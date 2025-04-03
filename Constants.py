@@ -1,0 +1,15 @@
+GEMINI_API_KEY = "GEMINI_API_KEY "
+AI_Application_Title = "GEMINI CLONE"
+Chat_Interface = "Chat"
+Edit_Image_Text = "Edit Images"
+Generate_Image_Text = "Generate Images"
+
+AI_Model_Name_For_Chat = "gemini-2.0-flash"
+AI_Model_Name_For_Image_Generation = "gemini-2.0-flash-exp-image-generation"
+
+Chat_Input_Message = "Ask me about Website Generation"
+Image_edit_Message = "Edit images by adding images"
+Image_Generation_Message = "Generate Images from Text"
+
+Image_Generation_Extra_Context = "Realistic Image Generation"
+Chat_Extra_Context = "Website Generator"
