@@ -7,9 +7,10 @@ Generate_Image_Text = "Generate Images"
 AI_Model_Name_For_Chat = "gemini-2.0-flash"
 AI_Model_Name_For_Image_Generation = "gemini-2.0-flash-exp-image-generation"
 
-Chat_Input_Message = "Ask me about Website Generation"
+Chat_Input_Message = "Ask me about Cricket"
 Image_edit_Message = "Edit images by adding images"
 Image_Generation_Message = "Generate Images from Text"
 
 Image_Generation_Extra_Context = "Realistic Image Generation"
-Chat_Extra_Context = "Website Generator"
+Chat_Extra_Context = f"You are a expert in Cricket {Main_Context}"
+Main_Context = "Cricket Statergies and Expert in Cricket Analytics"
