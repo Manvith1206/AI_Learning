@@ -12,5 +12,5 @@ Image_edit_Message = "Edit images by adding images"
 Image_Generation_Message = "Generate Images from Text"
 
 Image_Generation_Extra_Context = "Realistic Image Generation"
-Chat_Extra_Context = f"You are a expert in Cricket {Main_Context}"
 Main_Context = "Cricket Statergies and Expert in Cricket Analytics"
+Chat_Extra_Context = f"You are a expert in Cricket {Main_Context}"
