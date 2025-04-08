@@ -7,7 +7,26 @@ import Constants as Constants
 from PyPDF2 import PdfReader
 st.title(Constants.AI_Application_Title)
 
-client = genai.Client(api_key="AIzaSyCFQ0VjGetLO0QoeZ5UMLOf6SvuduSeyzI")
+st.markdown("""
+<style>
+.stChatInputContainer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: white;
+    padding: 1rem;
+    z-index: 100;
+    border-top: 1px solid #e6e6e6;
+}
+.main .block-container {
+    padding-bottom: 80px; /* Add padding to prevent content from being hidden behind the chat input */
+}
+</style>
+""", unsafe_allow_html=True)
+
+
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 context_file = None
 
 Chat_Interface, Edit_Image, Generate_Images, ContextCreater= st.tabs([
