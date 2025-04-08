@@ -7,7 +7,7 @@ import Constants as Constants
 from PyPDF2 import PdfReader
 st.title(Constants.AI_Application_Title)
 
-client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+client = genai.Client(api_key="AIzaSyCFQ0VjGetLO0QoeZ5UMLOf6SvuduSeyzI")
 context_file = None
 
 Chat_Interface, Edit_Image, Generate_Images, ContextCreater= st.tabs([
