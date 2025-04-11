@@ -117,7 +117,7 @@ with Generate_Images:
                 st.image(message["content"], caption="Generated Image")
                 
     # resp_contents = ('Hi, can you create 3d rendered image of soldier of powerful nation and this soldier is powerful of all with gold and black armor with powerful weapons dont keep too much weapons add weapons so that he can hold')
-    img_prompt = st.text_input(Constants.Image_Generation_Message)
+    img_prompt = st.chat_input(Constants.Image_Generation_Message)
 
     with st.spinner("Generating"):
         if img_prompt:
