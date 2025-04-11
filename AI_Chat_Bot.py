@@ -29,7 +29,7 @@ st.markdown("""
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 context_file = None
 
-Chat_Interface, Edit_Image, Generate_Images, ContextCreater= st.tabs([
+Chat_Interface, Edit_Image, Generate_Images = st.tabs([
     Constants.Chat_Interface, 
     Constants.Edit_Image_Text,
     Constants.Generate_Image_Text,
@@ -38,9 +38,9 @@ Chat_Interface, Edit_Image, Generate_Images, ContextCreater= st.tabs([
 if "gemini_model" not in st.session_state:
     st.session_state["gemini_model"] = Constants.AI_Model_Name_For_Chat
 
-with ContextCreater:
-    context_file = st.file_uploader(label="Upload a image",
-                     type=["pdf"])
+# with ContextCreater:
+#     context_file = st.file_uploader(label="Upload a image",
+#                      type=["pdf"])
 
 def extract_text_from_pdf(uploaded_file):
     reader = PdfReader(uploaded_file)
@@ -118,7 +118,7 @@ with Generate_Images:
                 st.image(message["content"], caption="Generated Image")
                 
     # resp_contents = ('Hi, can you create 3d rendered image of soldier of powerful nation and this soldier is powerful of all with gold and black armor with powerful weapons dont keep too much weapons add weapons so that he can hold')
-    img_prompt = st.text_area(Constants.Image_Generation_Message)
+    img_prompt = st.text_input(Constants.Image_Generation_Message)
 
     with st.spinner("Generating"):
         if img_prompt:
