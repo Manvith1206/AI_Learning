@@ -32,8 +32,7 @@ context_file = None
 Chat_Interface, Edit_Image, Generate_Images = st.tabs([
     Constants.Chat_Interface, 
     Constants.Edit_Image_Text,
-    Constants.Generate_Image_Text,
-    "Context"])
+    Constants.Generate_Image_Text])
 
 if "gemini_model" not in st.session_state:
     st.session_state["gemini_model"] = Constants.AI_Model_Name_For_Chat
