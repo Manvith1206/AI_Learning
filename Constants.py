@@ -1,5 +1,5 @@
 GEMINI_API_KEY = "GEMINI_API_KEY "
-AI_Application_Title = "GEMINI CLONE"
+AI_Application_Title = "AI Chat Bot"
 Chat_Interface = "Chat"
 Edit_Image_Text = "Edit Images"
 Generate_Image_Text = "Generate Images"
