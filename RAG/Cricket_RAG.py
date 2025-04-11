@@ -167,20 +167,20 @@ def main():
                         
     
     # Check if vectors are already saved
-    if (st.session_state.vector_store is None and 
-        os.path.exists("cricket_vectorizer.pkl") and 
-        os.path.exists("cricket_vectors.pkl") and
-        os.path.exists("cricket_documents.pkl")):
-        try:
-            with open("cricket_vectorizer.pkl", "rb") as f:
-                st.session_state.vectorizer = pickle.load(f)
-            with open("cricket_vectors.pkl", "rb") as f:
-                st.session_state.vector_store = pickle.load(f)
-            with open("cricket_documents.pkl", "rb") as f:
-                st.session_state.documents = pickle.load(f)
-            st.info("Loaded pre-processed cricket data")
-        except Exception as e:
-            st.error(f"Error loading saved data: {str(e)}")
+    # if (st.session_state.vector_store is None and 
+    #     os.path.exists("cricket_vectorizer.pkl") and 
+    #     os.path.exists("cricket_vectors.pkl") and
+    #     os.path.exists("cricket_documents.pkl")):
+    #     try:
+    #         with open("cricket_vectorizer.pkl", "rb") as f:
+    #             st.session_state.vectorizer = pickle.load(f)
+    #         with open("cricket_vectors.pkl", "rb") as f:
+    #             st.session_state.vector_store = pickle.load(f)
+    #         with open("cricket_documents.pkl", "rb") as f:
+    #             st.session_state.documents = pickle.load(f)
+    #         st.info("Loaded pre-processed cricket data")
+    #     except Exception as e:
+    #         st.error(f"Error loading saved data: {str(e)}")
 
     # Initialize chat history
     if "messages" not in st.session_state:
@@ -209,17 +209,17 @@ def main():
                     
                     # Format context for the LLM
                     context_parts = []
-                    for doc in similar_docs:
-                        context_parts.append(f"Document ID: {doc['id']} (Similarity: {doc['score']:.4f})\n{doc['content']}")
+                    for doc in st.session_state.documents:
+                        context_parts.append(f"{doc}")
                     
                     context = "\n\n".join(context_parts)
                     
                     # Generate response with Gemini
                     query = f"""
-                        Behave like a cricket analyst and expert in cricket and answer the question.
-                        Be a helpful and informative assistant.
-                        The context provided contains IPL matches ball-by-ball data.
-                        
+                        Behave like Cricket Analyst and be helpful cricket analyst
+                        I want to analyze this ball-by-ball cricket data to understand:
+                        [player performance, team strategy, match patterns, player stats in these matches]
+                        Analyze all matches provided in context
                         Context:
                         {context}
                         

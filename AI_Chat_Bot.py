@@ -7,24 +7,6 @@ import Constants as Constants
 from PyPDF2 import PdfReader
 st.title(Constants.AI_Application_Title)
 
-st.markdown("""
-<style>
-.stChatInputContainer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: white;
-    padding: 1rem;
-    z-index: 100;
-    border-top: 1px solid #e6e6e6;
-}
-.main .block-container {
-    padding-bottom: 80px; /* Add padding to prevent content from being hidden behind the chat input */
-}
-</style>
-""", unsafe_allow_html=True)
-
 
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 context_file = None
@@ -48,7 +30,6 @@ def extract_text_from_pdf(uploaded_file):
     return text[:4000]  # Ensure within token limit
 
 with Chat_Interface:
-    text_prompt = st.chat_input(Constants.Chat_Input_Message)
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -58,6 +39,7 @@ with Chat_Interface:
     
     if context_file:
         context_file = extract_text_from_pdf(context_file)
+    text_prompt = st.chat_input(Constants.Chat_Input_Message)
 
     if text_prompt:
         st.session_state.messages.append({"role": "user", "content": text_prompt})

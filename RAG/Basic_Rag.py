@@ -1,42 +1,99 @@
 import streamlit as st
 import os
 import shutil
+import numpy as np
+import pandas as pd
+import re
+import uuid
 from concurrent.futures import ThreadPoolExecutor
-from langchain_community.document_loaders import (
-    PyPDFLoader, 
-    TextLoader, 
-    CSVLoader, 
-    Docx2txtLoader
-)
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.llms import HuggingFaceHub
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import NearestNeighbors
 from google import genai
+
+# For document loading
+import PyPDF2
+import docx2txt
+import csv
 
 # Constants
 TEMP_DIR = "temp_docs"
 MAX_WORKERS = 4  # Optimal for most systems
+CHUNK_SIZE = 3000
+CHUNK_OVERLAP = 200
 
-# Initialize components
-embedding = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=3000, 
-    chunk_overlap=200,
-    length_function=len,
-    is_separator_regex=False
-)
-
+# Initialize Google Generative AI client
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 # Initialize session states
-if 'vector_store' not in st.session_state:
-    st.session_state.vector_store = None
+if 'vectorizer' not in st.session_state:
+    st.session_state.vectorizer = TfidfVectorizer()
+    
+if 'vectors' not in st.session_state:
+    st.session_state.vectors = None
+    
+if 'chunks' not in st.session_state:
+    st.session_state.chunks = []
 
 # Ensure clean temp directory on startup
 if os.path.exists(TEMP_DIR):
     shutil.rmtree(TEMP_DIR)
 os.makedirs(TEMP_DIR, exist_ok=True)
+
+def extract_text_from_file(file_path, file_ext):
+    """Extract text from different file types"""
+    if file_ext == '.pdf':
+        text = ""
+        with open(file_path, 'rb') as f:
+            pdf_reader = PyPDF2.PdfReader(f)
+            for page in pdf_reader.pages:
+                text += page.extract_text() + "\n"
+        return text
+    elif file_ext == '.docx':
+        return docx2txt.process(file_path)
+    elif file_ext == '.txt':
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            return f.read()
+    elif file_ext == '.csv':
+        text = ""
+        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            csv_reader = csv.reader(f)
+            for row in csv_reader:
+                text += " ".join(row) + "\n"
+        return text
+    else:
+        return None
+
+def split_text_into_chunks(text, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
+    """Split text into overlapping chunks"""
+    if not text:
+        return []
+        
+    # Split by paragraphs first
+    paragraphs = re.split(r'\n\s*\n', text)
+    paragraphs = [p.strip() for p in paragraphs if p.strip()]
+    
+    chunks = []
+    current_chunk = ""
+    
+    for paragraph in paragraphs:
+        # If adding this paragraph exceeds chunk size, save current chunk and start new one
+        print("Para: " + paragraph)
+        if len(current_chunk) + len(paragraph) > chunk_size and current_chunk:
+            chunks.append(current_chunk.strip())
+            # Keep overlap from previous chunk
+            words = current_chunk.split()
+            if len(words) > chunk_overlap:
+                current_chunk = " ".join(words[-chunk_overlap:]) + "\n"
+            else:
+                current_chunk = ""
+                
+        current_chunk += paragraph + "\n\n"
+        
+    # Add the last chunk if it's not empty
+    if current_chunk.strip():
+        chunks.append(current_chunk.strip())
+        
+    return chunks
 
 def process_single_file(file):
     """Process a single file with proper error handling"""
@@ -48,19 +105,25 @@ def process_single_file(file):
         with open(file_path, "wb") as f:
             f.write(file.getbuffer())
         
-        # Load based on file type
-        if file_ext == '.pdf':
-            loader = PyPDFLoader(file_path)
-        elif file_ext == '.docx':
-            loader = Docx2txtLoader(file_path)
-        elif file_ext == '.txt':
-            loader = TextLoader(file_path)
-        elif file_ext == '.csv':
-            loader = CSVLoader(file_path)
-        else:
+        # Extract text from file
+        text = extract_text_from_file(file_path, file_ext)
+        if not text:
             return None
             
-        return loader.load()
+        # Split text into chunks
+        chunks = split_text_into_chunks(text)
+        
+        # Create document objects similar to LangChain format for compatibility
+        documents = []
+        for chunk in chunks:
+            doc_id = str(uuid.uuid4())
+            documents.append({
+                "id": doc_id,
+                "page_content": chunk,
+                "metadata": {"source": file.name}
+            })
+            
+        return documents
     except Exception as e:
         st.error(f"Error processing {file.name}: {str(e)}")
         return None
@@ -70,6 +133,7 @@ def process_single_file(file):
             os.remove(file_path)
 
 with st.sidebar:
+    st.subheader("Upload and Process Documents")
     with st.spinner("Uploading Docs..."):
         uploaded_files = st.file_uploader(
             "Upload Documents", 
@@ -94,29 +158,37 @@ with st.sidebar:
                         progress_bar.progress((i + 1) / len(futures))
                 
                 if documents:
-                    # Flatten and split documents
-                    all_docs = [item for sublist in documents for item in sublist]
-                    texts = text_splitter.split_documents(all_docs)
+                    # Flatten documents
+                    all_docs = [item for sublist in documents if sublist for item in sublist]
                     
-                    # Create vector store
-                    try:
-                        st.session_state.vector_store = FAISS.from_documents(
-                            texts, 
-                            embedding=embedding
-                        )
-                        st.success(f"Processed {len(texts)} chunks from {len(uploaded_files)} files")
-                        st.write(f"Vector store size: {st.session_state.vector_store.index.ntotal} vectors")
-                    except Exception as e:
-                        st.error(f"Error creating vector store: {str(e)}")
+                    if all_docs:
+                        # Extract text from documents
+                        texts = [doc["page_content"] for doc in all_docs]
+                        st.session_state.chunks = all_docs
+                        
+                        # Create vector store using TF-IDF and Nearest Neighbors
+                        try:
+                            # Fit the vectorizer and transform documents
+                            st.session_state.vectorizer = TfidfVectorizer()
+                            st.session_state.vectors = st.session_state.vectorizer.fit_transform(texts)
+                            
+                            # Initialize nearest neighbors model
+                            st.session_state.nn_model = NearestNeighbors(
+                                n_neighbors=min(5, len(texts)),  # Limit to 5 or number of texts if less
+                                metric='cosine'
+                            )
+                            st.session_state.nn_model.fit(st.session_state.vectors)
+                            
+                            st.success(f"Processed {len(texts)} chunks from {len(uploaded_files)} files")
+                            st.write(f"Vector store size: {st.session_state.vectors.shape[0]} vectors")
+                        except Exception as e:
+                            st.error(f"Error creating vector store: {str(e)}")
+                    else:
+                        st.warning("No valid content was extracted from documents")
                 else:
                     st.warning("No valid documents were processed")
 
-llm = HuggingFaceHub(
-    repo_id="google/flan-t5-xxl",  # Using a larger model that better supports text generation
-    huggingfacehub_api_token=st.secrets["HUGGINGFACE_API_KEY"],
-    model_kwargs={"temperature": 0.5},
-    task="text2text-generation"  # Explicitly specifying the task
-)
+# We'll use Google's Gemini model directly instead of HuggingFace
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -137,35 +209,45 @@ if prompt := st.chat_input("Ask a question about your documents"):
     # Generate and display assistant response
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            # Debug: Display vector store status
-            if st.session_state.vector_store is not None:
-                # Create RAG pipeline with proper configuration
-                query_embed = embedding.embed_query(prompt)
-                similar_docs_with_scores = st.session_state.vector_store.similarity_search_with_relevance_scores(prompt, k=2)
-
-                context_parts = []
-                for doc, score in similar_docs_with_scores:
-                    context_parts.append(f"Document ID: {doc.id} (Similarity: {score:.4f})\n{doc.page_content}")
-                
-                context = "\n\n".join(context_parts)
-
-                query = f"""
-                    Based on the following context, please answer the question.
+            # Check if vectors are available
+            if hasattr(st.session_state, 'vectors') and st.session_state.vectors is not None:
+                try:
+                    # Transform query using the same vectorizer
+                    query_vector = st.session_state.vectorizer.transform([prompt])
                     
-                    Context:
-                    {context}
+                    # Find nearest neighbors
+                    distances, indices = st.session_state.nn_model.kneighbors(query_vector, n_neighbors=min(2, st.session_state.vectors.shape[0]))
                     
-                    Question: {prompt}
+                    # Convert distances to similarity scores (1 - distance)
+                    similarity_scores = 1 - distances.flatten()
                     
-                    Answer:
-                    """
-                response = client.models.generate_content(model="gemini-2.0-flash", contents=query)
-
-                # Display the response
-                st.markdown(response.text)
-                
-                # Add assistant response to chat history
-                st.session_state.messages.append({"role": "assistant", "content": response.text})
-                context = context + "\n\n" + response.text
+                    # Get the relevant documents
+                    context_parts = []
+                    for i, (idx, score) in enumerate(zip(indices.flatten(), similarity_scores)):
+                        doc = st.session_state.chunks[idx]
+                        context_parts.append(f"Document ID: {doc['id']} (Similarity: {score:.4f})\n{doc['page_content']}")
+                    
+                    context = "\n\n".join(context_parts)
+                    
+                    # Create the query for Gemini
+                    query = f"""
+                        You are an assistant that answers questions based on the following context. Use only the information provided in the context. Do not make up answers.
+                        
+                        Context:
+                        {context}
+                        
+                        Question: {prompt}
+                        
+                        Answer:
+                        """
+                    response = client.models.generate_content(model="gemini-2.0-flash", contents=query)
+                    
+                    # Display the response
+                    st.markdown(response.text)
+                    
+                    # Add assistant response to chat history
+                    st.session_state.messages.append({"role": "assistant", "content": response.text})
+                except Exception as e:
+                    st.error(f"Error generating response: {str(e)}")
             else:
                 st.error("Please upload and process documents first.")
