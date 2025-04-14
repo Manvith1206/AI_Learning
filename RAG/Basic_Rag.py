@@ -9,11 +9,11 @@ from concurrent.futures import ThreadPoolExecutor
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 from google import genai
-
 # For document loading
 import PyPDF2
 import docx2txt
 import csv
+
 
 # Constants
 TEMP_DIR = "temp_docs"
@@ -216,7 +216,7 @@ if prompt := st.chat_input("Ask a question about your documents"):
                     query_vector = st.session_state.vectorizer.transform([prompt])
                     
                     # Find nearest neighbors
-                    distances, indices = st.session_state.nn_model.kneighbors(query_vector, n_neighbors=min(2, st.session_state.vectors.shape[0]))
+                    distances, indices = st.session_state.nn_model.kneighbors(query_vector, n_neighbors=4)
                     
                     # Convert distances to similarity scores (1 - distance)
                     similarity_scores = 1 - distances.flatten()
@@ -231,7 +231,8 @@ if prompt := st.chat_input("Ask a question about your documents"):
                     
                     # Create the query for Gemini
                     query = f"""
-                        You are an assistant that answers questions based on the following context. Use only the information provided in the context. Do not make up answers.
+                        You are an assistant that answers questions based on the following context. Do not make up answers.
+                        Answers should be in detailed
                         
                         Context:
                         {context}
