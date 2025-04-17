@@ -1,5 +1,6 @@
-.pyc
-.toml
-.pdf
-.txt
-.text
+*.pyc
+*.toml
+*.pdf
+*.txt
+*.text
+*.json
