@@ -1,1 +1,6 @@
-.pyc
+*.pyc
+*.toml
+*.pdf
+*.txt
+*.text
+*.json
