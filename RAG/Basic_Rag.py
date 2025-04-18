@@ -13,13 +13,18 @@ from google import genai
 import PyPDF2
 import docx2txt
 import csv
-
+from ragas.metrics import context_precision, context_recall, faithfulness, answer_correctness
+from ragas import evaluate
+from datasets import Dataset
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 # Constants
 TEMP_DIR = "temp_docs"
 MAX_WORKERS = 4  # Optimal for most systems
-CHUNK_SIZE = 3000
+CHUNK_SIZE = 600
 CHUNK_OVERLAP = 200
+import openai
+os.environ["OPENAI_API_KEY"] = st.secrets["OPEN_AI_API_KEY"]
 
 # Initialize Google Generative AI client
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
@@ -33,6 +38,14 @@ if 'vectors' not in st.session_state:
     
 if 'chunks' not in st.session_state:
     st.session_state.chunks = []
+if "query" not in st.session_state:
+    st.session_state.query = None
+if "query" not in st.session_state:
+    st.session_state.query = None
+if "context_docs" not in st.session_state:
+    st.session_state.context_docs = []
+if "assistant_response" not in st.session_state:
+    st.session_state.assistant_response = None
 
 # Ensure clean temp directory on startup
 if os.path.exists(TEMP_DIR):
@@ -67,32 +80,14 @@ def split_text_into_chunks(text, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVER
     """Split text into overlapping chunks"""
     if not text:
         return []
-        
-    # Split by paragraphs first
-    paragraphs = re.split(r'\n\s*\n', text)
-    paragraphs = [p.strip() for p in paragraphs if p.strip()]
     
-    chunks = []
-    current_chunk = ""
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap
+    )
+
+    chunks = text_splitter.split_text(text)
     
-    for paragraph in paragraphs:
-        # If adding this paragraph exceeds chunk size, save current chunk and start new one
-        print("Para: " + paragraph)
-        if len(current_chunk) + len(paragraph) > chunk_size and current_chunk:
-            chunks.append(current_chunk.strip())
-            # Keep overlap from previous chunk
-            words = current_chunk.split()
-            if len(words) > chunk_overlap:
-                current_chunk = " ".join(words[-chunk_overlap:]) + "\n"
-            else:
-                current_chunk = ""
-                
-        current_chunk += paragraph + "\n\n"
-        
-    # Add the last chunk if it's not empty
-    if current_chunk.strip():
-        chunks.append(current_chunk.strip())
-        
     return chunks
 
 def process_single_file(file):
@@ -111,82 +106,100 @@ def process_single_file(file):
             return None
             
         # Split text into chunks
-        chunks = split_text_into_chunks(text)
+        chunks = split_text_into_chunks(text, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
         
         # Create document objects similar to LangChain format for compatibility
         documents = []
+        file_chunks = []
         for chunk in chunks:
             doc_id = str(uuid.uuid4())
+            file_chunks.append(chunk)
             documents.append({
                 "id": doc_id,
                 "page_content": chunk,
                 "metadata": {"source": file.name}
             })
-            
-        return documents
+        
+        # Return both the documents and chunks for this file
+        return documents, file_chunks
     except Exception as e:
         st.error(f"Error processing {file.name}: {str(e)}")
-        return None
+        return None, None
     finally:
         # Clean up temp file
         if os.path.exists(file_path):
             os.remove(file_path)
 
 with st.sidebar:
+    result = None
+    if st.button("Evaluate RAG"):
+        print("Evaluate")
+        def run_ragas_eval(question, answer, contexts, ground_truths=[""]):
+            # Create a HuggingFace Dataset
+            # print("Question: ")
+            # print(type(question))
+            # print("Answer: ")
+            # print(type(answer))
+            # print("Contexts: ")
+            # print(type(contexts))
+
+            data = Dataset.from_dict({
+                "question": [question],
+                "answer": [answer],
+                "contexts": [contexts],
+                "ground_truths": [ground_truths],
+            })
+
+            result = evaluate(
+                data,
+                metrics=[
+                    faithfulness
+                ]
+            )
+            
+            return result
+
+        if (st.session_state.query and st.session_state.assistant_response and st.session_state.context_docs):
+            result = run_ragas_eval(st.session_state.query, st.session_state.assistant_response, st.session_state.context_docs)
+    if result:
+        print(result["faithfulness"])
+        st.text_area("Faithfulness", value=result["faithfulness"])
+
     st.subheader("Upload and Process Documents")
     with st.spinner("Uploading Docs..."):
-        uploaded_files = st.file_uploader(
-            "Upload Documents", 
+        uploaded_file = st.file_uploader(
+            "Upload Document", 
             type=["pdf", "csv", "txt", "docx"], 
-            accept_multiple_files=True
+            accept_multiple_files=False
         )
     
-    if uploaded_files:
-        with st.spinner("Processing Docs..."):
-            if st.button("Process Documents"):
-                # Process files in parallel with progress
-                progress_bar = st.progress(0)
-                
-                with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-                    futures = [executor.submit(process_single_file, file) for file in uploaded_files]
-                    documents = []
-                    
-                    for i, future in enumerate(futures):
-                        result = future.result()
-                        if result:
-                            documents.append(result)
-                        progress_bar.progress((i + 1) / len(futures))
-                
-                if documents:
-                    # Flatten documents
-                    all_docs = [item for sublist in documents if sublist for item in sublist]
-                    
-                    if all_docs:
-                        # Extract text from documents
-                        texts = [doc["page_content"] for doc in all_docs]
-                        st.session_state.chunks = all_docs
-                        
-                        # Create vector store using TF-IDF and Nearest Neighbors
-                        try:
-                            # Fit the vectorizer and transform documents
-                            st.session_state.vectorizer = TfidfVectorizer()
-                            st.session_state.vectors = st.session_state.vectorizer.fit_transform(texts)
-                            
-                            # Initialize nearest neighbors model
-                            st.session_state.nn_model = NearestNeighbors(
-                                n_neighbors=min(5, len(texts)),  # Limit to 5 or number of texts if less
-                                metric='cosine'
-                            )
-                            st.session_state.nn_model.fit(st.session_state.vectors)
-                            
-                            st.success(f"Processed {len(texts)} chunks from {len(uploaded_files)} files")
-                            st.write(f"Vector store size: {st.session_state.vectors.shape[0]} vectors")
-                        except Exception as e:
-                            st.error(f"Error creating vector store: {str(e)}")
-                    else:
-                        st.warning("No valid content was extracted from documents")
+    if uploaded_file:
+        with st.spinner("Processing Doc..."):
+            if st.button("Process Document"):
+                result, file_chunks = process_single_file(uploaded_file)
+                if result and file_chunks:
+                    # Extract text from documents
+                    texts = [doc["page_content"] for doc in result]
+                    st.session_state.chunks = result
+                    st.session_state.context_docs = file_chunks
+
+                    # Create vector store using TF-IDF and Nearest Neighbors
+                    try:
+                        st.session_state.vectorizer = TfidfVectorizer()
+                        st.session_state.vectors = st.session_state.vectorizer.fit_transform(texts)
+
+                        st.session_state.nn_model = NearestNeighbors(
+                            n_neighbors=min(5, len(texts)),
+                            metric='cosine'
+                        )
+                        st.session_state.nn_model.fit(st.session_state.vectors)
+
+                        st.success(f"Processed {len(texts)} chunks from 1 file")
+                        st.write(f"Vector store size: {st.session_state.vectors.shape[0]} vectors")
+                    except Exception as e:
+                        st.error(f"Error creating vector store: {str(e)}")
                 else:
-                    st.warning("No valid documents were processed")
+                    st.warning("No valid content was extracted from the document")
 
 # We'll use Google's Gemini model directly instead of HuggingFace
 
@@ -223,10 +236,16 @@ if prompt := st.chat_input("Ask a question about your documents"):
                     
                     # Get the relevant documents
                     context_parts = []
-                    for i, (idx, score) in enumerate(zip(indices.flatten(), similarity_scores)):
-                        doc = st.session_state.chunks[idx]
-                        context_parts.append(f"Document ID: {doc['id']} (Similarity: {score:.4f})\n{doc['page_content']}")
-                    
+                    index = 0
+                    for i in range(len(indices[0])):
+                        idx = indices[0][i]
+                        index+=1
+                        # Get the document chunk
+                        doc = st.session_state.context_docs[idx]
+                        
+                        # Add only the content to context parts
+                        context_parts.append(doc)
+                    print("Index: " + str(index))
                     context = "\n\n".join(context_parts)
                     
                     # Create the query for Gemini
@@ -242,7 +261,17 @@ if prompt := st.chat_input("Ask a question about your documents"):
                         Answer:
                         """
                     response = client.models.generate_content(model="gemini-2.0-flash", contents=query)
-                    
+                    st.session_state.query = query
+                    st.session_state.assistant_response = response.text
+
+                    print("Context: ")
+                    breakpoint()
+                    print(context)
+
+                    session_state_docs = []
+                    for chunk in st.session_state.context_docs:
+                        session_state_docs.append(chunk)
+
                     # Display the response
                     st.markdown(response.text)
                     
