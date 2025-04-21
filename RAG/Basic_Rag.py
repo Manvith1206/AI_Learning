@@ -52,6 +52,47 @@ if os.path.exists(TEMP_DIR):
     shutil.rmtree(TEMP_DIR)
 os.makedirs(TEMP_DIR, exist_ok=True)
 
+###############################################
+# LLM-based Re-ranking Helper Function
+###############################################
+def rerank_chunks_with_llm(query, chunks, client, model_name="gemini-2.0-flash"):
+    """
+    Uses Gemini LLM to select the best chunk(s) among the retrieved candidates and explain why.
+    Returns a tuple: (list of selected chunks, explanation string)
+    """
+    # Build the prompt
+    chunk_list = "\n".join([f"{i+1}. {chunk}" for i, chunk in enumerate(chunks)])
+    rerank_prompt = f"""
+You are given a user query and a list of retrieved document chunks. 
+For each chunk, determine how relevant it is to the query, then select the best chunk(s) that would help answer the query. 
+Explain your reasoning for selecting the chunk(s).
+
+Query: {query}
+
+Chunks:
+{chunk_list}
+
+Please respond in the following format:
+Best Chunk(s): [list the chunk numbers]
+Explanation: [your reasoning]
+"""
+    # Call Gemini
+    response = client.models.generate_content(model=model_name, contents=rerank_prompt)
+    response_text = response.text.strip()
+
+    # Parse the LLM's response
+    import re
+    best_chunks_match = re.search(r"Best Chunk\(s\):\s*\[([^\]]+)\]", response_text)
+    explanation_match = re.search(r"Explanation:\s*(.*)", response_text, re.DOTALL)
+    selected_indices = []
+    if best_chunks_match:
+        indices_str = best_chunks_match.group(1)
+        # Extract numbers and convert to 0-based indices
+        selected_indices = [int(idx.strip())-1 for idx in indices_str.split(",") if idx.strip().isdigit()]
+    explanation = explanation_match.group(1).strip() if explanation_match else "No explanation provided."
+    selected_chunks = [chunks[i] for i in selected_indices if 0 <= i < len(chunks)]
+    return selected_chunks, explanation
+
 def extract_text_from_file(file_path, file_ext):
     """Extract text from different file types"""
     if file_ext == '.pdf':
@@ -234,43 +275,43 @@ if prompt := st.chat_input("Ask a question about your documents"):
                     # Convert distances to similarity scores (1 - distance)
                     similarity_scores = 1 - distances.flatten()
                     
-                    # Get the relevant documents
-                    context_parts = []
-                    index = 0
+                    # Get the relevant document chunks
+                    candidate_chunks = []
                     for i in range(len(indices[0])):
                         idx = indices[0][i]
-                        index+=1
-                        # Get the document chunk
                         doc = st.session_state.context_docs[idx]
-                        
-                        # Add only the content to context parts
-                        context_parts.append(doc)
-                    print("Index: " + str(index))
-                    context = "\n\n".join(context_parts)
-                    
-                    # Create the query for Gemini
-                    query = f"""
+                        candidate_chunks.append(doc)
+
+                    # --- LLM-based Re-ranking Step ---
+                    # Use Gemini to select the best chunk(s) and explain why
+                    selected_chunks, rerank_explanation = rerank_chunks_with_llm(prompt, candidate_chunks, client)
+
+                    if not selected_chunks:
+                        # Fallback: use all candidate chunks if LLM fails to select
+                        selected_chunks = candidate_chunks
+                        rerank_explanation = "LLM did not select any chunks. Using all top-k retrieved chunks."
+
+                    # Join selected chunks for answer generation
+                    context = "\n\n".join(selected_chunks)
+
+                    # Show the LLM's re-ranking explanation above the answer
+                    st.markdown(f"**Re-ranking Explanation:**\n{rerank_explanation}")
+
+                    # Create the query for Gemini (final answer)
+                    answer_prompt = f"""
                         You are an assistant that answers questions based on the following context. Do not make up answers.
-                        Answers should be in detailed
-                        
+                        Answers should be detailed.
+
                         Context:
                         {context}
-                        
+
                         Question: {prompt}
-                        
+
                         Answer:
                         """
-                    response = client.models.generate_content(model="gemini-2.0-flash", contents=query)
-                    st.session_state.query = query
+                    response = client.models.generate_content(model="gemini-2.0-flash", contents=answer_prompt)
+                    st.session_state.query = answer_prompt
                     st.session_state.assistant_response = response.text
-
-                    print("Context: ")
-                    breakpoint()
-                    print(context)
-
-                    session_state_docs = []
-                    for chunk in st.session_state.context_docs:
-                        session_state_docs.append(chunk)
 
                     # Display the response
                     st.markdown(response.text)
