@@ -1,324 +1,208 @@
 import streamlit as st
 import os
-import shutil
-import numpy as np
+import sys
 import pandas as pd
-import re
-import uuid
-from concurrent.futures import ThreadPoolExecutor
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.neighbors import NearestNeighbors
-from google import genai
-# For document loading
-import PyPDF2
-import docx2txt
-import csv
-from ragas.metrics import context_precision, context_recall, faithfulness, answer_correctness
-from ragas import evaluate
-from datasets import Dataset
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-# Constants
+# Add rag_modular to path
+sys.path.append(os.path.join(os.path.dirname(__file__), 'rag_modular'))
+from rag_modular.rag_pipeline import RAGPipeline
+from rag_modular.config_manager import ConfigManager
+
 TEMP_DIR = "temp_docs"
-MAX_WORKERS = 4  # Optimal for most systems
-CHUNK_SIZE = 600
-CHUNK_OVERLAP = 200
-import openai
-os.environ["OPENAI_API_KEY"] = st.secrets["OPEN_AI_API_KEY"]
 
-# Initialize Google Generative AI client
-client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+# Initialize session state for pipeline
+if "pipeline" not in st.session_state:
+    config_manager = ConfigManager()
+    st.session_state.pipeline = RAGPipeline(config_manager)
 
-# Initialize session states
-if 'vectorizer' not in st.session_state:
-    st.session_state.vectorizer = TfidfVectorizer()
-    
-if 'vectors' not in st.session_state:
-    st.session_state.vectors = None
-    
-if 'chunks' not in st.session_state:
-    st.session_state.chunks = []
-if "query" not in st.session_state:
-    st.session_state.query = None
-if "query" not in st.session_state:
-    st.session_state.query = None
-if "context_docs" not in st.session_state:
-    st.session_state.context_docs = []
-if "assistant_response" not in st.session_state:
-    st.session_state.assistant_response = None
-
-# Ensure clean temp directory on startup
-if os.path.exists(TEMP_DIR):
-    shutil.rmtree(TEMP_DIR)
-os.makedirs(TEMP_DIR, exist_ok=True)
-
-###############################################
-# LLM-based Re-ranking Helper Function
-###############################################
-def rerank_chunks_with_llm(query, chunks, client, model_name="gemini-2.0-flash"):
-    """
-    Uses Gemini LLM to select the best chunk(s) among the retrieved candidates and explain why.
-    Returns a tuple: (list of selected chunks, explanation string)
-    """
-    # Build the prompt
-    chunk_list = "\n".join([f"{i+1}. {chunk}" for i, chunk in enumerate(chunks)])
-    rerank_prompt = f"""
-You are given a user query and a list of retrieved document chunks. 
-For each chunk, determine how relevant it is to the query, then select the best chunk(s) that would help answer the query. 
-Explain your reasoning for selecting the chunk(s).
-
-Query: {query}
-
-Chunks:
-{chunk_list}
-
-Please respond in the following format:
-Best Chunk(s): [list the chunk numbers]
-Explanation: [your reasoning]
-"""
-    # Call Gemini
-    response = client.models.generate_content(model=model_name, contents=rerank_prompt)
-    response_text = response.text.strip()
-
-    # Parse the LLM's response
-    import re
-    best_chunks_match = re.search(r"Best Chunk\(s\):\s*\[([^\]]+)\]", response_text)
-    explanation_match = re.search(r"Explanation:\s*(.*)", response_text, re.DOTALL)
-    selected_indices = []
-    if best_chunks_match:
-        indices_str = best_chunks_match.group(1)
-        # Extract numbers and convert to 0-based indices
-        selected_indices = [int(idx.strip())-1 for idx in indices_str.split(",") if idx.strip().isdigit()]
-    explanation = explanation_match.group(1).strip() if explanation_match else "No explanation provided."
-    selected_chunks = [chunks[i] for i in selected_indices if 0 <= i < len(chunks)]
-    return selected_chunks, explanation
-
-def extract_text_from_file(file_path, file_ext):
-    """Extract text from different file types"""
-    if file_ext == '.pdf':
-        text = ""
-        with open(file_path, 'rb') as f:
-            pdf_reader = PyPDF2.PdfReader(f)
-            for page in pdf_reader.pages:
-                text += page.extract_text() + "\n"
-        return text
-    elif file_ext == '.docx':
-        return docx2txt.process(file_path)
-    elif file_ext == '.txt':
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            return f.read()
-    elif file_ext == '.csv':
-        text = ""
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            csv_reader = csv.reader(f)
-            for row in csv_reader:
-                text += " ".join(row) + "\n"
-        return text
-    else:
-        return None
-
-def split_text_into_chunks(text, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
-    """Split text into overlapping chunks"""
-    if not text:
-        return []
-    
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap
-    )
-
-    chunks = text_splitter.split_text(text)
-    
-    return chunks
-
-def process_single_file(file):
-    """Process a single file with proper error handling"""
-    try:
-        file_ext = os.path.splitext(file.name)[1].lower()
-        file_path = os.path.join(TEMP_DIR, file.name)
-        
-        # Write to temp file
-        with open(file_path, "wb") as f:
-            f.write(file.getbuffer())
-        
-        # Extract text from file
-        text = extract_text_from_file(file_path, file_ext)
-        if not text:
-            return None
-            
-        # Split text into chunks
-        chunks = split_text_into_chunks(text, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
-        
-        # Create document objects similar to LangChain format for compatibility
-        documents = []
-        file_chunks = []
-        for chunk in chunks:
-            doc_id = str(uuid.uuid4())
-            file_chunks.append(chunk)
-            documents.append({
-                "id": doc_id,
-                "page_content": chunk,
-                "metadata": {"source": file.name}
-            })
-        
-        # Return both the documents and chunks for this file
-        return documents, file_chunks
-    except Exception as e:
-        st.error(f"Error processing {file.name}: {str(e)}")
-        return None, None
-    finally:
-        # Clean up temp file
-        if os.path.exists(file_path):
-            os.remove(file_path)
-
-with st.sidebar:
-    result = None
-    if st.button("Evaluate RAG"):
-        print("Evaluate")
-        def run_ragas_eval(question, answer, contexts, ground_truths=[""]):
-            # Create a HuggingFace Dataset
-            # print("Question: ")
-            # print(type(question))
-            # print("Answer: ")
-            # print(type(answer))
-            # print("Contexts: ")
-            # print(type(contexts))
-
-            data = Dataset.from_dict({
-                "question": [question],
-                "answer": [answer],
-                "contexts": [contexts],
-                "ground_truths": [ground_truths],
-            })
-
-            result = evaluate(
-                data,
-                metrics=[
-                    faithfulness
-                ]
-            )
-            
-            return result
-
-        if (st.session_state.query and st.session_state.assistant_response and st.session_state.context_docs):
-            result = run_ragas_eval(st.session_state.query, st.session_state.assistant_response, st.session_state.context_docs)
-    if result:
-        print(result["faithfulness"])
-        st.text_area("Faithfulness", value=result["faithfulness"])
-
-    st.subheader("Upload and Process Documents")
-    with st.spinner("Uploading Docs..."):
-        uploaded_file = st.file_uploader(
-            "Upload Document", 
-            type=["pdf", "csv", "txt", "docx"], 
-            accept_multiple_files=False
-        )
-    
-    if uploaded_file:
-        with st.spinner("Processing Doc..."):
-            if st.button("Process Document"):
-                result, file_chunks = process_single_file(uploaded_file)
-                if result and file_chunks:
-                    # Extract text from documents
-                    texts = [doc["page_content"] for doc in result]
-                    st.session_state.chunks = result
-                    st.session_state.context_docs = file_chunks
-
-                    # Create vector store using TF-IDF and Nearest Neighbors
-                    try:
-                        st.session_state.vectorizer = TfidfVectorizer()
-                        st.session_state.vectors = st.session_state.vectorizer.fit_transform(texts)
-
-                        st.session_state.nn_model = NearestNeighbors(
-                            n_neighbors=min(5, len(texts)),
-                            metric='cosine'
-                        )
-                        st.session_state.nn_model.fit(st.session_state.vectors)
-
-                        st.success(f"Processed {len(texts)} chunks from 1 file")
-                        st.write(f"Vector store size: {st.session_state.vectors.shape[0]} vectors")
-                    except Exception as e:
-                        st.error(f"Error creating vector store: {str(e)}")
-                else:
-                    st.warning("No valid content was extracted from the document")
-
-# We'll use Google's Gemini model directly instead of HuggingFace
-
+if "documents" not in st.session_state:
+    st.session_state.documents = None
+if "chunks" not in st.session_state:
+    st.session_state.chunks = None
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Sidebar for configuration and document upload
+with st.sidebar:
+    st.subheader("Configuration")
+    
+    # Create tabs for different component types
+    config_tabs = st.tabs(["Text Processing", "Retrieval", "Evaluation"])
+    
+    with config_tabs[0]:
+        st.write("**Text Processing**")
+        # Chunker selection
+        chunker_type = st.selectbox(
+            "Chunker Type",
+            options=["recursive", "sentence", "semantic"],
+            index=0
+        )
+        
+        # Chunker parameters
+        if chunker_type == "recursive":
+            chunk_size = st.slider("Chunk Size", 100, 10000, 600)
+            chunk_overlap = st.slider("Chunk Overlap", 0, 3000, 200)
+            chunker_params = {"chunk_size": chunk_size, "chunk_overlap": chunk_overlap}
+        elif chunker_type == "semantic":
+            min_chunk_size = st.slider("Min Chunk Size", 100, 10000, 600)
+            max_chunk_size = st.slider("Max Chunk Size", 100, 10000, 600)
+            similarity_threshold = st.text_area("Similarity Threshold", 0.65)
+            model_name = st.selectbox("Model Name", options=['all-MiniLM-L6-v2', 'paraphrase-MiniLM-L3-v2'])
+
+            chunker_params = {"min_chunk_size": min_chunk_size, "max_chunk_size": max_chunk_size, "similarity_threshold": float(similarity_threshold), "model_name": model_name}
+        elif chunker_type == "sentece":  # sentence
+            max_sentences = st.slider("Max Sentences per Chunk", 1, 20, 5)
+            chunker_params = {"max_sentences": max_sentences}
+            
+        # Embedder selection
+        embedder_type = st.selectbox(
+            "Embedder Type",
+            options=["tfidf", "gemini"],
+            index=0
+        )
+        # Apply text processing config
+        if st.button("Apply Text Processing", key="apply_text_proc"):
+            chunker_config = {"type": chunker_type, "params": chunker_params}
+            st.session_state.pipeline.update_component("chunker", chunker_config)
+            embedder_config = {"type": embedder_type}
+            st.session_state.pipeline.update_component("embedder", embedder_config)
+            st.success("Text processing configuration updated.")
+    
+    with config_tabs[1]:
+        st.write("**Retrieval Settings**")
+        # Retriever selection
+        retriever_type = st.selectbox(
+            "Retriever Type",
+            options=["similarity", "hybrid"],
+            index=0
+        )
+        re_ranker_type = st.selectbox(
+            "Re-ranker Type",
+            options=["cosine", "llm"],
+            index=0
+        )
+        
+        if re_ranker_type == "cosine":
+            re_ranker_params = {"type": "cosine"}
+        else:  # llm
+            re_ranker_params = {"type": "llm"}
+        
+        if re_ranker_params["type"] == "llm":
+            model = st.selectbox("LLM Model", options=["gemini-2.0-flash", "gemini-2.5-pro"], index=0)
+            re_ranker_params["model"] = model
+        # Retriever parameters
+        if retriever_type == "similarity":
+            similarity_threshold = st.slider("Similarity Threshold", 0.0, 1.0, 0.0, 0.01)
+            retriever_params = {"similarity_threshold": similarity_threshold}
+        else:  # hybrid
+            keyword_weight = st.slider("Keyword Weight", 0.0, 1.0, 0.3, 0.05)
+            retriever_params = {"keyword_weight": keyword_weight}
+            
+        # Top-k setting
+        top_k = st.slider("Top-K Documents", 1, 20, 5)
+        # Apply retrieval config
+        if st.button("Apply Retrieval", key="apply_retrieval"):
+            retriever_config = {"type": retriever_type, "params": retriever_params, "top_k": top_k}
+            reranker_config = {"type": re_ranker_type, "model": "gemini-2.0-flash"}
+            st.session_state.pipeline.update_component("retriever", retriever_config)
+            st.session_state.pipeline.update_component("reranker", reranker_config)
+            st.success("Retrieval configuration updated.")
+    
+    with config_tabs[2]:
+        st.write("**Evaluation Settings**")
+        # Evaluator selection
+        evaluator_type = st.selectbox(
+            "Evaluator Type",
+            options=["simple", "ragas"],
+            index=0
+        )
+        # Apply evaluation config
+        if st.button("Apply Evaluation", key="apply_evaluation"):
+            evaluator_config = {"type": evaluator_type}
+            st.session_state.pipeline.update_component("evaluator", evaluator_config)
+            st.success("Evaluation configuration updated.")
+
+    # Document upload
+    st.subheader("Upload and Process Documents")
+    uploaded_file = st.file_uploader(
+        "Upload Document",
+        type=["pdf", "csv", "txt", "docx"],
+        accept_multiple_files=False
+    )
+    if uploaded_file:
+        if st.button("Process Document"):
+            with st.spinner("Processing document..."):
+                try:
+                    documents, chunks = st.session_state.pipeline.process_document(uploaded_file)
+                    if documents and chunks:
+                        st.session_state.documents = documents
+                        st.session_state.chunks = chunks
+                        st.success(f"Processed {len(documents)} chunks from document")
+                    else:
+                        st.warning("No valid content was extracted from the document")
+                except Exception as e:
+                    st.error(f"Error processing document: {str(e)}")
+    
+    # Evaluation section
+    st.subheader("Evaluation")
+    ground_truth = st.text_area("Ground Truth", value="")
+    if st.button("Evaluate Last Query"):
+        if hasattr(st.session_state.pipeline, 'last_query'):
+            with st.spinner("Evaluating..."):
+                try:
+                    metrics = st.session_state.pipeline.evaluate(ground_truths=ground_truth)
+                    
+                    # Display metrics in a nice format
+                    st.write("**Evaluation Metrics:**")
+                    
+                    metrics_df = pd.DataFrame({
+                        "Metric": list(metrics.keys()),
+                        "Score": list(metrics.values())
+                    })
+                    st.dataframe(metrics_df)
+                    
+                    # Show a bar chart of metrics
+                    st.bar_chart(metrics_df.set_index("Metric"))
+                    
+                    # Store metrics in session state
+                    st.session_state.last_evaluation = metrics
+                except Exception as e:
+                    st.error(f"Error during evaluation: {str(e)}")
+        else:
+            st.warning("No query to evaluate. Ask a question first.")
+            
+    # Show previous evaluation if available
+    if "last_evaluation" in st.session_state:
+        with st.expander("Previous Evaluation Results"):
+            metrics_df = pd.DataFrame({
+                "Metric": list(st.session_state.last_evaluation.keys()),
+                "Score": list(st.session_state.last_evaluation.values())
+            })
+            st.dataframe(metrics_df)
+
+# Main chat interface
+st.subheader("Chat with your Documents")
 # Display chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-        
+# Chat input
 if prompt := st.chat_input("Ask a question about your documents"):
-    # Add user message to chat history
     st.session_state.messages.append({"role": "user", "content": prompt})
-    
-    # Display user message
     with st.chat_message("user"):
         st.markdown(prompt)
-        
-    # Generate and display assistant response
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            # Check if vectors are available
-            if hasattr(st.session_state, 'vectors') and st.session_state.vectors is not None:
+        if st.session_state.documents:
+            with st.spinner("Thinking..."):
                 try:
-                    # Transform query using the same vectorizer
-                    query_vector = st.session_state.vectorizer.transform([prompt])
-                    
-                    # Find nearest neighbors
-                    distances, indices = st.session_state.nn_model.kneighbors(query_vector, n_neighbors=4)
-                    
-                    # Convert distances to similarity scores (1 - distance)
-                    similarity_scores = 1 - distances.flatten()
-                    
-                    # Get the relevant document chunks
-                    candidate_chunks = []
-                    for i in range(len(indices[0])):
-                        idx = indices[0][i]
-                        doc = st.session_state.context_docs[idx]
-                        candidate_chunks.append(doc)
-
-                    # --- LLM-based Re-ranking Step ---
-                    # Use Gemini to select the best chunk(s) and explain why
-                    selected_chunks, rerank_explanation = rerank_chunks_with_llm(prompt, candidate_chunks, client)
-
-                    if not selected_chunks:
-                        # Fallback: use all candidate chunks if LLM fails to select
-                        selected_chunks = candidate_chunks
-                        rerank_explanation = "LLM did not select any chunks. Using all top-k retrieved chunks."
-
-                    # Join selected chunks for answer generation
-                    context = "\n\n".join(selected_chunks)
-
-                    # Show the LLM's re-ranking explanation above the answer
-                    st.markdown(f"**Re-ranking Explanation:**\n{rerank_explanation}")
-
-                    # Create the query for Gemini (final answer)
-                    answer_prompt = f"""
-                        You are an assistant that answers questions based on the following context. Do not make up answers.
-                        Answers should be detailed.
-
-                        Context:
-                        {context}
-
-                        Question: {prompt}
-
-                        Answer:
-                        """
-                    response = client.models.generate_content(model="gemini-2.0-flash", contents=answer_prompt)
-                    st.session_state.query = answer_prompt
-                    st.session_state.assistant_response = response.text
-
-                    # Display the response
-                    st.markdown(response.text)
-                    
-                    # Add assistant response to chat history
-                    st.session_state.messages.append({"role": "assistant", "content": response.text})
+                    response = st.session_state.pipeline.query(prompt)
+                    st.markdown(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
+                    st.markdown(response["answer"])
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": response["answer"]
+                    })
                 except Exception as e:
                     st.error(f"Error generating response: {str(e)}")
-            else:
-                st.error("Please upload and process documents first.")
+        else:
+            st.error("Please upload and process documents first.")
