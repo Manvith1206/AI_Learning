@@ -8,7 +8,7 @@ class CohereReranker(BaseReranker):
         api_key: your COHERE_API_KEY (or set via env var COHERE_API_KEY)
         model:   the Cohere embed model to use
         """
-        breakpoint()
+        
         key = api_key 
         if not key:
             raise ValueError("Cohere API key not provided. Set COHERE_API_KEY or pass api_key.")
@@ -21,7 +21,7 @@ class CohereReranker(BaseReranker):
             documents=documents,
             model=self.model
         )
-        breakpoint()
+        
         # Create a list of (document, score) tuples
         doc_score_pairs = [(documents[result.index], result.relevance_score) for result in response.results]
 

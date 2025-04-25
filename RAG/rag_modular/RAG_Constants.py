@@ -58,6 +58,7 @@ TEMP_DOCS_DIR = "temp_docs"
 GEMINI_API_KEY = "GEMINI_API_KEY"
 OPENAI_API_KEY = "OPEN_AI_API_KEY"
 COHERE_API_KEY = "COHERE_API_KEY"
+VOYAGE_API_KEY = "VOYAGE_API_KEY"
 
 FAITHFULNESS = "faithfulness"
 ANSWER_CORRECTNESS = "answer_correctness"
@@ -100,6 +101,7 @@ class EmbedderType(Enum):
     TFIDF = "tfidf"
     GEMINI = "gemini"
     COHERE = "cohere"
+    VOYAGE = "Voyage"
 
 class RetrieverType(Enum):
     SIMILARITY = "similarity"
@@ -129,3 +131,9 @@ class CohereLLMModel(Enum):
     RERANK_DEFAULT_MODEL = "rerank-v3.5"
     RERANK_ENGLISH = "rerank-english-v3.0"
     RERANK_MULTLINGUAL = "rerank-multilingual-v3.0"
+
+class VoyageEmbedModels(Enum):
+    VOYAGE_EMBED_DEFAULT_MODEL = "voyage-3-large"
+    VOYAGE_3_EMBED_MODEL = "voyage-3"
+    VOYAGE_3_LITE_EMBED_MODEL = "voyage-3-lite"
+    VOYAGE_CODE_2_EMBED_MODEL = "voyage-code-2"

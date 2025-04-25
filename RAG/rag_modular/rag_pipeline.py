@@ -25,6 +25,7 @@ import rag_modular.RAG_Constants as constants
 from rag_modular.similarity_retriever import SimilarityRetriever
 from .sentence_window_retreiver import SentenceWindowRetriever
 from .cohere_re_ranker import CohereReranker
+from .voyage_embedder import VoyageEmbedder
 
 class RAGPipeline:
     def __init__(self, config_manager=None):
@@ -65,6 +66,9 @@ class RAGPipeline:
             return GeminiEmbedder(api_key=st.secrets[constants.GEMINI_API_KEY])
         elif t == EmbedderType.COHERE.value:
             return CohereEmbedder(api_key=st.secrets[constants.COHERE_API_KEY],
+                                  model=cfg.get(constants.CONFIG_MODEL))
+        elif t == EmbedderType.VOYAGE.value:
+            return VoyageEmbedder(api_key=st.secrets[constants.VOYAGE_API_KEY],
                                   model=cfg.get(constants.CONFIG_MODEL))
         else:
             return TFIDFEmbedder()

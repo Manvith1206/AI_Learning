@@ -50,7 +50,7 @@ class SimpleEvaluator(BaseEvaluator):
             gt_terms = set(re.findall(r'\b\w{4,}\b', ground_truths[0].lower()))
             if gt_terms:
                 term_overlap = len(answer_terms.intersection(gt_terms)) / len(gt_terms)
-                metrics["ground_truth_overlap"] = term_overlap
+                metrics["ground_truth_overlap"] = term_overlap  
         
         # Overall score (simple average)
         metrics["overall_score"] = sum(v for v in metrics.values()) / len(metrics)

@@ -7,7 +7,7 @@ class LLMReranker(BaseReranker):
         self.llm_client = llm_client
         self.model_name = model_name
     def rerank(self, query, documents, **kwargs):
-        breakpoint()
+        
         chunk_list = "\n".join([f"{i+1}. {doc}" for i, doc in enumerate(documents)])
         rerank_prompt = f"""
             You are given a user query and a list of retrieved document chunks. 

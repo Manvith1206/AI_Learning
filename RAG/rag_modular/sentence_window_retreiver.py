@@ -179,7 +179,7 @@ class SentenceWindowRetriever(BaseRetriever):
         return merged
 
     def retrieve(self, query_embedding, documents, top_k=5, **kwargs):
-        breakpoint()
+        
         query_text = kwargs.get(constants.QUERY_TEXT)
         
         if not query_text:

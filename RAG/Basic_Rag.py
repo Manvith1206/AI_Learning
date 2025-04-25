@@ -74,16 +74,20 @@ with st.sidebar:
             index=0
         )
 
-        if embedder_type == EmbedderType.COHERE.value:
-            emb_model = st.selectbox(constants.EMBED_MODEL_DISPLAY_NAME, options=[constants.COHERE_EMBED_MODEL_DEFAULT, constants.COHERE_EMBED_MODEL_ENG])
+        if embedder_type == EmbedderType.COHERE.value or embedder_type == EmbedderType.VOYAGE.value:
+            if embedder_type == EmbedderType.COHERE.value:
+                emb_model = st.selectbox(constants.EMBED_MODEL_DISPLAY_NAME, options=[constants.COHERE_EMBED_MODEL_DEFAULT, constants.COHERE_EMBED_MODEL_ENG])
+            elif embedder_type == EmbedderType.VOYAGE.value:
+                emb_model = st.selectbox(constants.EMBED_MODEL_DISPLAY_NAME, options=[e.value for e in constants.VoyageEmbedModels])
             embedder_params = {constants.CONFIG_TYPE_PARAM: embedder_type, constants.CONFIG_MODEL: emb_model}
         else:
             embedder_params={constants.CONFIG_TYPE_PARAM: embedder_type}
-
+        
         # Apply text processing config
         if st.button("Apply Text Processing", key="apply_text_proc"):
             chunker_config = {constants.CONFIG_TYPE_PARAM: chunker_type, constants.CONFIG_PARAM: chunker_params}
             st.session_state.pipeline.update_component(constants.CONFIG_CHUNKER, chunker_config)
+            st.session_state.pipeline.update_component(constants.CONFIG_VECTOR_STORE, vector_store_params)
             
             st.session_state.pipeline.update_component(constants.CONFIG_EMBEDDER, embedder_params)
             st.success("Text processing configuration updated.")
