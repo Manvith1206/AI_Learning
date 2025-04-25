@@ -1,6 +1,7 @@
 from sklearn.neighbors import NearestNeighbors
 import numpy as np
 from .base_vector_store import BaseVectorStore
+import rag_modular.RAG_Constants as constants
 
 class SklearnVectorStore(BaseVectorStore):
     def __init__(self, metric='cosine'):
@@ -34,7 +35,7 @@ class SklearnVectorStore(BaseVectorStore):
         results = []
         for i, idx in enumerate(indices[0]):
             results.append({
-                "document": self.documents[idx],
-                "score": similarity_scores[i]
+                constants.Document: self.documents[idx],
+                constants.Score: similarity_scores[i]
             })
         return results

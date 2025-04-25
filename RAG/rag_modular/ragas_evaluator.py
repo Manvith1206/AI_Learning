@@ -1,11 +1,13 @@
 from .base_evaluator import BaseEvaluator
-from ragas.metrics import faithfulness, answer_correctness, context_precision, context_recall, answer_relevancy
+from ragas.metrics import answer_relevancy, faithfulness, answer_correctness, context_precision, context_recall
 from ragas import evaluate
 from datasets import Dataset
 import os
 import streamlit as st
 import openai
-os.environ["OPENAI_API_KEY"] = st.secrets["OPEN_AI_API_KEY"]
+import rag_modular.RAG_Constants as constants
+
+os.environ["OPENAI_API_KEY"] = st.secrets[constants.OPENAI_API_KEY]
 
 class RagasEvaluator(BaseEvaluator):
     """Evaluator that uses RAGAS metrics for RAG evaluation"""
@@ -18,7 +20,7 @@ class RagasEvaluator(BaseEvaluator):
             metrics: List of RAGAS metrics to use (default: faithfulness)
         """
         self.metrics = metrics or [faithfulness, context_precision, answer_correctness, context_recall, answer_relevancy]
-    
+
     def evaluate(self, question, answer, contexts, ground_truths=None):
         """
         Evaluate using RAGAS metrics
@@ -40,12 +42,11 @@ class RagasEvaluator(BaseEvaluator):
 
         
         data = Dataset.from_dict({
-            "question": questions,
-            "answer": answers,
-            "contexts": contexts_list,
-            "reference": [ground_truths]
+            constants.QUESTION: questions,
+            constants.ANSWER: answers,
+            constants.CONTEXTS: contexts_list,
+            constants.REFERENCE: ground_truths_list
         })
-        
 
         with st.spinner("Running RAG evaluation..."):
             result = evaluate(
@@ -55,10 +56,10 @@ class RagasEvaluator(BaseEvaluator):
         
 
         metrics_dict = {}
-        metrics_dict["faithfulness"] = result["faithfulness"]
-        metrics_dict["answer_correctness"] = result["answer_correctness"]
-        metrics_dict["context_precision"] = result["context_precision"]
-        metrics_dict["context_recall"] = result["context_recall"]
-        metrics_dict["answer_relevancy"] = result["answer_relevancy"]
-            
+        metrics_dict[constants.FAITHFULNESS] = round((result[constants.FAITHFULNESS][0]), 2)
+        metrics_dict[constants.ANSWER_CORRECTNESS] = round((result[constants.ANSWER_CORRECTNESS][0]), 2)
+        metrics_dict[constants.CONTEXT_PRECISION] = round((result[constants.CONTEXT_PRECISION][0]), 2)
+        metrics_dict[constants.CONTEXT_RECALL] = round((result[constants.CONTEXT_RECALL][0]), 2)
+        metrics_dict[constants.ANSWER_RELEVANCY] = round((result[constants.ANSWER_RELEVANCY][0]), 2)
+        
         return metrics_dict

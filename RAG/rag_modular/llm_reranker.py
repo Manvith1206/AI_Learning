@@ -1,11 +1,13 @@
 from .base_reranker import BaseReranker
 import re
+import rag_modular.RAG_Constants as constants
 
 class LLMReranker(BaseReranker):
     def __init__(self, llm_client, model_name="gemini-2.0-flash"):
         self.llm_client = llm_client
         self.model_name = model_name
     def rerank(self, query, documents, **kwargs):
+        breakpoint()
         chunk_list = "\n".join([f"{i+1}. {doc}" for i, doc in enumerate(documents)])
         rerank_prompt = f"""
             You are given a user query and a list of retrieved document chunks. 
@@ -32,9 +34,9 @@ class LLMReranker(BaseReranker):
         if best_chunks_match:
             indices_str = best_chunks_match.group(1)
             selected_indices = [int(idx.strip())-1 for idx in indices_str.split(",") if idx.strip().isdigit()]
-        explanation = explanation_match.group(1).strip() if explanation_match else "No explanation provided."
+        explanation = explanation_match.group(1).strip() if explanation_match else constants.NO_EXPLAINATION_NEEDED_MESSAGE
         selected_documents = [documents[i] for i in selected_indices if 0 <= i < len(documents)]
         if not selected_documents:
             selected_documents = documents
-            explanation = "LLM did not select any chunks. Using all retrieved chunks."
+            explanation = constants.LLM_DID_NOT_SELECT_INFO_MESSAGE
         return selected_documents, explanation

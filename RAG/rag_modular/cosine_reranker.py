@@ -1,5 +1,6 @@
 from .base_reranker import BaseReranker
 from sklearn.metrics.pairwise import cosine_similarity
+from rag_modular.RAG_Constants import RERANK_EXPLAINATION
 
 class CosineReranker(BaseReranker):
     """
@@ -21,5 +22,5 @@ class CosineReranker(BaseReranker):
         paired.sort(key=lambda x: x[1], reverse=True)
         sorted_docs = [doc for doc, score in paired]
         # Explanation
-        explanation = "Chunks sorted by cosine similarity scores (highest to lowest)."
+        explanation = RERANK_EXPLAINATION
         return sorted_docs, explanation

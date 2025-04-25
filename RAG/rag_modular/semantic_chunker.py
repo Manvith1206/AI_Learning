@@ -3,10 +3,11 @@ from sentence_transformers import SentenceTransformer
 import re
 from typing import List, Dict, Any
 from base_chunker import BaseChunker
+import rag_modular.RAG_Constants as constants
 
 class SemanticChunker(BaseChunker):
     def __init__(self, 
-                 model_name: str = 'all-MiniLM-L6-v2', 
+                 model_name: str = constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI, 
                  similarity_threshold: float = 0.7,
                  min_chunk_size: int = 3,
                  max_chunk_size: int = 20):
@@ -24,8 +25,6 @@ class SemanticChunker(BaseChunker):
         self.min_chunk_size = min_chunk_size
         self.max_chunk_size = max_chunk_size
     def split_text(self, text):
-        breakpoint()
-        
         # Chunk the document
         chunks = self.chunk_text(text)
         print("Chunks: ")
@@ -78,7 +77,7 @@ class SemanticChunker(BaseChunker):
         """
         boundaries = []
         current_chunk_size = 0
-        breakpoint()
+        
         for i in range(len(embeddings) - 1):
             current_chunk_size += 1
             similarity = float(self._cosine_similarity(embeddings[i], embeddings[i+1]))
@@ -95,7 +94,7 @@ class SemanticChunker(BaseChunker):
         elif not boundaries:
             boundaries.append(len(embeddings))
         
-        breakpoint()
+        
         return boundaries
     
     def chunk_text(self, text: str) -> List[Dict[Any, Any]]:
@@ -109,7 +108,7 @@ class SemanticChunker(BaseChunker):
             List of dictionaries containing chunk text and metadata
         """
         # Split text into sentences
-        breakpoint()
+        
         sentences = self._segment_into_sentences(text)
         if not sentences:
             return []

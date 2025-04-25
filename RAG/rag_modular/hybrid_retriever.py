@@ -1,4 +1,5 @@
 from .base_retriever import BaseRetriever
+import rag_modular.RAG_Constants as constants
 
 class HybridRetriever(BaseRetriever):
     """
@@ -22,14 +23,14 @@ class HybridRetriever(BaseRetriever):
             List of retrieved documents with combined scores
         """
         # Get vector store from kwargs
-        vector_store = kwargs.get('vector_store')
+        vector_store = kwargs.get(constants.CONFIG_VECTOR_STORE)
         if not vector_store:
-            raise ValueError("Vector store must be provided")
+            raise ValueError(constants.VECTOR_STORE_MUST_BE_PROVIDED_ERROR_MESSAGE)
             
         # Get query text from kwargs
-        query_text = kwargs.get('query_text')
+        query_text = kwargs.get(constants.QUERY_TEXT)
         if not query_text:
-            raise ValueError("Query text must be provided")
+            raise ValueError(constants.QUERY_TEXT_MUST_BE_PROVIDED_ERROR_MESSAGE)
             
         # Get semantic search results
         semantic_results = vector_store.search(query_embedding, top_k=top_k*2)
@@ -40,18 +41,18 @@ class HybridRetriever(BaseRetriever):
         query_terms = set(query_text.lower().split())
         
         for i, doc in enumerate(documents):
-            content = doc["page_content"].lower()
+            content = doc[constants.PAGE_CONTENT].lower()
             # Count matching terms
             matches = sum(1 for term in query_terms if term in content)
             # Normalize by query length
             score = matches / max(1, len(query_terms))
-            keyword_scores[doc["id"]] = score
+            keyword_scores[doc[constants.ID]] = score
         
         # Combine scores
         combined_results = []
         for result in semantic_results:
-            doc_id = result["document"]["id"]
-            semantic_score = result["score"]
+            doc_id = result[constants.Document][constants.ID]
+            semantic_score = result[constants.Score]
             keyword_score = keyword_scores.get(doc_id, 0)
             
             # Weighted combination
@@ -61,12 +62,12 @@ class HybridRetriever(BaseRetriever):
             )
             
             combined_results.append({
-                "document": result["document"],
-                "score": combined_score,
-                "semantic_score": semantic_score,
-                "keyword_score": keyword_score
+                constants.Document: result[constants.Document],
+                constants.Score: combined_score,
+                constants.SEMANTIC_SCORE: semantic_score,
+                constants.KEYWORD_SCORE: keyword_score
             })
         
         # Sort by combined score and take top_k
-        combined_results.sort(key=lambda x: x["score"], reverse=True)
+        combined_results.sort(key=lambda x: x[constants.Score], reverse=True)
         return combined_results[:top_k]

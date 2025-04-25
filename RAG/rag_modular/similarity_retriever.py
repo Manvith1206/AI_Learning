@@ -1,5 +1,6 @@
 import numpy as np
 from .base_retriever import BaseRetriever
+import rag_modular.RAG_Constants as constants
 
 class SimilarityRetriever(BaseRetriever):
     """Retriever that uses cosine similarity to find relevant documents"""
@@ -20,9 +21,9 @@ class SimilarityRetriever(BaseRetriever):
             List of retrieved documents with similarity scores
         """
         # Get vector store from kwargs
-        vector_store = kwargs.get('vector_store')
+        vector_store = kwargs.get(constants.CONFIG_VECTOR_STORE)
         if not vector_store:
-            raise ValueError("Vector store must be provided")
+            raise ValueError(constants.VECTOR_STORE_MUST_BE_PROVIDED_ERROR_MESSAGE)
             
         # Get search results from vector store
         results = vector_store.search(query_embedding, top_k=top_k)
@@ -31,7 +32,7 @@ class SimilarityRetriever(BaseRetriever):
         # Filter by similarity threshold if needed
         filtered_results = [
             result for result in results 
-            if result["score"] >= self.similarity_threshold
+            if result[constants.Score] >= self.similarity_threshold
         ]
         print("Filtered results successfully")
         print(filtered_results)

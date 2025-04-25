@@ -11,6 +11,7 @@ class TFIDFEmbedder(BaseEmbedder):
         return self.vectors
     def transform(self, texts):
         # Ensure fit() has been called
+        breakpoint()
         if self.vectors is None:
             raise ValueError("TF-IDF Embedder not fitted. Please process documents (fit) before querying.")
         return self.vectorizer.transform(texts)

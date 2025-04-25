@@ -1,17 +1,24 @@
 import os
+from rag_modular.RAG_Constants import (
+    ChunkerType, EmbedderType,
+    RetrieverType, RerankerType,
+    EvaluatorType, LLMServiceType, GeminiLLMModel
+)
+import rag_modular.RAG_Constants as constants
 
 class ConfigManager:
     """Manages configuration for RAG components"""
     def __init__(self, config=None):
         self.config = config or {
-            "chunker": {"type": "recursive", "params": {"chunk_size": 600, "chunk_overlap": 200}},
-            "embedder": {"type": "tfidf"},
-            "vector_store": {"type": "sklearn", "params": {"metric": "cosine"}},
-            "retriever": {"type": "similarity", "params": {"similarity_threshold": 0.0}, "top_k": 5},
-            "reranker": {"type": "llm", "model": "gemini-2.0-flash"},
-            "llm": {"type": "gemini", "model": "gemini-2.0-flash"},
-            "evaluator": {"type": "simple"}
+            constants.CONFIG_CHUNKER: {constants.CONFIG_TYPE_PARAM: ChunkerType.RECURSIVE.value, constants.CONFIG_PARAM: {constants.CONFIG_CHUNK_SIZE_PARAM: 600, constants.CONFIG_CHUNK_OVERLAP_PARAM: 200}},
+            constants.CONFIG_EMBEDDER: {constants.CONFIG_TYPE_PARAM: EmbedderType.TFIDF.value, constants.CONFIG_MODEL: constants.COHERE_EMBED_MODEL_DEFAULT},
+            constants.CONFIG_VECTOR_STORE: {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_SKLEARN, constants.CONFIG_PARAM: {constants.CONFIG_VECTOR_STORE_METRIC: constants.CONFIG_METRIC_COSINE}},
+            constants.CONFIG_RETRIEVER: {constants.CONFIG_TYPE_PARAM: RetrieverType.SIMILARITY.value, constants.CONFIG_PARAM: {constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.0}, constants.CONFIG_TOP_K_PARAM: 5},
+            constants.CONFIG_LLM: {constants.CONFIG_TYPE_PARAM: RerankerType.LLM.value, constants.CONFIG_PARAM: {constants.CONFIG_METRIC_COSINE: constants.CONFIG_METRIC_COSINE}},
+            constants.CONFIG_RERANKER: {constants.CONFIG_TYPE_PARAM: LLMServiceType.GEMINI.value, constants.CONFIG_PARAM: GeminiLLMModel.GEMINI_FLASH.value},
+            constants.CONFIG_EVALUATOR: {constants.CONFIG_TYPE_PARAM: EvaluatorType.SIMPLE.value}
         }
+
     def get_config(self, component=None):
         if component:
             return self.config.get(component, {})
