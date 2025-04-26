@@ -89,6 +89,7 @@ with st.sidebar:
             st.session_state.pipeline.update_component(constants.CONFIG_CHUNKER, chunker_config)
             st.session_state.pipeline.update_component(constants.CONFIG_VECTOR_STORE, vector_store_params)
             
+            st.session_state.pipeline.update_component(constants.CONFIG_CHUNKER, chunker_config)            
             st.session_state.pipeline.update_component(constants.CONFIG_EMBEDDER, embedder_params)
             st.success("Text processing configuration updated.")
     

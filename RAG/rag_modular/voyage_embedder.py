@@ -9,7 +9,7 @@ class VoyageEmbedder(BaseEmbedder):
         model:   the Cohere embed model to use
         """ 
         key = api_key
-        self.client = voyageai.Client(api_key=api_key)
+        self.client = voyageai.Client(api_key=key)
         self.model = model
         self.embeddings = None
         
