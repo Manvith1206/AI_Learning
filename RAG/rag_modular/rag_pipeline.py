@@ -26,6 +26,7 @@ from rag_modular.similarity_retriever import SimilarityRetriever
 from .sentence_window_retreiver import SentenceWindowRetriever
 from .cohere_re_ranker import CohereReranker
 from .voyage_embedder import VoyageEmbedder
+from .FAISS_Vector_Store import FAISS_Vector_Store
 
 class RAGPipeline:
     def __init__(self, config_manager=None):
@@ -47,6 +48,7 @@ class RAGPipeline:
     def _build_chunker(self):
         cfg = self.config_manager.get_config(constants.CONFIG_CHUNKER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
+        
         params = cfg.get(constants.CONFIG_PARAM, {})
         if t == ChunkerType.RECURSIVE.value:
             return RecursiveChunker(**params)
@@ -60,10 +62,12 @@ class RAGPipeline:
     def _build_embedder(self):
         cfg = self.config_manager.get_config(constants.CONFIG_EMBEDDER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
+        model_name = cfg.get(constants.CONFIG_MODEL)
+
         if t == EmbedderType.TFIDF.value:
             return TFIDFEmbedder()
         elif t == EmbedderType.GEMINI.value:
-            return GeminiEmbedder(api_key=st.secrets[constants.GEMINI_API_KEY])
+            return GeminiEmbedder(api_key=st.secrets[constants.GEMINI_API_KEY], model_name=model_name)
         elif t == EmbedderType.COHERE.value:
             return CohereEmbedder(api_key=st.secrets[constants.COHERE_API_KEY],
                                   model=cfg.get(constants.CONFIG_MODEL))
@@ -76,7 +80,12 @@ class RAGPipeline:
     def _build_vector_store(self):
         cfg = self.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
         params = cfg.get(constants.CONFIG_PARAM, {})
-        return SklearnVectorStore(**params)
+        type = cfg.get(constants.CONFIG_TYPE_PARAM)
+        
+        if type == constants.CONFIG_VECTOR_STORE_SKLEARN:
+            return SklearnVectorStore(**params)
+        else:
+            return FAISS_Vector_Store()
 
     def _build_retriever(self):
         cfg = self.config_manager.get_config(constants.CONFIG_RETRIEVER)
@@ -156,54 +165,51 @@ class RAGPipeline:
             constants.TXT_EXTENSION: TXTLoader(),
             constants.CSV_EXTENSION: CSVLoader(),
         }
-        try:
-            os.makedirs(temp_dir, exist_ok=True)
-            file_ext = os.path.splitext(file.name)[1].lower()
-            file_path = os.path.join(temp_dir, file.name)
-            with open(file_path, "wb") as f:
-                f.write(file.getbuffer())
-            print("File saved successfully")
-            if file_ext in loaders:
-                text = loaders[file_ext].load_document(file_path)
-            else:
-                raise ValueError(f"Unsupported file type: {file_ext}")
-            print("Documents loaded succesfully")
-            if not text:
-                return None, None
-            print("Text loaded successfully")
-            chunks =  self.chunker.split_text(text=text)
+        os.makedirs(temp_dir, exist_ok=True)
+        file_ext = os.path.splitext(file.name)[1].lower()
+        file_path = os.path.join(temp_dir, file.name)
+        with open(file_path, "wb") as f:
+            f.write(file.getbuffer())
+        print("File saved successfully")
+        if file_ext in loaders:
+            text = loaders[file_ext].load_document(file_path)
+        else:
+            raise ValueError(f"Unsupported file type: {file_ext}")
+        print("Documents loaded succesfully")
+        if not text:
+            return None, None
+        print("Text loaded successfully")
+        chunks =  self.chunker.split_text(text=text)
 
 
-            print("Chunks generated successfully")
-            
-            documents = []
-            for chunk in chunks:
-                doc_id = str(uuid.uuid4())
-                documents.append({
-                    constants.ID: doc_id,
-                    constants.PAGE_CONTENT: chunk,
-                    constants.METADATA: {"source": file.name}
-                })
-            print("Docs loaded from chunks data")
-            texts = [doc[constants.PAGE_CONTENT] for doc in documents]
-            print("Texts extracted successfully")
-            embeddings = self.embedder.fit(texts)
-            st.success(f"Embedder: {self.embedder}")
-            
-            print("Embeddings generated successfully")
-            print(type(embeddings))
-            print(type(documents))
-            
-            self.vector_store.add_embeddings(embeddings, documents)
-            print("Self docs: ")
-            print(self.vector_store.documents[0])
-            print("Documents processed successfully")
-            return documents, chunks
-        except Exception as e:
-            st.error(f"Error processing document: in Process Doc Function {str(e)}")
-        finally:
-            if os.path.exists(file_path):
-                os.remove(file_path)
+        print("Chunks generated successfully")
+        documents = []
+        for chunk in chunks:
+            doc_id = str(uuid.uuid4())
+            documents.append({
+                constants.ID: doc_id,
+                constants.PAGE_CONTENT: chunk,
+                constants.METADATA: {"source": file.name}
+            })
+        print("Docs loaded from chunks data")
+        texts = [doc[constants.PAGE_CONTENT] for doc in documents]
+        print("Texts extracted successfully")
+        embeddings = self.embedder.fit(texts)
+        st.success(f"Embedder: {self.embedder}")
+        
+        print("Embeddings generated successfully")
+        print(type(embeddings))
+        print(type(documents))
+        
+        documents = self.vector_store.format_documents(documents)
+        self.vector_store.add_embeddings(embeddings, documents)
+        
+
+        print("Self docs: ")
+        print(self.vector_store.documents[0])
+        print("Documents processed successfully")
+
+        return documents, chunks
 
     def query(self, query_text, top_k=None):
         print("Query Started")
@@ -218,6 +224,13 @@ class RAGPipeline:
         
         # Generate query embedding
         query_embedding = self.embedder.transform([query_text])
+        if isinstance(query_embedding, list) and query_embedding:
+            first = query_embedding[0]
+            if hasattr(first, "values"):
+                query_embedding = [e.values for e in query_embedding]
+            elif hasattr(first, "embedding"):
+                query_embedding = [e.embedding for e in query_embedding]
+
         print("Query embedding generated successfully")
         
         retriever_config = self.config_manager.get_config(constants.CONFIG_RETRIEVER)
@@ -260,7 +273,7 @@ class RAGPipeline:
         # Extract document content
         print("Docs retrieved successfully")
         print(retrieved_docs)
-        breakpoint()
+        
         # Rerank documents
         reranked_docs, explanation = self.reranker.rerank(query_text, retrieved_docs)
         

@@ -66,19 +66,34 @@ with st.sidebar:
         elif chunker_type == ChunkerType.SENTENCE.value:  
             max_sentences = st.slider(constants.MAX_SENTENCES_DISPLAY_NAME, 1, 20, 5)
             chunker_params = {constants.CONFIG_MAX_SENTENCES: max_sentences}
-            
+        
+        # Vector Store
+        vector_store = st.selectbox(
+            constants.VECTOR_STORE_DISPLAY_NAME,
+            options=[e.value for e in constants.VectorStore],
+            index=0            
+        )
+        if vector_store == constants.VectorStore.SCIKIT_LEARN.value:
+            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_SKLEARN, constants.CONFIG_VECTOR_STORE_METRIC: {constants.CONFIG_METRIC_COSINE}}
+        else:
+            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_FAISS}
+
         # Embedder selection
         embedder_type = st.selectbox(
             constants.EMBEDDER_TYPE_DISPLAY_NAME,
             options=[e.value for e in EmbedderType],
             index=0
         )
-
-        if embedder_type == EmbedderType.COHERE.value or embedder_type == EmbedderType.VOYAGE.value:
+        
+        if embedder_type == EmbedderType.COHERE.value or embedder_type == EmbedderType.VOYAGE.value or embedder_type == EmbedderType.GEMINI.value:
+            emb_options = []
             if embedder_type == EmbedderType.COHERE.value:
-                emb_model = st.selectbox(constants.EMBED_MODEL_DISPLAY_NAME, options=[constants.COHERE_EMBED_MODEL_DEFAULT, constants.COHERE_EMBED_MODEL_ENG])
+                emb_options = constants.CohereEmbedModels
             elif embedder_type == EmbedderType.VOYAGE.value:
-                emb_model = st.selectbox(constants.EMBED_MODEL_DISPLAY_NAME, options=[e.value for e in constants.VoyageEmbedModels])
+                emb_options = constants.VoyageEmbedModels
+            elif embedder_type == EmbedderType.GEMINI.value:
+                emb_options = constants.GeminiEmbedModels
+            emb_model = st.selectbox(constants.EMBED_MODEL_DISPLAY_NAME, options=[e.value for e in emb_options])
             embedder_params = {constants.CONFIG_TYPE_PARAM: embedder_type, constants.CONFIG_MODEL: emb_model}
         else:
             embedder_params={constants.CONFIG_TYPE_PARAM: embedder_type}
@@ -86,11 +101,10 @@ with st.sidebar:
         # Apply text processing config
         if st.button("Apply Text Processing", key="apply_text_proc"):
             chunker_config = {constants.CONFIG_TYPE_PARAM: chunker_type, constants.CONFIG_PARAM: chunker_params}
-            st.session_state.pipeline.update_component(constants.CONFIG_CHUNKER, chunker_config)
-            st.session_state.pipeline.update_component(constants.CONFIG_VECTOR_STORE, vector_store_params)
-            
             st.session_state.pipeline.update_component(constants.CONFIG_CHUNKER, chunker_config)            
             st.session_state.pipeline.update_component(constants.CONFIG_EMBEDDER, embedder_params)
+            
+            st.session_state.pipeline.update_component(constants.CONFIG_VECTOR_STORE, vector_store_params)
             st.success("Text processing configuration updated.")
     
     with config_tabs[1]:
@@ -177,17 +191,14 @@ with st.sidebar:
     if uploaded_file:
         if st.button("Process Document"):
             with st.spinner("Processing document..."):
-                try:
-                    documents, chunks = st.session_state.pipeline.process_document(uploaded_file)
+                documents, chunks = st.session_state.pipeline.process_document(uploaded_file)
                     
-                    if documents and chunks:
-                        st.session_state.documents = documents
-                        st.session_state.chunks = chunks
-                        st.success(f"Processed {len(documents)} chunks from document")
-                    else:
-                        st.warning("No valid content was extracted from the document")
-                except Exception as e:
-                    st.error(f"Error processing document: {str(e)}")
+                if documents and chunks:
+                    st.session_state.documents = documents
+                    st.session_state.chunks = chunks
+                    st.success(f"Processed {len(documents)} chunks from document")
+                else:
+                    st.warning("No valid content was extracted from the document")
     
     # Evaluation section
     st.subheader("Evaluation")
@@ -208,10 +219,12 @@ with st.sidebar:
                 overallScore = 0
                 for score in list(metrics.values()):
                     overallScore += score
-                st.write("Overall Score: " + overallScore)
+                breakpoint()
+                overallScore = overallScore / metrics_df.count()
+                st.write("Overall Score: " + str(overallScore))
                 # Show a bar chart of metrics
                 st.bar_chart(metrics_df.set_index("Metric"))
-                
+
                 # Store metrics in session state
                 st.session_state.last_evaluation = metrics
             except Exception as e:

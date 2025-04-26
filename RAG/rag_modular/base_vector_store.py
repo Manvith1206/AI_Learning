@@ -7,3 +7,6 @@ class BaseVectorStore(ABC):
     @abstractmethod
     def search(self, query_embedding, top_k=5):
         pass
+    @abstractmethod
+    def format_documents(self, documents):
+        pass

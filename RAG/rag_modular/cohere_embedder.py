@@ -5,7 +5,7 @@ import os
 import rag_modular.RAG_Constants as constants
 
 class CohereEmbedder(BaseEmbedder):
-    def __init__(self, api_key: str = None, model: str = constants.COHERE_EMBED_MODEL_ENG):
+    def __init__(self, api_key: str = None, model: str = constants.CohereEmbedModels.COHERE_EMBED_MODEL_ENG):
         """
         api_key: your COHERE_API_KEY (or set via env var COHERE_API_KEY)
         model:   the Cohere embed model to use

@@ -11,18 +11,26 @@ class SklearnVectorStore(BaseVectorStore):
         self.embeddings = None
 
     def add_embeddings(self, embeddings, documents):
-        # assign documents and log for debugging
+        # assign documents
         self.documents = documents
-        print("SklearnVectorStore.documents set to:")
-        print(self.documents[0])
+        # Unwrap wrapper objects (e.g. ContentEmbedding) into raw floats
+        if isinstance(embeddings, list) and embeddings:
+            first = embeddings[0]
+            if hasattr(first, "values"):
+                embeddings = [e.values for e in embeddings]
+            elif hasattr(first, "embedding"):
+                embeddings = [e.embedding for e in embeddings]
+        # Convert to numpy array
         if hasattr(embeddings, "toarray"):
             embeddings = embeddings.toarray()
         if not isinstance(embeddings, np.ndarray):
-            embeddings = np.array(embeddings)
+            embeddings = np.array(embeddings, dtype=np.float32)
+        # store embeddings and fit model
         self.embeddings = embeddings
         n_neighbors = min(5, len(documents))
         self.nn_model = NearestNeighbors(n_neighbors=n_neighbors, metric=self.metric)
         self.nn_model.fit(embeddings)
+
     def search(self, query_embedding, top_k=5):
         if self.nn_model is None:
             raise ValueError("Vector store not initialized. Call add_embeddings first.")
@@ -39,3 +47,6 @@ class SklearnVectorStore(BaseVectorStore):
                 constants.Score: similarity_scores[i]
             })
         return results
+
+    def format_documents(self, documents):
+        return documents

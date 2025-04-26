@@ -6,6 +6,7 @@ TEXT_PROCESSING_DISPLAY_NAME = "Text Processing"
 RETRIEVAL_DISPLAY_NAME = "Retrieval"
 EVALUATION_DISPLAY_NAME = "Evaluation"
 EMBEDDER_TYPE_DISPLAY_NAME = "Embedder Type"
+VECTOR_STORE_DISPLAY_NAME = "Vector Store"
 
 # Config Manager Names
 CONFIG_CHUNKER = "chunker"
@@ -20,6 +21,8 @@ CONFIG_PARAM = "params"
 CONFIG_CHUNK_SIZE_PARAM = "chunk_size"
 CONFIG_CHUNK_OVERLAP_PARAM = "chunk_overlap"
 CONFIG_VECTOR_STORE_SKLEARN = "sklearn"
+
+CONFIG_VECTOR_STORE_FAISS = "faiss"
 CONFIG_VECTOR_STORE_METRIC = "metric"
 CONFIG_SIMILARITY_THRESHOLD_PARAM = "similarity_threshold"
 CONFIG_TOP_K_PARAM = "top_k"
@@ -69,8 +72,6 @@ ANSWER_RELEVANCY = "answer_relevancy"
 # Model Names
 SENTENCE_TRANSFORMER_MODEL_ALL_MINI = "all-MiniLM-L6-v2"
 SENTENCE_TRANSFORMER_MODEL_PARAPHRASE_MINI = "paraphrase-MiniLM-L3-v2"
-COHERE_EMBED_MODEL_DEFAULT = "embed-v4.0"
-COHERE_EMBED_MODEL_ENG = "embed-english-v3.0"
 
 MIN_CHUNK_SIZE_DISPLAY_NAME = "Min Chunk Size"
 MAX_CHUNK_SIZE_DISPLAY_NAME = "Max Chunk Size"
@@ -126,14 +127,32 @@ class GeminiLLMModel(Enum):
     GEMINI_FLASH = "gemini-2.0-flash"
     GEMINI_PRO = "gemini-2.5-pro"
 
+# vector stores
+class VectorStore(Enum):
+    SCIKIT_LEARN = "sckit_learn"
+    FAISS = "faiss"
+
 # Common LLM model names
 class CohereLLMModel(Enum):
     RERANK_DEFAULT_MODEL = "rerank-v3.5"
     RERANK_ENGLISH = "rerank-english-v3.0"
     RERANK_MULTLINGUAL = "rerank-multilingual-v3.0"
 
+class CohereEmbedModels(Enum):
+    COHERE_EMBED_MODEL_DEFAULT = "embed-v4.0"
+    COHERE_EMBED_MODEL_ENG = "embed-english-v3.0"
+
 class VoyageEmbedModels(Enum):
     VOYAGE_EMBED_DEFAULT_MODEL = "voyage-3-large"
     VOYAGE_3_EMBED_MODEL = "voyage-3"
     VOYAGE_3_LITE_EMBED_MODEL = "voyage-3-lite"
     VOYAGE_CODE_2_EMBED_MODEL = "voyage-code-2"
+
+class GeminiEmbedModels(Enum):
+    GEMINI_EMBED_EXP_MODEL =  "gemini-embedding-exp-03-07"
+    GEMINI_TEXT_EMBED_MODEL = "models/text-embedding-004"
+    GEMINI_EMBED_001_MODEL = "models/embedding-001"
+
+
+
+
