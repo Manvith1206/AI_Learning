@@ -113,6 +113,7 @@ class RerankerType(Enum):
     COSINE = "cosine"
     LLM = "llm"
     COHERE = "cohere"
+    JINA = 'jina'
 
 class EvaluatorType(Enum):
     SIMPLE = "simple"
@@ -153,6 +154,10 @@ class GeminiEmbedModels(Enum):
     GEMINI_TEXT_EMBED_MODEL = "models/text-embedding-004"
     GEMINI_EMBED_001_MODEL = "models/embedding-001"
 
+class JINA_RERANKER_MODELS(Enum):
+    JINA_RERANKER_V1_TURBO = "jina-reranker-v1-turbo-en"
+    JINA_RERANKER_TINY = "jina-reranker-v1-tiny-en"
+    JINA_RERANKER_M0 = "jina-reranker-m0"
 
 
 

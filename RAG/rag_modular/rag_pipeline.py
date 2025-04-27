@@ -27,6 +27,7 @@ from .sentence_window_retreiver import SentenceWindowRetriever
 from .cohere_re_ranker import CohereReranker
 from .voyage_embedder import VoyageEmbedder
 from .FAISS_Vector_Store import FAISS_Vector_Store
+from .jina_reranker import JinaReranker
 
 class RAGPipeline:
     def __init__(self, config_manager=None):
@@ -119,6 +120,8 @@ class RAGPipeline:
             return LLMReranker(self.llm_service.client, model_name=model)
         elif t == RerankerType.COHERE.value:
             return CohereReranker(st.secrets[constants.COHERE_API_KEY], model_name=model)
+        elif t == RerankerType.JINA.value:
+            return JinaReranker(model_name=model)
         elif t == RerankerType.COSINE.value:
             return CosineReranker(self.embedder)
         else:

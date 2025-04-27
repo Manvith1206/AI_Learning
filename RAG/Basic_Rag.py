@@ -130,8 +130,10 @@ with st.sidebar:
         elif re_ranker_type == RerankerType.COHERE.value:# cohere
             re_ranker_params = {constants.CONFIG_TYPE_PARAM: RerankerType.COHERE.value}
             st.session_state.LLM_Model_Options = [e.value for e in constants.CohereLLMModel]
-
-        if re_ranker_params[constants.CONFIG_TYPE_PARAM] == RerankerType.LLM.value or re_ranker_params[constants.CONFIG_TYPE_PARAM] == RerankerType.COHERE.value:
+        elif re_ranker_type == RerankerType.JINA.value:
+            re_ranker_params = {constants.CONFIG_TYPE_PARAM: RerankerType.JINA.value}
+            st.session_state.LLM_Model_Options = [e.value for e in constants.JINA_RERANKER_MODELS]
+        if re_ranker_params[constants.CONFIG_TYPE_PARAM] == RerankerType.LLM.value or re_ranker_params[constants.CONFIG_TYPE_PARAM] == RerankerType.COHERE.value or re_ranker_params[constants.CONFIG_TYPE_PARAM] == RerankerType.JINA.value:
             model = st.selectbox(constants.MODEL_NAME_DISPLAY_NAME, options=[e for e in st.session_state.LLM_Model_Options], index=0)
             re_ranker_params[constants.CONFIG_MODEL] = model
 
@@ -155,10 +157,8 @@ with st.sidebar:
             retriever_config = {constants.CONFIG_TYPE_PARAM: retriever_type, constants.CONFIG_PARAM: retriever_params, constants.CONFIG_TOP_K_PARAM: top_k}
             if re_ranker_type == RerankerType.LLM.value:
                 service = st.selectbox("LLM Service", options=[e.value for e in constants.LLMServiceType])
-
                 reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: model}
-            elif re_ranker_type == RerankerType.COHERE.value:
-
+            elif re_ranker_type == RerankerType.COHERE.value or re_ranker_type == RerankerType.JINA.value:
                 reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: model}
             else:
                 reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: {}}
