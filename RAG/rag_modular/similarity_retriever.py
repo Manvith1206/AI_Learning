@@ -20,6 +20,7 @@ class SimilarityRetriever(BaseRetriever):
         Returns:
             List of retrieved documents with similarity scores
         """
+        
         # Get vector store from kwargs
         vector_store = kwargs.get(constants.CONFIG_VECTOR_STORE)
         if not vector_store:

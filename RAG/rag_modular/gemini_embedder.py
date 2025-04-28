@@ -25,7 +25,7 @@ class GeminiEmbedder(BaseEmbedder):
             elif hasattr(first, "embedding"):
                 resp.embeddings = [e.embedding for e in resp.embeddings]
         self.embeddings = resp.embeddings
-        breakpoint()
+        
         return self.embeddings
     
     def transform(self, texts):

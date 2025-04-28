@@ -75,6 +75,8 @@ with st.sidebar:
         )
         if vector_store == constants.VectorStore.SCIKIT_LEARN.value:
             vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_SKLEARN, constants.CONFIG_VECTOR_STORE_METRIC: {constants.CONFIG_METRIC_COSINE}}
+        elif vector_store == constants.VectorStore.PINE_CONE.value:
+            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_PINCONE}
         else:
             vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_FAISS}
 
@@ -219,7 +221,7 @@ with st.sidebar:
                 overallScore = 0
                 for score in list(metrics.values()):
                     overallScore += score
-                breakpoint()
+                
                 overallScore = overallScore / metrics_df.count()
                 st.write("Overall Score: " + str(overallScore))
                 # Show a bar chart of metrics

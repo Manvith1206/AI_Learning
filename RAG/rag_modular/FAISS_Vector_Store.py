@@ -19,7 +19,7 @@ class FAISS_Vector_Store(BaseVectorStore):
         vector_store_data_path = "vector_store_data_path"
         self.documents = documents
         self.embeddings = embeddings
-        breakpoint()
+        
         if isinstance(embeddings, np.ndarray) and embeddings.ndim == 2:
             # For dense embeddings
             dimension = embeddings.shape[1]
@@ -42,7 +42,7 @@ class FAISS_Vector_Store(BaseVectorStore):
 
     def search(self, query_embedding, top_k=5):
         """Search for most similar documents in FAISS index."""
-        breakpoint()
+        
         if self.index is None:
             raise ValueError("Vector store not initialized. Call add_embeddings first.")
         

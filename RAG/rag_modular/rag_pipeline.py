@@ -16,6 +16,8 @@ import streamlit as st
 from .cosine_reranker import CosineReranker
 from .semantic_chunker import SemanticChunker
 from .cohere_embedder import CohereEmbedder
+from .pinecone_vector_store import PineConeVectorStore
+
 from rag_modular.RAG_Constants import (
     ChunkerType, EmbedderType,
     RetrieverType, RerankerType,
@@ -82,9 +84,12 @@ class RAGPipeline:
         cfg = self.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
         params = cfg.get(constants.CONFIG_PARAM, {})
         type = cfg.get(constants.CONFIG_TYPE_PARAM)
-        
+        api_key = st.secrets[constants.PINECONE_API_KEY]
+
         if type == constants.CONFIG_VECTOR_STORE_SKLEARN:
             return SklearnVectorStore(**params)
+        elif type == constants.CONFIG_VECTOR_STORE_PINCONE:
+            return PineConeVectorStore(api_key=api_key, index_name=constants.PINE_CONE_INDEX_NAME)
         else:
             return FAISS_Vector_Store()
 
@@ -208,8 +213,6 @@ class RAGPipeline:
         self.vector_store.add_embeddings(embeddings, documents)
         
 
-        print("Self docs: ")
-        print(self.vector_store.documents[0])
         print("Documents processed successfully")
 
         return documents, chunks

@@ -21,6 +21,8 @@ CONFIG_PARAM = "params"
 CONFIG_CHUNK_SIZE_PARAM = "chunk_size"
 CONFIG_CHUNK_OVERLAP_PARAM = "chunk_overlap"
 CONFIG_VECTOR_STORE_SKLEARN = "sklearn"
+CONFIG_VECTOR_STORE_PINCONE = "pinecone"
+
 
 CONFIG_VECTOR_STORE_FAISS = "faiss"
 CONFIG_VECTOR_STORE_METRIC = "metric"
@@ -58,10 +60,13 @@ RERANK_EXPLANATION = "rerank_explanation"
 LAST_QUERY = "last_query"
 TEMP_DOCS_DIR = "temp_docs"
 
+PINE_CONE_INDEX_NAME = "test-rag-v1"
+
 GEMINI_API_KEY = "GEMINI_API_KEY"
 OPENAI_API_KEY = "OPEN_AI_API_KEY"
 COHERE_API_KEY = "COHERE_API_KEY"
 VOYAGE_API_KEY = "VOYAGE_API_KEY"
+PINECONE_API_KEY = "PINECONE_API_KEY"
 
 FAITHFULNESS = "faithfulness"
 ANSWER_CORRECTNESS = "answer_correctness"
@@ -132,6 +137,7 @@ class GeminiLLMModel(Enum):
 class VectorStore(Enum):
     SCIKIT_LEARN = "sckit_learn"
     FAISS = "faiss"
+    PINE_CONE = "pine-cone"
 
 # Common LLM model names
 class CohereLLMModel(Enum):
