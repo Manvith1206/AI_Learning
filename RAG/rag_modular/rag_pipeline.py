@@ -30,6 +30,9 @@ from .cohere_re_ranker import CohereReranker
 from .voyage_embedder import VoyageEmbedder
 from .FAISS_Vector_Store import FAISS_Vector_Store
 from .jina_reranker import JinaReranker
+from .mistral_embedder import MistralEmbedder
+from .claude_service import ClaudeService
+import anthropic
 
 class RAGPipeline:
     def __init__(self, config_manager=None):
@@ -51,7 +54,6 @@ class RAGPipeline:
     def _build_chunker(self):
         cfg = self.config_manager.get_config(constants.CONFIG_CHUNKER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
-        
         params = cfg.get(constants.CONFIG_PARAM, {})
         if t == ChunkerType.RECURSIVE.value:
             return RecursiveChunker(**params)
@@ -66,7 +68,6 @@ class RAGPipeline:
         cfg = self.config_manager.get_config(constants.CONFIG_EMBEDDER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         model_name = cfg.get(constants.CONFIG_MODEL)
-
         if t == EmbedderType.TFIDF.value:
             return TFIDFEmbedder()
         elif t == EmbedderType.GEMINI.value:
@@ -77,6 +78,10 @@ class RAGPipeline:
         elif t == EmbedderType.VOYAGE.value:
             return VoyageEmbedder(api_key=st.secrets[constants.VOYAGE_API_KEY],
                                   model=cfg.get(constants.CONFIG_MODEL))
+        elif t == EmbedderType.MISTRAL.value:
+            return MistralEmbedder(api_key=st.secrets[constants.MISTRAL_API_KEY],
+                                  model=cfg.get(constants.CONFIG_MODEL),
+                                  )
         else:
             return TFIDFEmbedder()
 
@@ -109,20 +114,26 @@ class RAGPipeline:
 
     def _build_llm_service(self):
         cfg = self.config_manager.get_config(constants.CONFIG_LLM)
+        
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         from google import genai
         client = genai.Client(api_key=st.secrets[constants.GEMINI_API_KEY])
+        
         if t == LLMServiceType.GEMINI.value:
             return GeminiService(client, model_name=cfg.get(constants.CONFIG_MODEL))
+        elif t == LLMServiceType.CLAUDE.value:
+            client = anthropic.Anthropic(api_key=st.secrets[constants.CLAUDE_API_KEY])
+            
+            return ClaudeService(client, model_name=cfg.get(constants.CONFIG_MODEL))
         else:
-            return GeminiService(client)
+            return GeminiService(client, model_name=cfg.get(constants.CONFIG_MODEL))
 
     def _build_reranker(self):
         cfg = self.config_manager.get_config(constants.CONFIG_RERANKER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         model = cfg.get(constants.CONFIG_PARAM)
         if t == RerankerType.LLM.value:
-            return LLMReranker(self.llm_service.client, model_name=model)
+            return LLMReranker(self.llm_service, model_name=model)
         elif t == RerankerType.COHERE.value:
             return CohereReranker(st.secrets[constants.COHERE_API_KEY], model_name=model)
         elif t == RerankerType.JINA.value:
@@ -160,9 +171,7 @@ class RAGPipeline:
             self.evaluator = self._build_evaluator()
         # else: unknown component, ignore
 
-    # process documents
-    def process_document(self, file, temp_dir=constants.TEMP_DOCS_DIR):
-        
+    def extractText(self, file, temp_dir=constants.TEMP_DOCS_DIR):
         from .document_loaders.pdf_loader import PDFLoader
         from .document_loaders.docx_loader import DOCXLoader
         from .document_loaders.txt_loader import TXTLoader
@@ -176,21 +185,24 @@ class RAGPipeline:
         os.makedirs(temp_dir, exist_ok=True)
         file_ext = os.path.splitext(file.name)[1].lower()
         file_path = os.path.join(temp_dir, file.name)
+        
         with open(file_path, "wb") as f:
             f.write(file.getbuffer())
-        print("File saved successfully")
         if file_ext in loaders:
             text = loaders[file_ext].load_document(file_path)
         else:
             raise ValueError(f"Unsupported file type: {file_ext}")
-        print("Documents loaded succesfully")
         if not text:
             return None, None
-        print("Text loaded successfully")
-        chunks =  self.chunker.split_text(text=text)
+        else:
+            return text
+        
+        
+    # process documents
+    def process_document(self, file, texts=None):
+        
+        chunks =  self.chunker.split_text(text=texts)
 
-
-        print("Chunks generated successfully")
         documents = []
         for chunk in chunks:
             doc_id = str(uuid.uuid4())
@@ -199,31 +211,22 @@ class RAGPipeline:
                 constants.PAGE_CONTENT: chunk,
                 constants.METADATA: {"source": file.name}
             })
-        print("Docs loaded from chunks data")
         texts = [doc[constants.PAGE_CONTENT] for doc in documents]
-        print("Texts extracted successfully")
         embeddings = self.embedder.fit(texts)
         st.success(f"Embedder: {self.embedder}")
         
-        print("Embeddings generated successfully")
-        print(type(embeddings))
-        print(type(documents))
         
         documents = self.vector_store.format_documents(documents)
         self.vector_store.add_embeddings(embeddings, documents)
         
 
-        print("Documents processed successfully")
-
         return documents, chunks
 
     def query(self, query_text, top_k=None):
-        print("Query Started")
         
         # Ensure documents are available
         if not hasattr(self.vector_store, 'documents') or not self.vector_store.documents:
             raise ValueError("No documents processed. Please upload and process a document before querying.")
-        print("Querying...")
         # Use configured top_k if not specified
         if top_k is None:
             top_k = self.top_k
@@ -237,7 +240,6 @@ class RAGPipeline:
             elif hasattr(first, "embedding"):
                 query_embedding = [e.embedding for e in query_embedding]
 
-        print("Query embedding generated successfully")
         
         retriever_config = self.config_manager.get_config(constants.CONFIG_RETRIEVER)
         if retriever_config[constants.CONFIG_TYPE_PARAM] == constants.RetrieverType.SENTENCE_WINDOW.value:
@@ -271,19 +273,15 @@ class RAGPipeline:
                 query_text=query_text
         )
             retrieved_docs = [result[constants.Document][constants.PAGE_CONTENT] for result in results]
-            
+        breakpoint()
         # Use retriever to get relevant documents
         
-        print("Results retrieved successfully")
         
         # Extract document content
-        print("Docs retrieved successfully")
-        print(retrieved_docs)
         
         # Rerank documents
-        reranked_docs, explanation = self.reranker.rerank(query_text, retrieved_docs)
+        reranked_docs, explanation = self.reranker.rerank(query_text, retrieved_docs, top_k=top_k)
         
-        print("Docs reranked successfully")
         
         context_docs = None
         if reranked_docs:
@@ -293,16 +291,39 @@ class RAGPipeline:
 
         # Join contexts
         context = "\n\n".join(context_docs)
-        print("Context generated successfully")
         
         # Generate answer
         answer_prompt = f"""
-            You are an assistant that answers questions based on the following context. Do not make up answers.
-            Answers should be detailed.
+        ACT AS AN EXPERT TUTOR IN DATA COMMUNICATION TECHNIQUES FOR UNIVERSITY-LEVEL STUDENTS. YOU MUST ANSWER ONLY USING INFORMATION FROM THE DOCUMENT **"DCA2104 Unit-08: Digital Data Communication Techniques"**.
 
+        ### GOALS ###
+        - PROVIDE CLEAR, CONCISE, AND FACTUALLY CORRECT ANSWERS
+        - JUSTIFY YOUR RESPONSES BY TRACING BACK TO THE DOCUMENT CONTENT
+        - STRUCTURE EACH ANSWER USING A CHAIN OF THOUGHT:
+        1. UNDERSTAND the user's query
+        2. IDENTIFY relevant content from the unit
+        3. EXTRACT accurate details
+        4. FORMULATE a clear and helpful answer
+        5. Answer in detail which is relavant to the query
+        6. Answer should be faithfull and grounded
+
+        ### RESPONSE BEHAVIOR ###
+        - IF CONTENT IS NOT IN THE DOCUMENT, YOU MUST SAY: **"The answer is not available in the provided material."**
+        - IF THE USER ASKS FOR A DEFINITION, PROVIDE IT ONLY IF PRESENT IN THE TEXT
+
+        ### INSTRUCTION RULES ###
+        - DO NOT USE OUTSIDE KNOWLEDGE OR WEBSOURCES
+        - DO NOT GUESS
+        - AVOID SUMMARIZING THE WHOLE DOCUMENT UNLESS ASKED
+        - MAINTAIN AN EDUCATIONAL AND TECHNICAL TONE
+
+        THIS DOCUMENT IS YOUR ONLY SOURCE OF TRUTH.
+
+        Below are contexts:
             Context:
             {context}
-
+        Below is the query asked by User:
+        
             Question: {query_text}
 
             Answer:
@@ -348,7 +369,7 @@ class RAGPipeline:
                 # Remove newline character and convert to integer
                 item = line.strip()
                 eval_questions.append(item)
-
+        
         if not (question and answer and contexts):
             raise ValueError("No query data available for evaluation")
         

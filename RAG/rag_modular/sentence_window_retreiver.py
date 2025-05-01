@@ -194,13 +194,7 @@ class SentenceWindowRetriever(BaseRetriever):
             **kwargs
         )
         
-        print("Original retrieved chunks:")
-        for i, chunk in enumerate(documents):
-            print(f"{i+1}. {chunk}\n")
         
-        print("\nEnhanced contexts after sentence window retrieval:")
-        for i, context in enumerate(enhanced_contexts):
-            print(f"{i+1}. {context}\n")
 
         return enhanced_contexts
 

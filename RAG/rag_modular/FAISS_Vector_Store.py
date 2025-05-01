@@ -4,8 +4,8 @@ from .base_vector_store import BaseVectorStore
 from langchain_core.documents import Document
 import RAG_Constants as constants
 import numpy as np
-
 import faiss
+import uuid
 
 class FAISS_Vector_Store(BaseVectorStore):
     def __init__(self):
@@ -13,30 +13,35 @@ class FAISS_Vector_Store(BaseVectorStore):
         self.embeddings = None
         self.index = None
         self.db = None
+        self.ids = None
 
     def add_embeddings(self, embeddings, documents):
         vector_store_path = "vector_store_index_path"
-        vector_store_data_path = "vector_store_data_path"
+        # Unify embeddings: list, numpy array, or sparse -> dense np.float32
         self.documents = documents
-        self.embeddings = embeddings
-        
-        if isinstance(embeddings, np.ndarray) and embeddings.ndim == 2:
-            # For dense embeddings
-            dimension = embeddings.shape[1]
-            index = faiss.IndexFlatIP(dimension)  # Inner product for cosine similarity
-
-            if embeddings.dtype != np.float32:
-                embeddings = embeddings.astype(np.float32)
-
-            index.add(embeddings)
+        # Generate and store document IDs
+        self.ids = []
+        for document in documents:
+            if isinstance(document, dict):
+                doc_id = document.get("id", str(uuid.uuid4()))
+            elif hasattr(document, "metadata") and isinstance(document.metadata, dict) and "id" in document.metadata:
+                doc_id = document.metadata["id"]
+            else:
+                doc_id = str(uuid.uuid4())
+            self.ids.append(doc_id)
+        if hasattr(embeddings, "toarray"):
+            emb_arr = embeddings.toarray().astype(np.float32)
         else:
-            # Handle sparse embeddings if needed
-            dimension = embeddings.shape[1]
-            index = faiss.IndexFlatIP(dimension)
-
-            # Convert sparse to dense
-            dense_embeddings = embeddings.toarray().astype(np.float32)
-            index.add(dense_embeddings)
+            emb_arr = np.array(embeddings, dtype=np.float32)
+        # Ensure 2D array
+        if emb_arr.ndim == 1:
+            emb_arr = emb_arr.reshape(1, -1)
+        dimension = emb_arr.shape[1]
+        # Normalize vectors for cosine similarity
+        faiss.normalize_L2(emb_arr)
+        # Build and populate FAISS index using inner product
+        index = faiss.IndexFlatIP(dimension)
+        index.add(emb_arr)
         self.index = index
         faiss.write_index(index, vector_store_path)
 
@@ -71,7 +76,8 @@ class FAISS_Vector_Store(BaseVectorStore):
                 similarity_score = 1 / (1 + distances[0][i])
                 results.append({
                     constants.Document: self.documents[idx],
-                    constants.Score: similarity_score
+                    constants.Score: similarity_score,
+                    constants.ID: self.ids[idx]
                 })
         
         return results

@@ -8,10 +8,13 @@ from rag_modular.RAG_Constants import (
     EvaluatorType, GeminiLLMModel
 )
 import rag_modular.RAG_Constants as constants
+import rag_modular.recursive_chunker
 # Add rag_modular to path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'rag_modular'))
 from rag_modular.rag_pipeline import RAGPipeline
 from rag_modular.config_manager import ConfigManager
+import rag_modular.test_rag_pipeline
+import test_rag_combinations
 
 TEMP_DIR = "temp_docs"
 
@@ -66,7 +69,7 @@ with st.sidebar:
         elif chunker_type == ChunkerType.SENTENCE.value:  
             max_sentences = st.slider(constants.MAX_SENTENCES_DISPLAY_NAME, 1, 20, 5)
             chunker_params = {constants.CONFIG_MAX_SENTENCES: max_sentences}
-        
+        st.divider()
         # Vector Store
         vector_store = st.selectbox(
             constants.VECTOR_STORE_DISPLAY_NAME,
@@ -79,7 +82,7 @@ with st.sidebar:
             vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_PINCONE}
         else:
             vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_FAISS}
-
+        st.divider()
         # Embedder selection
         embedder_type = st.selectbox(
             constants.EMBEDDER_TYPE_DISPLAY_NAME,
@@ -87,7 +90,7 @@ with st.sidebar:
             index=0
         )
         
-        if embedder_type == EmbedderType.COHERE.value or embedder_type == EmbedderType.VOYAGE.value or embedder_type == EmbedderType.GEMINI.value:
+        if embedder_type != EmbedderType.TFIDF.value:
             emb_options = []
             if embedder_type == EmbedderType.COHERE.value:
                 emb_options = constants.CohereEmbedModels
@@ -95,20 +98,23 @@ with st.sidebar:
                 emb_options = constants.VoyageEmbedModels
             elif embedder_type == EmbedderType.GEMINI.value:
                 emb_options = constants.GeminiEmbedModels
+            elif embedder_type == EmbedderType.MISTRAL.value:
+                emb_options = constants.MISTRAL_EMBED_MODELS
             emb_model = st.selectbox(constants.EMBED_MODEL_DISPLAY_NAME, options=[e.value for e in emb_options])
             embedder_params = {constants.CONFIG_TYPE_PARAM: embedder_type, constants.CONFIG_MODEL: emb_model}
         else:
             embedder_params={constants.CONFIG_TYPE_PARAM: embedder_type}
         
-        # Apply text processing config
-        if st.button("Apply Text Processing", key="apply_text_proc"):
-            chunker_config = {constants.CONFIG_TYPE_PARAM: chunker_type, constants.CONFIG_PARAM: chunker_params}
-            st.session_state.pipeline.update_component(constants.CONFIG_CHUNKER, chunker_config)            
-            st.session_state.pipeline.update_component(constants.CONFIG_EMBEDDER, embedder_params)
-            
-            st.session_state.pipeline.update_component(constants.CONFIG_VECTOR_STORE, vector_store_params)
-            st.success("Text processing configuration updated.")
-    
+        with st.spinner("Applying Text Processing Params"):
+            # Apply text processing config
+            if st.button("Apply Text Processing Params", key="apply_text_proc"):
+                chunker_config = {constants.CONFIG_TYPE_PARAM: chunker_type, constants.CONFIG_PARAM: chunker_params}
+                st.session_state.pipeline.update_component(constants.CONFIG_CHUNKER, chunker_config)            
+                st.session_state.pipeline.update_component(constants.CONFIG_EMBEDDER, embedder_params)
+                
+                st.session_state.pipeline.update_component(constants.CONFIG_VECTOR_STORE, vector_store_params)
+                st.success("Text processing configuration updated.")
+        
     with config_tabs[1]:
         st.write("**" + constants.RETRIEVAL_DISPLAY_NAME + "**")
         # Retriever selection
@@ -155,19 +161,20 @@ with st.sidebar:
         # Top-k setting
         top_k = st.slider("Top-K Documents", 1, 20, 5)
         # Apply retrieval config
-        if st.button("Apply Retrieval", key="apply_retrieval"):
-            retriever_config = {constants.CONFIG_TYPE_PARAM: retriever_type, constants.CONFIG_PARAM: retriever_params, constants.CONFIG_TOP_K_PARAM: top_k}
-            if re_ranker_type == RerankerType.LLM.value:
-                service = st.selectbox("LLM Service", options=[e.value for e in constants.LLMServiceType])
-                reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: model}
-            elif re_ranker_type == RerankerType.COHERE.value or re_ranker_type == RerankerType.JINA.value:
-                reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: model}
-            else:
-                reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: {}}
+        with st.spinner("Applying Retrieval Params"):
+            if st.button("Apply Retrieval Params", key="apply_retrieval"):
+                retriever_config = {constants.CONFIG_TYPE_PARAM: retriever_type, constants.CONFIG_PARAM: retriever_params, constants.CONFIG_TOP_K_PARAM: top_k}
+                if re_ranker_type == RerankerType.LLM.value:
+                    service = st.selectbox("LLM Service", options=[e.value for e in constants.LLMServiceType])
+                    reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: model}
+                elif re_ranker_type == RerankerType.COHERE.value or re_ranker_type == RerankerType.JINA.value:
+                    reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: model}
+                else:
+                    reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: {}}
 
-            st.session_state.pipeline.update_component(constants.CONFIG_RETRIEVER, retriever_config)
-            st.session_state.pipeline.update_component(constants.CONFIG_RERANKER, reranker_config)
-            st.success("Retrieval configuration updated.")
+                st.session_state.pipeline.update_component(constants.CONFIG_RETRIEVER, retriever_config)
+                st.session_state.pipeline.update_component(constants.CONFIG_RERANKER, reranker_config)
+                st.success("Retrieval configuration updated.")
     
     with config_tabs[2]:
         st.write("**" + constants.EVALUATION_DISPLAY_NAME + "**")
@@ -177,11 +184,30 @@ with st.sidebar:
             options=[e.value for e in EvaluatorType],
             index=0
         )
-        # Apply evaluation config
-        if st.button("Apply Evaluation", key="apply_evaluation"):
-            evaluator_config = {constants.CONFIG_TYPE_PARAM: evaluator_type}
-            st.session_state.pipeline.update_component(constants.CONFIG_EVALUATOR, evaluator_config)
-            st.success("Evaluation configuration updated.")
+        with st.spinner("Applying Evaluation Params"):
+            # Apply evaluation config
+            if st.button("Apply Evaluation Params", key="apply_evaluation"):
+                evaluator_config = {constants.CONFIG_TYPE_PARAM: evaluator_type}
+                st.session_state.pipeline.update_component(constants.CONFIG_EVALUATOR, evaluator_config)
+                st.success("Evaluation configuration updated.")
+
+    st.divider()
+    st.write("**" + constants.CHAT_RESPONSE_CONFIG_DISPLAY_NAME + "**")
+    # Chat response config
+    llm_service = st.selectbox(constants.LLM_CHAT_SERVICE, options=[e.value for e in constants.LLMServiceType], index=0)
+    llm_model_options = []
+    if (llm_service == constants.LLMServiceType.GEMINI.value):
+        llm_model_options = {model.display_name: model for model in constants.GeminiLLMModel}
+    elif (llm_service == constants.LLMServiceType.CLAUDE.value):
+        llm_model_options = {model.display_name: model for model in constants.CLAUDE_MODELS}
+    else:
+        llm_model_options = {model.display_name: model for model in constants.GeminiLLMModel}
+
+    llm_service = st.selectbox(constants.LLM_CHAT_SERVICE, options=llm_model_options.keys(), index=0)
+    chat_response_config = {constants.CONFIG_TYPE_PARAM: constants.LLMServiceType.CLAUDE.value, constants.CONFIG_MODEL: llm_model_options[llm_service].value}
+    if st.button("Apply Chat Response Config", key="apply_chat_response"):
+        st.session_state.pipeline.update_component(constants.CONFIG_LLM, chat_response_config)
+        st.success("Chat response configuration updated.")
 
     # Document upload
     st.subheader("Upload and Process Documents")
@@ -193,7 +219,8 @@ with st.sidebar:
     if uploaded_file:
         if st.button("Process Document"):
             with st.spinner("Processing document..."):
-                documents, chunks = st.session_state.pipeline.process_document(uploaded_file)
+                texts = st.session_state.pipeline.extractText(uploaded_file)
+                documents, chunks = st.session_state.pipeline.process_document(uploaded_file, texts)
                     
                 if documents and chunks:
                     st.session_state.documents = documents
@@ -245,10 +272,13 @@ with st.sidebar:
             st.dataframe(metrics_df)
 
     st.divider()
-    if st.session_state.pipeline.config_manager:
-        Config_Content = f"Chunker Config: {st.session_state.pipeline.config_manager.config[constants.CONFIG_CHUNKER]}\nEmbedder Config: {st.session_state.pipeline.config_manager.config[constants.CONFIG_EMBEDDER]}\nVector Store Config{st.session_state.pipeline.config_manager.config[constants.CONFIG_VECTOR_STORE]}\nRetreiver Config: {st.session_state.pipeline.config_manager.config[constants.CONFIG_RETRIEVER]}\nLLM Config: {st.session_state.pipeline.config_manager.config[constants.CONFIG_LLM]}\nRe Ranking Config: {st.session_state.pipeline.config_manager.config[constants.CONFIG_RERANKER]}\n{st.session_state.pipeline.config_manager.config[constants.CONFIG_EVALUATOR]}"
-        st.markdown(Config_Content)
+    with st.expander("Config Details"):
+        if st.session_state.pipeline.config_manager:
+            Config_Content = f"Chunker Config: {st.session_state.pipeline.config_manager.config[constants.CONFIG_CHUNKER]}\nEmbedder Config: {st.session_state.pipeline.config_manager.config[constants.CONFIG_EMBEDDER]}\nVector Store Config{st.session_state.pipeline.config_manager.config[constants.CONFIG_VECTOR_STORE]}\nRetreiver Config: {st.session_state.pipeline.config_manager.config[constants.CONFIG_RETRIEVER]}\nLLM Config: {st.session_state.pipeline.config_manager.config[constants.CONFIG_LLM]}\nRe Ranking Config: {st.session_state.pipeline.config_manager.config[constants.CONFIG_RERANKER]}\n{st.session_state.pipeline.config_manager.config[constants.CONFIG_EVALUATOR]}"
+            st.markdown(Config_Content)
 
+    if st.button("Test All Configurations", key="test_all_combinations"):
+        test_rag_combinations.run_tests()
 # Main chat interface
 st.subheader("Chat with your Documents")
 # Display chat history

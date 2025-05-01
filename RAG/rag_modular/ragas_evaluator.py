@@ -6,6 +6,7 @@ import os
 import streamlit as st
 import openai
 import rag_modular.RAG_Constants as constants
+from ragas.dataset_schema import MultiTurnSample
 
 os.environ["OPENAI_API_KEY"] = st.secrets[constants.OPENAI_API_KEY]
 
@@ -34,24 +35,24 @@ class RagasEvaluator(BaseEvaluator):
         Returns:
             Dictionary of evaluation metrics
         """
-        
         questions = [question]
         answers = [answer]
         contexts_list = [contexts]
         ground_truths_list = [ground_truths]
 
-        
+
         data = Dataset.from_dict({
             constants.QUESTION: questions,
             constants.ANSWER: answers,
             constants.CONTEXTS: contexts_list,
-            constants.REFERENCE: ground_truths_list
+            "ground_truth": ground_truths_list
         })
 
         with st.spinner("Running RAG evaluation..."):
             result = evaluate(
                 data,
-                metrics=self.metrics
+                metrics=self.metrics,
+                raise_exceptions=True
             )
         
 

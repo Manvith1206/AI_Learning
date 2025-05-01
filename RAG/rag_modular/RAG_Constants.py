@@ -5,6 +5,8 @@ CHUNKER_TYPE_DISPLAY_NAME = "Chunker Type"
 TEXT_PROCESSING_DISPLAY_NAME = "Text Processing"
 RETRIEVAL_DISPLAY_NAME = "Retrieval"
 EVALUATION_DISPLAY_NAME = "Evaluation"
+CHAT_RESPONSE_CONFIG_DISPLAY_NAME = "Chat Interface"
+
 EMBEDDER_TYPE_DISPLAY_NAME = "Embedder Type"
 VECTOR_STORE_DISPLAY_NAME = "Vector Store"
 
@@ -23,6 +25,8 @@ CONFIG_CHUNK_OVERLAP_PARAM = "chunk_overlap"
 CONFIG_VECTOR_STORE_SKLEARN = "sklearn"
 CONFIG_VECTOR_STORE_PINCONE = "pinecone"
 
+CONFIG_BATCH_SIZE = "batch_size"
+BATCH_SIZE_DISPLAY_NAME = "Batch Size"
 
 CONFIG_VECTOR_STORE_FAISS = "faiss"
 CONFIG_VECTOR_STORE_METRIC = "metric"
@@ -41,8 +45,12 @@ CONFIG_MODEL_NAME = "model_name"
 CONFIG_MAX_SENTENCES = "max_sentences"
 MAX_SENTENCES_DISPLAY_NAME = "Max Sentences per Chunk"
 EMBED_MODEL_DISPLAY_NAME = "Embed Model"
+CONFIG_CHAT_RESPONSE = "chat_response"
+
 # constants
 RERANK_EXPLAINATION = "Chunks sorted by cosine similarity scores (highest to lowest)."
+NO_EXPLAINATION_NEEDED_MESSAGE = "No explanation needed."
+
 VECTOR_STORE_MUST_BE_PROVIDED_ERROR_MESSAGE = "Vector store must be provided"
 QUERY_TEXT_MUST_BE_PROVIDED_ERROR_MESSAGE = "Query text must be provided"
 QUERY_TEXT  = "query_text"
@@ -67,6 +75,9 @@ OPENAI_API_KEY = "OPEN_AI_API_KEY"
 COHERE_API_KEY = "COHERE_API_KEY"
 VOYAGE_API_KEY = "VOYAGE_API_KEY"
 PINECONE_API_KEY = "PINECONE_API_KEY"
+JINA_RERANKER_API_KEY = "JINA_RERANKER_API_KEY"
+MISTRAL_API_KEY = "MISTRAL_API_KEY"
+CLAUDE_API_KEY = "CLAUDE_API_KEY"
 
 FAITHFULNESS = "faithfulness"
 ANSWER_CORRECTNESS = "answer_correctness"
@@ -97,6 +108,16 @@ LLM_MODEL_OPTIONS = "LLM_Model_Options"
 GROUND_TRUTH_DISPLAY_NAME = "Ground Truth"
 GROUND_TRUTH_DEFAULT_VALUE = "It sends large blocks of data continuously without start and stop bits. Requires clock synchronization between sender and receiver and is more efficient."
 
+GROUND_TRUTH_CONFIG_NAME = "ground_truth"
+RESPONSE_CONFIG_NAME = "response"
+CONTEXTS_CONFIG_NAME = "contexts"
+STATUS_CONFIG_NAME = "status"
+ERROR_CONFIG_NAME = "error"
+METRICS_CONFIG_NAME = "metrics"
+
+MISTRAL_EMBED_MODEL = "mistral-embed"
+
+LLM_CHAT_SERVICE = "LLM Chat Service"
 # Component type enums with string values matching config and UI
 class ChunkerType(Enum):
     RECURSIVE = "recursive"
@@ -108,6 +129,7 @@ class EmbedderType(Enum):
     GEMINI = "gemini"
     COHERE = "cohere"
     VOYAGE = "Voyage"
+    MISTRAL = "mistral"
 
 class RetrieverType(Enum):
     SIMILARITY = "similarity"
@@ -127,12 +149,17 @@ class EvaluatorType(Enum):
 class LLMServiceType(Enum):
     GEMINI = "gemini"
     COHERE = "cohere"
+    CLAUDE = "claude"
 
 # Common LLM model names
 class GeminiLLMModel(Enum):
     GEMINI_FLASH = "gemini-2.0-flash"
     GEMINI_PRO = "gemini-2.5-pro"
-
+    
+    @property
+    def display_name(self):
+        # Optional: custom formatting
+        return self.name.replace("_", " ").title()
 # vector stores
 class VectorStore(Enum):
     SCIKIT_LEARN = "sckit_learn"
@@ -156,7 +183,7 @@ class VoyageEmbedModels(Enum):
     VOYAGE_CODE_2_EMBED_MODEL = "voyage-code-2"
 
 class GeminiEmbedModels(Enum):
-    GEMINI_EMBED_EXP_MODEL =  "gemini-embedding-exp-03-07"
+    # GEMINI_EMBED_EXP_MODEL =  "gemini-embedding-exp-03-07"
     GEMINI_TEXT_EMBED_MODEL = "models/text-embedding-004"
     GEMINI_EMBED_001_MODEL = "models/embedding-001"
 
@@ -164,6 +191,18 @@ class JINA_RERANKER_MODELS(Enum):
     JINA_RERANKER_V1_TURBO = "jina-reranker-v1-turbo-en"
     JINA_RERANKER_TINY = "jina-reranker-v1-tiny-en"
     JINA_RERANKER_M0 = "jina-reranker-m0"
+    JINA_RERANKER_MULTILINGUAL = "jina-reranker-v2-base-multilingual"
+class MISTRAL_EMBED_MODELS(Enum):
+    MISTRAL_EMBED_MODEL_DEFAULT = "mistral-embed"
 
-
-
+class CLAUDE_MODELS(Enum):
+    CLAUDE_SONNET_THREE_7 = "claude-3-7-sonnet-20250219"
+    CLAUDE_SONNET_THREE_5 = "claude-3-5-sonnet-20241022"
+    CLAUDE_HAIKU_THREE_5 = "claude-3-5-haiku-20241022"
+    CLAUDE_OPUS_THREE = "claude-3-opus-20240229"
+    
+    @property
+    def display_name(self):
+        # Optional: custom formatting
+        return self.name.replace("_", " ").title()
+    

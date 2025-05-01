@@ -27,8 +27,6 @@ class SemanticChunker(BaseChunker):
     def split_text(self, text):
         # Chunk the document
         chunks = self.chunk_text(text)
-        print("Chunks: ")
-        print(chunks)
 
         return chunks
     

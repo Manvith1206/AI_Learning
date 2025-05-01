@@ -28,14 +28,11 @@ class SimilarityRetriever(BaseRetriever):
             
         # Get search results from vector store
         results = vector_store.search(query_embedding, top_k=top_k)
-        print("Results retrieved successfully")
         
         # Filter by similarity threshold if needed
         filtered_results = [
             result for result in results 
             if result[constants.Score] >= self.similarity_threshold
         ]
-        print("Filtered results successfully")
-        print(filtered_results)
         
         return filtered_results

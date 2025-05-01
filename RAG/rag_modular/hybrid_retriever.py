@@ -46,11 +46,13 @@ class HybridRetriever(BaseRetriever):
             matches = sum(1 for term in query_terms if term in content)
             # Normalize by query length
             score = matches / max(1, len(query_terms))
+            
             keyword_scores[doc[constants.ID]] = score
         
         # Combine scores
         combined_results = []
         for result in semantic_results:
+            
             doc_id = result[constants.Document][constants.ID]
             semantic_score = result[constants.Score]
             keyword_score = keyword_scores.get(doc_id, 0)

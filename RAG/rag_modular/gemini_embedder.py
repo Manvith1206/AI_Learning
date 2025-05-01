@@ -5,7 +5,7 @@ import streamlit as st
 import RAG_Constants as constants
 
 class GeminiEmbedder(BaseEmbedder):
-    def __init__(self, api_key=None, model_name = constants.GeminiEmbedModels.GEMINI_EMBED_EXP_MODEL.value):
+    def __init__(self, api_key=None, model_name = constants.GeminiEmbedModels.GEMINI_EMBED_001_MODEL.value):
         api_key = api_key or st.secrets[constants.GEMINI_API_KEY]
         self.client = genai.Client(api_key=api_key)
         self.model = model_name

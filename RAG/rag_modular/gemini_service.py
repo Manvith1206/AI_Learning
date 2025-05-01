@@ -6,6 +6,7 @@ class GeminiService(BaseLLMService):
         self.client = client
         self.model_name = model_name
     def generate_response(self, prompt, **kwargs):
+        
         response = self.client.models.generate_content(
             model=self.model_name,
             contents=prompt

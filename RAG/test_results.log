@@ -1,0 +1,910 @@
+---------------------
+Combinations: recursive|tfidf|sklearn|similarity|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|tfidf|sklearn|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|tfidf|sklearn|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|tfidf|sklearn|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|tfidf|sklearn|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|tfidf|sklearn|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|tfidf|sklearn|hybrid|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|tfidf|sklearn|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|tfidf|sklearn|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|tfidf|sklearn|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|tfidf|sklearn|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|tfidf|sklearn|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|tfidf|sklearn|sentence_window|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|tfidf|sklearn|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|tfidf|sklearn|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|tfidf|sklearn|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|tfidf|sklearn|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|tfidf|sklearn|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|tfidf|faiss|similarity|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|tfidf|faiss|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|tfidf|faiss|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|tfidf|faiss|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|tfidf|faiss|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|tfidf|faiss|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|tfidf|faiss|hybrid|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|tfidf|faiss|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|tfidf|faiss|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|tfidf|faiss|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|tfidf|faiss|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|tfidf|faiss|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|tfidf|faiss|sentence_window|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|tfidf|faiss|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|tfidf|faiss|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|tfidf|faiss|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|tfidf|faiss|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|tfidf|faiss|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: tfidf Params: {}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|hybrid|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|faiss|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|faiss|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|faiss|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|faiss|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|sentence_window|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|faiss|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|faiss|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|faiss|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|faiss|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'gemini-embedding-exp-03-07'}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|hybrid|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|faiss|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|faiss|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|faiss|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|faiss|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|sentence_window|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|faiss|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|faiss|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|faiss|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|faiss|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/text-embedding-004'}
+VEctor store: faiss Params: {}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|hybrid|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: hybrid Params: {'keyword_weight': 0.3}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-english-v3.0'}
+---------------------
+Combinations: recursive|gemini|sklearn|sentence_window|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: sklearn Params: {'metric': 'cosine'}
+Retriever: sentence_window Params: {'window_size': 2}
+Retriever: cohere Params: {'params': 'rerank-multilingual-v3.0'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|cosine
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cosine Params: {}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.0-flash'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|llm
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: llm Params: {'params': 'gemini-2.5-pro'}
+---------------------
+Combinations: recursive|gemini|faiss|similarity|cohere
+Chunker: recursive Params: {'chunk_size': 600, 'chunk_overlap': 200}
+Embedder: gemini Params: {'model': 'models/embedding-001'}
+VEctor store: faiss Params: {}
+Retriever: similarity Params: {'similarity_threshold': 0.0}
+Retriever: cohere Params: {'params': 'rerank-v3.5'}

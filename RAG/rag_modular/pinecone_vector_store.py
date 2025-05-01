@@ -4,13 +4,14 @@ from .base_vector_store import BaseVectorStore
 import RAG_Constants as constants
 import uuid
 import numpy as np
+from scipy.sparse import csr_matrix
 
 class PineConeVectorStore(BaseVectorStore):
     def __init__(self, api_key: str, index_name: str):
         self.documents = None
         self.embeddings = None
         self.index_name = index_name
-        
+        self.dimension = None
         self.pc = Pinecone(api_key=api_key)
         
 
@@ -19,14 +20,27 @@ class PineConeVectorStore(BaseVectorStore):
         self.embeddings = embeddings
         vectors = []
         
-                # Connect to existing index or create one if needed
-        if self.index_name not in [i.name for i in self.pc.list_indexes()]:
+        # Connect to existing index or create one if needed
+        if isinstance(embeddings, csr_matrix):
+            self.dimension = embeddings.shape[1]
+        if isinstance(embeddings, list):
+            self.dimension = len(embeddings[0])
+
+        if self.index_name not in [i.name for i in self.pc.list_indexes()] or self.dimension != [i.index['dimension'] for i in self.pc.list_indexes()]:
+            if self.index_name in [i.name for i in self.pc.list_indexes()]:
+                self.pc.delete_index(self.index_name)
+
             self.pc.create_index(
                 name=self.index_name,
-                dimension=embeddings.shape[1],  # We'll set dimension at runtime
+                dimension=self.dimension,  # We'll set dimension at runtime
                 metric="cosine",
                 spec=ServerlessSpec(cloud="aws", region="us-east-1")
             )
+        else:
+            for i in self.pc.list_indexes():
+                if i.index['dimension'] == self.dimension:
+                    self.index_name = i.name
+            
         
         self.index = self.pc.Index(self.index_name)
 
@@ -88,9 +102,11 @@ class PineConeVectorStore(BaseVectorStore):
         for match in search_result["matches"]:
             metadata = match["metadata"]
             score = match["score"]
+            id = match["id"]
             results.append({
                 constants.Document: metadata,
-                constants.Score: score
+                constants.Score: score,
+                constants.ID: id
             })
 
         return results

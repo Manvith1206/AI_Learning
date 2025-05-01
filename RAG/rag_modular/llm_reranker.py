@@ -23,11 +23,10 @@ class LLMReranker(BaseReranker):
             Best Chunk(s): [list the chunk numbers]
             Explanation: [your reasoning]
             """
-        response = self.llm_client.models.generate_content(
-            model=self.model_name,
-            contents=rerank_prompt
+        response = self.llm_client.generate_response(
+            prompt=rerank_prompt
         )
-        response_text = response.text.strip()
+        response_text = response.strip()
         best_chunks_match = re.search(r"Best Chunk\(s\):\s*\[([^\]]+)\]", response_text)
         explanation_match = re.search(r"Explanation:\s*(.*)", response_text, re.DOTALL)
         selected_indices = []
