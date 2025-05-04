@@ -4,8 +4,10 @@ import re
 from typing import List, Dict, Any
 from base_chunker import BaseChunker
 import rag_modular.RAG_Constants as constants
+max_sentences = 300
 
 class SemanticChunker(BaseChunker):
+
     def __init__(self, 
                  model_name: str = constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI, 
                  similarity_threshold: float = 0.7,
@@ -56,7 +58,7 @@ class SemanticChunker(BaseChunker):
         # Further split any remaining sentences that might be too long
         final_sentences = []
         for sentence in sentences:
-            if len(sentence) > 300:  # If a sentence is too long, split on commas or semicolons
+            if len(sentence) > max_sentences:  # If a sentence is too long, split on commas or semicolons
                 split_parts = re.split(r'(?<=[,;])\s+', sentence)
                 if len(split_parts) > 1:
                     final_sentences.extend(split_parts)

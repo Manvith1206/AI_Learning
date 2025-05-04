@@ -50,6 +50,7 @@ CONFIG_CHAT_RESPONSE = "chat_response"
 # constants
 RERANK_EXPLAINATION = "Chunks sorted by cosine similarity scores (highest to lowest)."
 NO_EXPLAINATION_NEEDED_MESSAGE = "No explanation needed."
+UNABLE_TO_RETRIEVE_MESSAGE = "Unable to retrieve documents currently. Try Again after some time."
 
 VECTOR_STORE_MUST_BE_PROVIDED_ERROR_MESSAGE = "Vector store must be provided"
 QUERY_TEXT_MUST_BE_PROVIDED_ERROR_MESSAGE = "Query text must be provided"
@@ -134,7 +135,7 @@ class EmbedderType(Enum):
 class RetrieverType(Enum):
     SIMILARITY = "similarity"
     HYBRID = "hybrid"
-    SENTENCE_WINDOW = "sentence_window"
+    # SENTENCE_WINDOW = "sentence_window"
 
 class RerankerType(Enum):
     COSINE = "cosine"

@@ -186,13 +186,13 @@ def run_tests():
             },
             constants.CONFIG_TOP_K_PARAM: 3
         }),
-        (RetrieverType.SENTENCE_WINDOW.value, {
-            constants.CONFIG_TYPE_PARAM: RetrieverType.SENTENCE_WINDOW.value, 
-            constants.CONFIG_PARAM: {
-                constants.CONFIG_WINDOW_SIZE: 3
-            },
-            constants.CONFIG_TOP_K_PARAM: 3
-        }),
+        # (RetrieverType.SENTENCE_WINDOW.value, {
+        #     constants.CONFIG_TYPE_PARAM: RetrieverType.SENTENCE_WINDOW.value, 
+        #     constants.CONFIG_PARAM: {
+        #         constants.CONFIG_WINDOW_SIZE: 3
+        #     },
+        #     constants.CONFIG_TOP_K_PARAM: 3
+        # }),
         
     ]
     

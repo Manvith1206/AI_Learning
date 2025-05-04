@@ -1,22 +1,11 @@
 import os
 import uuid
-from .recursive_chunker import RecursiveChunker
-from .sentence_chunker import SentenceChunker
-from .tfidf_embedder import TFIDFEmbedder
-from .gemini_embedder import GeminiEmbedder
-from .sklearn_vector_store import SklearnVectorStore
-from .llm_reranker import LLMReranker
-from .gemini_service import GeminiService
-from .similarity_retriever import SimilarityRetriever
-from .hybrid_retriever import HybridRetriever
+
+
 from .simple_evaluator import SimpleEvaluator
 from .ragas_evaluator import RagasEvaluator
 from .config_manager import ConfigManager
 import streamlit as st
-from .cosine_reranker import CosineReranker
-from .semantic_chunker import SemanticChunker
-from .cohere_embedder import CohereEmbedder
-from .pinecone_vector_store import PineConeVectorStore
 
 from rag_modular.RAG_Constants import (
     ChunkerType, EmbedderType,
@@ -24,15 +13,9 @@ from rag_modular.RAG_Constants import (
     EvaluatorType, LLMServiceType, GeminiLLMModel
 )
 import rag_modular.RAG_Constants as constants
-from rag_modular.similarity_retriever import SimilarityRetriever
-from .sentence_window_retreiver import SentenceWindowRetriever
-from .cohere_re_ranker import CohereReranker
-from .voyage_embedder import VoyageEmbedder
-from .FAISS_Vector_Store import FAISS_Vector_Store
-from .jina_reranker import JinaReranker
-from .mistral_embedder import MistralEmbedder
-from .claude_service import ClaudeService
-import anthropic
+
+
+import traceback
 
 class RAGPipeline:
     def __init__(self, config_manager=None):
@@ -52,6 +35,10 @@ class RAGPipeline:
 
     # build invidual components
     def _build_chunker(self):
+        from .recursive_chunker import RecursiveChunker
+        from .sentence_chunker import SentenceChunker
+        from .semantic_chunker import SemanticChunker
+
         cfg = self.config_manager.get_config(constants.CONFIG_CHUNKER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         params = cfg.get(constants.CONFIG_PARAM, {})
@@ -65,6 +52,10 @@ class RAGPipeline:
             return RecursiveChunker()
 
     def _build_embedder(self):
+        from .tfidf_embedder import TFIDFEmbedder
+        from .gemini_embedder import GeminiEmbedder
+        from .mistral_embedder import MistralEmbedder
+
         cfg = self.config_manager.get_config(constants.CONFIG_EMBEDDER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         model_name = cfg.get(constants.CONFIG_MODEL)
@@ -73,9 +64,11 @@ class RAGPipeline:
         elif t == EmbedderType.GEMINI.value:
             return GeminiEmbedder(api_key=st.secrets[constants.GEMINI_API_KEY], model_name=model_name)
         elif t == EmbedderType.COHERE.value:
+            from .cohere_embedder import CohereEmbedder
             return CohereEmbedder(api_key=st.secrets[constants.COHERE_API_KEY],
                                   model=cfg.get(constants.CONFIG_MODEL))
         elif t == EmbedderType.VOYAGE.value:
+            from .voyage_embedder import VoyageEmbedder
             return VoyageEmbedder(api_key=st.secrets[constants.VOYAGE_API_KEY],
                                   model=cfg.get(constants.CONFIG_MODEL))
         elif t == EmbedderType.MISTRAL.value:
@@ -86,6 +79,10 @@ class RAGPipeline:
             return TFIDFEmbedder()
 
     def _build_vector_store(self):
+        from .pinecone_vector_store import PineConeVectorStore
+        from .FAISS_Vector_Store import FAISS_Vector_Store
+        from .sklearn_vector_store import SklearnVectorStore
+
         cfg = self.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
         params = cfg.get(constants.CONFIG_PARAM, {})
         type = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -99,6 +96,10 @@ class RAGPipeline:
             return FAISS_Vector_Store()
 
     def _build_retriever(self):
+        from rag_modular.similarity_retriever import SimilarityRetriever
+        from .sentence_window_retreiver import SentenceWindowRetriever
+        from .similarity_retriever import SimilarityRetriever
+
         cfg = self.config_manager.get_config(constants.CONFIG_RETRIEVER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         params = cfg.get(constants.CONFIG_PARAM, {})
@@ -106,13 +107,18 @@ class RAGPipeline:
         if t == RetrieverType.SIMILARITY.value:
             return SimilarityRetriever(**params)
         elif t == RetrieverType.HYBRID.value:
+            from .hybrid_retriever import HybridRetriever
+
             return HybridRetriever(**params)
-        elif t == RetrieverType.SENTENCE_WINDOW.value:
-            return SentenceWindowRetriever(**params)
+        # elif t == RetrieverType.SENTENCE_WINDOW.value:
+        #     return SentenceWindowRetriever(**params)
         else:
             return SimilarityRetriever()
 
     def _build_llm_service(self):
+        
+        from .gemini_service import GeminiService
+
         cfg = self.config_manager.get_config(constants.CONFIG_LLM)
         
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -122,6 +128,8 @@ class RAGPipeline:
         if t == LLMServiceType.GEMINI.value:
             return GeminiService(client, model_name=cfg.get(constants.CONFIG_MODEL))
         elif t == LLMServiceType.CLAUDE.value:
+            from .claude_service import ClaudeService
+            import anthropic
             client = anthropic.Anthropic(api_key=st.secrets[constants.CLAUDE_API_KEY])
             
             return ClaudeService(client, model_name=cfg.get(constants.CONFIG_MODEL))
@@ -133,14 +141,24 @@ class RAGPipeline:
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         model = cfg.get(constants.CONFIG_PARAM)
         if t == RerankerType.LLM.value:
+            from .llm_reranker import LLMReranker
+
             return LLMReranker(self.llm_service, model_name=model)
         elif t == RerankerType.COHERE.value:
+            from .cohere_re_ranker import CohereReranker
+
             return CohereReranker(st.secrets[constants.COHERE_API_KEY], model_name=model)
         elif t == RerankerType.JINA.value:
+            from .jina_reranker import JinaReranker
+
             return JinaReranker(model_name=model)
         elif t == RerankerType.COSINE.value:
+            from .cosine_reranker import CosineReranker
+
             return CosineReranker(self.embedder)
         else:
+            from .cosine_reranker import CosineReranker
+
             return CosineReranker(self.embedder)
 
     def _build_evaluator(self):
@@ -172,177 +190,146 @@ class RAGPipeline:
         # else: unknown component, ignore
 
     def extractText(self, file, temp_dir=constants.TEMP_DOCS_DIR):
-        from .document_loaders.pdf_loader import PDFLoader
-        from .document_loaders.docx_loader import DOCXLoader
-        from .document_loaders.txt_loader import TXTLoader
-        from .document_loaders.csv_loader import CSVLoader
-        loaders = {
-            constants.PDF_EXTENSION: PDFLoader(),
-            constants.DOCX_EXTENSION: DOCXLoader(),
-            constants.TXT_EXTENSION: TXTLoader(),
-            constants.CSV_EXTENSION: CSVLoader(),
-        }
-        os.makedirs(temp_dir, exist_ok=True)
-        file_ext = os.path.splitext(file.name)[1].lower()
-        file_path = os.path.join(temp_dir, file.name)
-        
-        with open(file_path, "wb") as f:
-            f.write(file.getbuffer())
-        if file_ext in loaders:
-            text = loaders[file_ext].load_document(file_path)
-        else:
-            raise ValueError(f"Unsupported file type: {file_ext}")
-        if not text:
+        try:
+            from .document_loaders.pdf_loader import PDFLoader
+            from .document_loaders.docx_loader import DOCXLoader
+            from .document_loaders.txt_loader import TXTLoader
+            from .document_loaders.csv_loader import CSVLoader
+            # loaders = {
+            #     constants.PDF_EXTENSION: PDFLoader(),
+            #     constants.DOCX_EXTENSION: DOCXLoader(),
+            #     constants.TXT_EXTENSION: TXTLoader(),
+            #     constants.CSV_EXTENSION: CSVLoader(),
+            # }
+            os.makedirs(temp_dir, exist_ok=True)
+            file_ext = os.path.splitext(file.name)[1].lower()
+            file_path = os.path.join(temp_dir, file.name)
+            
+            with open(file_path, "wb") as f:
+                f.write(file.getbuffer())
+            text = PDFLoader().load_document(file_path)
+            # if file_ext in loaders:
+            #     text = loaders[file_ext].load_document(file_path)
+            # else:
+            #     raise ValueError(f"Unsupported file type: {file_ext}")
+            if not text:
+                return None, None
+            else:
+                return text
+        except Exception as e:
+            st.error(f"Error extracting text: {e}, Traceback: {traceback.print_exc()}")
             return None, None
-        else:
-            return text
         
         
     # process documents
     def process_document(self, file, texts=None):
-        
-        chunks =  self.chunker.split_text(text=texts)
+        try:
+            chunks =  self.chunker.split_text(text=texts)
 
-        documents = []
-        for chunk in chunks:
-            doc_id = str(uuid.uuid4())
-            documents.append({
-                constants.ID: doc_id,
-                constants.PAGE_CONTENT: chunk,
-                constants.METADATA: {"source": file.name}
-            })
-        texts = [doc[constants.PAGE_CONTENT] for doc in documents]
-        embeddings = self.embedder.fit(texts)
-        st.success(f"Embedder: {self.embedder}")
-        
-        
-        documents = self.vector_store.format_documents(documents)
-        self.vector_store.add_embeddings(embeddings, documents)
-        
+            documents = []
+            for chunk in chunks:
+                doc_id = str(uuid.uuid4())
+                documents.append({
+                    constants.ID: doc_id,
+                    constants.PAGE_CONTENT: chunk,
+                    constants.METADATA: {"source": file.name}
+                })
+            texts = [doc[constants.PAGE_CONTENT] for doc in documents]
+            embeddings = self.embedder.fit(texts)
+            st.success(f"Embedder: {self.embedder}")
+            
+            
+            documents = self.vector_store.format_documents(documents)
+            self.vector_store.add_embeddings(embeddings, documents)
+            
 
-        return documents, chunks
+            return documents, chunks
+        except Exception as e:
+            st.error(f"Error processing document: {e}, Traceback: {traceback.print_exc()}")
+            return None, None
 
     def query(self, query_text, top_k=None):
-        
-        # Ensure documents are available
-        if not hasattr(self.vector_store, 'documents') or not self.vector_store.documents:
-            raise ValueError("No documents processed. Please upload and process a document before querying.")
-        # Use configured top_k if not specified
-        if top_k is None:
-            top_k = self.top_k
-        
-        # Generate query embedding
-        query_embedding = self.embedder.transform([query_text])
-        if isinstance(query_embedding, list) and query_embedding:
-            first = query_embedding[0]
-            if hasattr(first, "values"):
-                query_embedding = [e.values for e in query_embedding]
-            elif hasattr(first, "embedding"):
-                query_embedding = [e.embedding for e in query_embedding]
-
-        
-        retriever_config = self.config_manager.get_config(constants.CONFIG_RETRIEVER)
-        if retriever_config[constants.CONFIG_TYPE_PARAM] == constants.RetrieverType.SENTENCE_WINDOW.value:
+        try:
+            # Ensure documents are available
+            if not hasattr(self.vector_store, 'documents') or not self.vector_store.documents:
+                raise ValueError("No documents processed. Please upload and process a document before querying.")
+            # Use configured top_k if not specified
+            if top_k is None:
+                top_k = self.top_k
             
-            # First Retreive top docs with similarity retreival
-            similarity_retreival = SimilarityRetriever(similarity_threshold=0.0)
-            retreive_results = similarity_retreival.retrieve(
-                query_embedding, 
-                self.vector_store.documents,
-                top_k=top_k,
-                vector_store=self.vector_store
-                )
-            # After similarity retrieval:
-            chunk_texts = [res[constants.Document][constants.PAGE_CONTENT] for res in retreive_results]
-            # Apply the configured retriever on the filtered similarity results
+            # Generate query embedding
+            query_embedding = self.embedder.transform([query_text])
+            if isinstance(query_embedding, list) and query_embedding:
+                first = query_embedding[0]
+                if hasattr(first, "values"):
+                    query_embedding = [e.values for e in query_embedding]
+                elif hasattr(first, "embedding"):
+                    query_embedding = [e.embedding for e in query_embedding]
+
+                        
             results = self.retriever.retrieve(
-                query_embedding,
-                chunk_texts,
-                top_k=top_k,
-                embedder=self.embedder,
-                vector_store=self.vector_store,
-                query_text=query_text
-            )
-            retrieved_docs = [result for result in results]
-        else:
-            results = self.retriever.retrieve(
-                query_embedding, 
-                self.vector_store.documents, 
-                top_k=top_k,
-                vector_store=self.vector_store,
-                query_text=query_text
-        )
+                    query_embedding, 
+                    self.vector_store.documents, 
+                    top_k=top_k,
+                    vector_store=self.vector_store,
+                    query_text=query_text
+                    )
             retrieved_docs = [result[constants.Document][constants.PAGE_CONTENT] for result in results]
-        breakpoint()
-        # Use retriever to get relevant documents
-        
-        
-        # Extract document content
-        
-        # Rerank documents
-        reranked_docs, explanation = self.reranker.rerank(query_text, retrieved_docs, top_k=top_k)
-        
-        
-        context_docs = None
-        if reranked_docs:
-            context_docs = "\n\n".join(reranked_docs)
-        else:
-            context_docs = "\n\n".join(retrieved_docs)
+                
+            # Use retriever to get relevant documents
+            if not retrieved_docs:
+                raise ValueError(constants.UNABLE_TO_RETRIEVE_MESSAGE)
+            
+            # Rerank documents
+            reranked_docs, explanation = self.reranker.rerank(query_text, retrieved_docs, top_k=top_k)
+            
+            
+            context_docs = None
+            if reranked_docs:
+                context_docs = "\n\n".join(reranked_docs)
+            else:
+                context_docs = "\n\n".join(retrieved_docs)
 
-        # Join contexts
-        context = "\n\n".join(context_docs)
-        
-        # Generate answer
-        answer_prompt = f"""
-        ACT AS AN EXPERT TUTOR IN DATA COMMUNICATION TECHNIQUES FOR UNIVERSITY-LEVEL STUDENTS. YOU MUST ANSWER ONLY USING INFORMATION FROM THE DOCUMENT **"DCA2104 Unit-08: Digital Data Communication Techniques"**.
+            # Join contexts
+            context = "\n\n".join(context_docs)
+            
+            # Generate answer
+            answer_prompt = f"""
+            You are a highly detailed assistant that must answer questions based only on the provided context. Do not make up facts or include any information not explicitly supported by the context. If the answer is not present, respond with "The context does not provide enough information to answer this question."
 
-        ### GOALS ###
-        - PROVIDE CLEAR, CONCISE, AND FACTUALLY CORRECT ANSWERS
-        - JUSTIFY YOUR RESPONSES BY TRACING BACK TO THE DOCUMENT CONTENT
-        - STRUCTURE EACH ANSWER USING A CHAIN OF THOUGHT:
-        1. UNDERSTAND the user's query
-        2. IDENTIFY relevant content from the unit
-        3. EXTRACT accurate details
-        4. FORMULATE a clear and helpful answer
-        5. Answer in detail which is relavant to the query
-        6. Answer should be faithfull and grounded
-
-        ### RESPONSE BEHAVIOR ###
-        - IF CONTENT IS NOT IN THE DOCUMENT, YOU MUST SAY: **"The answer is not available in the provided material."**
-        - IF THE USER ASKS FOR A DEFINITION, PROVIDE IT ONLY IF PRESENT IN THE TEXT
-
-        ### INSTRUCTION RULES ###
-        - DO NOT USE OUTSIDE KNOWLEDGE OR WEBSOURCES
-        - DO NOT GUESS
-        - AVOID SUMMARIZING THE WHOLE DOCUMENT UNLESS ASKED
-        - MAINTAIN AN EDUCATIONAL AND TECHNICAL TONE
-
-        THIS DOCUMENT IS YOUR ONLY SOURCE OF TRUTH.
-
-        Below are contexts:
+            Your answers must be:
+            - Detailed and well-explained (minimum 6 sentences)
+            - Faithfully based only on the context
+            - Avoid any assumptions or hallucinations
+            # CONTEXT
             Context:
             {context}
-        Below is the query asked by User:
-        
+
+            # QUERY
+            Below is the query asked by User:
+            
             Question: {query_text}
 
             Answer:
             """
-        answer = self.llm_service.generate_response(answer_prompt)
-        
-        # Save the query data for potential evaluation
-        self.last_query = {
-            constants.QUESTION: query_text,
-            constants.ANSWER: answer,
-            constants.CONTEXTS: retrieved_docs
-        }
-        
-        
-        return {
-            constants.ANSWER: answer,
-            constants.CONTEXTS: context_docs,
-            constants.RERANK_EXPLANATION: explanation
-        }
+            answer = self.llm_service.generate_response(answer_prompt)
+            
+            # Save the query data for potential evaluation
+            self.last_query = {
+                constants.QUESTION: query_text,
+                constants.ANSWER: answer,
+                constants.CONTEXTS: retrieved_docs
+            }
+            
+            
+            return {
+                constants.ANSWER: answer,
+                constants.CONTEXTS: context_docs,
+                constants.RERANK_EXPLANATION: explanation
+            }
+        except Exception as e:
+            st.error(f"Error during query: {e}, Traceback: {traceback.print_exc()}")
+            return None
         
     def evaluate(self, question=None, answer=None, contexts=None, ground_truths=None):
         """Evaluate the RAG system using the configured evaluator
@@ -356,23 +343,26 @@ class RAGPipeline:
         Returns:
             Dictionary of evaluation metrics
         """
-        
-        # Use last query data if not provided
-        if hasattr(self, constants.LAST_QUERY) and (question is None or answer is None or contexts is None):
-            question = question or self.last_query[constants.QUESTION]
-            answer = answer or self.last_query[constants.ANSWER]
-            contexts = contexts or self.last_query[constants.CONTEXTS]
+        try:
+            # Use last query data if not provided
+            if hasattr(self, constants.LAST_QUERY) and (question is None or answer is None or contexts is None):
+                question = question or self.last_query[constants.QUESTION]
+                answer = answer or self.last_query[constants.ANSWER]
+                contexts = contexts or self.last_query[constants.CONTEXTS]
 
-        eval_questions = []
-        with open('RAG/generated_questions.text', 'r') as file:
-            for line in file:
-                # Remove newline character and convert to integer
-                item = line.strip()
-                eval_questions.append(item)
-        
-        if not (question and answer and contexts):
-            raise ValueError("No query data available for evaluation")
-        
-        # Run evaluation
-        metrics = self.evaluator.evaluate(question, answer, contexts, ground_truths)
-        return metrics
+            eval_questions = []
+            with open('RAG/generated_questions.text', 'r') as file:
+                for line in file:
+                    # Remove newline character and convert to integer
+                    item = line.strip()
+                    eval_questions.append(item)
+            
+            if not (question and answer and contexts):
+                raise ValueError("No query data available for evaluation")
+            
+            # Run evaluation
+            metrics = self.evaluator.evaluate(question, answer, contexts, ground_truths)
+            return metrics
+        except Exception as e:
+            st.error(f"Error during evaluation: {e}, Traceback: {traceback.print_exc()}")
+            return None

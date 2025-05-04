@@ -37,6 +37,7 @@ class SentenceWindowRetriever(BaseRetriever):
         Returns:
             List of sentences
         """
+        
         # Split text using regex
         sentences = self.sentence_pattern.split(text)
         
@@ -186,7 +187,7 @@ class SentenceWindowRetriever(BaseRetriever):
             raise ValueError(constants.QUERY_TEXT_MUST_BE_PROVIDED_ERROR_MESSAGE)
         
         # Apply sentence window retrieval
-        retriever = SentenceWindowRetriever(window_size=1)
+        retriever = SentenceWindowRetriever(window_size=self.window_size)
         enhanced_contexts = retriever.apply_sentence_window_retrieval(
             query_text,
             documents,

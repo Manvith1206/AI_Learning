@@ -53,7 +53,7 @@ class HybridRetriever(BaseRetriever):
         combined_results = []
         for result in semantic_results:
             
-            doc_id = result[constants.Document][constants.ID]
+            doc_id = result[constants.ID]
             semantic_score = result[constants.Score]
             keyword_score = keyword_scores.get(doc_id, 0)
             
@@ -65,6 +65,7 @@ class HybridRetriever(BaseRetriever):
             
             combined_results.append({
                 constants.Document: result[constants.Document],
+                constants.ID: result[constants.ID],
                 constants.Score: combined_score,
                 constants.SEMANTIC_SCORE: semantic_score,
                 constants.KEYWORD_SCORE: keyword_score

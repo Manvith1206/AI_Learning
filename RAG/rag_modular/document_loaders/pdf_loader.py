@@ -3,8 +3,10 @@ from .base_loader import BaseDocumentLoader
 
 class PDFLoader(BaseDocumentLoader):
     def load_document(self, file_path):
-        import pdfplumber
-
-        with pdfplumber.open(file_path) as pdf:
-            text = "\n".join(page.extract_text() for page in pdf.pages)
+        import pypdf
+        text = ""
+        with open(file_path, 'rb') as f:
+            pdf_reader = pypdf.PdfReader(f)
+            for page in pdf_reader.pages:
+                text += page.extract_text() + "\n"
         return text

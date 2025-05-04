@@ -122,14 +122,14 @@ RETRIEVER_PARAM_GRID = [
             constants.CONFIG_KEYWORD_WEIGHT: 0.3
         },
         constants.CONFIG_TOP_K_PARAM: 5
-    }),
-    (constants.RetrieverType.SENTENCE_WINDOW.value, {
-        constants.CONFIG_TYPE_PARAM: constants.RetrieverType.SENTENCE_WINDOW.value, 
-        constants.CONFIG_PARAM: {
-            constants.CONFIG_WINDOW_SIZE: 3
-        },
-        constants.CONFIG_TOP_K_PARAM: 5
-    })
+     }),
+    # (constants.RetrieverType.SENTENCE_WINDOW.value, {
+    #     constants.CONFIG_TYPE_PARAM: constants.RetrieverType.SENTENCE_WINDOW.value, 
+    #     constants.CONFIG_PARAM: {
+    #         constants.CONFIG_WINDOW_SIZE: 3
+    #     },
+    #     constants.CONFIG_TOP_K_PARAM: 5
+    # })
 ]
 
 RERANKER_PARAM_GRID = [

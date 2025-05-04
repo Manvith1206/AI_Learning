@@ -32,7 +32,7 @@ class MistralEmbedder(BaseEmbedder):
         """Count the number of tokens in a text string"""
         return len(self._tokenizer.encode(text))
     
-    def _batch_texts(self, texts, max_tokens_per_batch: int = 8192):
+    def _batch_texts(self, texts, max_tokens_per_batch: int = 7000):
         """Split texts into batches based on token count"""
         batches = []
         current_batch = []
@@ -72,7 +72,7 @@ class MistralEmbedder(BaseEmbedder):
         """Call the Mistral API with exponential backoff for rate limiting"""
         retry_count = 0
         delay = self._initial_delay
-        breakpoint()
+        
         while True:
             try:
                 response = self._client.embeddings.create(

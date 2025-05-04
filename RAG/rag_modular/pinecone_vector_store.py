@@ -99,6 +99,7 @@ class PineConeVectorStore(BaseVectorStore):
         )
 
         results = []
+        
         for match in search_result["matches"]:
             metadata = match["metadata"]
             score = match["score"]

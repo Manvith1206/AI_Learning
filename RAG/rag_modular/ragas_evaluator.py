@@ -58,7 +58,6 @@ class RagasEvaluator(BaseEvaluator):
 
         metrics_dict = {}
         metrics_dict[constants.FAITHFULNESS] = round((result[constants.FAITHFULNESS][0]), 2)
-        metrics_dict[constants.ANSWER_CORRECTNESS] = round((result[constants.ANSWER_CORRECTNESS][0]), 2)
         metrics_dict[constants.CONTEXT_PRECISION] = round((result[constants.CONTEXT_PRECISION][0]), 2)
         metrics_dict[constants.CONTEXT_RECALL] = round((result[constants.CONTEXT_RECALL][0]), 2)
         metrics_dict[constants.ANSWER_RELEVANCY] = round((result[constants.ANSWER_RELEVANCY][0]), 2)

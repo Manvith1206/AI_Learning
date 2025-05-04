@@ -1,5 +1,6 @@
 from .base_llm_service import BaseLLMService
 from rag_modular.RAG_Constants import GeminiLLMModel
+from google.genai import types
 
 class GeminiService(BaseLLMService):
     def __init__(self, client, model_name=GeminiLLMModel.GEMINI_FLASH.value):
