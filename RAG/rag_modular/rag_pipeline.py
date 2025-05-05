@@ -195,23 +195,22 @@ class RAGPipeline:
             from .document_loaders.docx_loader import DOCXLoader
             from .document_loaders.txt_loader import TXTLoader
             from .document_loaders.csv_loader import CSVLoader
-            # loaders = {
-            #     constants.PDF_EXTENSION: PDFLoader(),
-            #     constants.DOCX_EXTENSION: DOCXLoader(),
-            #     constants.TXT_EXTENSION: TXTLoader(),
-            #     constants.CSV_EXTENSION: CSVLoader(),
-            # }
+            loaders = {
+                constants.PDF_EXTENSION: PDFLoader(),
+                constants.DOCX_EXTENSION: DOCXLoader(),
+                constants.TXT_EXTENSION: TXTLoader(),
+                constants.CSV_EXTENSION: CSVLoader(),
+            }
             os.makedirs(temp_dir, exist_ok=True)
             file_ext = os.path.splitext(file.name)[1].lower()
             file_path = os.path.join(temp_dir, file.name)
             
             with open(file_path, "wb") as f:
                 f.write(file.getbuffer())
-            text = PDFLoader().load_document(file_path)
-            # if file_ext in loaders:
-            #     text = loaders[file_ext].load_document(file_path)
-            # else:
-            #     raise ValueError(f"Unsupported file type: {file_ext}")
+            if file_ext in loaders:
+                text = loaders[file_ext].load_document(file_path)
+            else:
+                raise ValueError(f"Unsupported file type: {file_ext}")
             if not text:
                 return None, None
             else:

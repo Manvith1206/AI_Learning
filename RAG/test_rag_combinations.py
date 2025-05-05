@@ -139,11 +139,11 @@ def run_tests():
         # (EmbedderType.TFIDF.value, {
         #     constants.CONFIG_TYPE_PARAM: EmbedderType.TFIDF.value
         # }),
-        # (EmbedderType.GEMINI.value, {
-        #     constants.CONFIG_TYPE_PARAM: EmbedderType.GEMINI.value, 
-        #     constants.CONFIG_MODEL: constants.GeminiEmbedModels.GEMINI_TEXT_EMBED_MODEL.value,
-        #     constants.CONFIG_BATCH_SIZE: 0
-        #  }),
+        (EmbedderType.GEMINI.value, {
+            constants.CONFIG_TYPE_PARAM: EmbedderType.GEMINI.value, 
+            constants.CONFIG_MODEL: constants.GeminiEmbedModels.GEMINI_TEXT_EMBED_MODEL.value,
+            constants.CONFIG_BATCH_SIZE: 0
+         }),
         (EmbedderType.COHERE.value, {
             constants.CONFIG_TYPE_PARAM: EmbedderType.COHERE.value, 
             constants.CONFIG_MODEL: constants.CohereEmbedModels.COHERE_EMBED_MODEL_DEFAULT.value
@@ -172,13 +172,13 @@ def run_tests():
     ]
     
     retriever_configs = [
-        # (RetrieverType.SIMILARITY.value, {
-        #     constants.CONFIG_TYPE_PARAM: RetrieverType.SIMILARITY.value, 
-        #     constants.CONFIG_PARAM: {
-        #         constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.0
-        #     },
-        #     constants.CONFIG_TOP_K_PARAM: 3
-        # }),
+        (RetrieverType.SIMILARITY.value, {
+            constants.CONFIG_TYPE_PARAM: RetrieverType.SIMILARITY.value, 
+            constants.CONFIG_PARAM: {
+                constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.0
+            },
+            constants.CONFIG_TOP_K_PARAM: 3
+        }),
         (RetrieverType.HYBRID.value, {
             constants.CONFIG_TYPE_PARAM: RetrieverType.HYBRID.value, 
             constants.CONFIG_PARAM: {

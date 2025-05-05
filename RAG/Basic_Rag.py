@@ -92,8 +92,8 @@ with st.sidebar:
             chunk_overlap = st.slider(constants.CHUNK_OVERLAP_DISPLAY_NAME, 0, 3000, 200)
             chunker_params = {constants.CONFIG_CHUNK_SIZE_PARAM: chunk_size, constants.CONFIG_CHUNK_OVERLAP_PARAM: chunk_overlap}
         elif chunker_type == ChunkerType.SEMANTIC.value:
-            min_chunk_size = st.slider(constants.MIN_CHUNK_SIZE_DISPLAY_NAME, 100, 10000, 600)
-            max_chunk_size = st.slider(constants.MAX_CHUNK_SIZE_DISPLAY_NAME, 100, 10000, 600)
+            min_chunk_size = st.number_input(constants.MIN_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 600)
+            max_chunk_size = st.number_input(constants.MAX_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 110)
             similarity_threshold = st.text_area(constants.SIMILARITY_THRESHOLD_DISPLAY_NAME, 0.65)
             model_name = st.selectbox(constants.MODEL_NAME_DISPLAY_NAME, 
                                       options=[constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI, 
