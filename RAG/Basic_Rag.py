@@ -14,12 +14,12 @@ main()
 # Create a loading indicator for initial setup
 with st.spinner("Loading application..."):
     # Lazy import dependencies only when needed
-    from rag_modular.RAG_Constants import (
+    from rag_modular.Common.RAG_Constants import (
         ChunkerType, EmbedderType,
         RetrieverType, RerankerType,
         EvaluatorType, GeminiLLMModel
     )
-    import rag_modular.RAG_Constants as constants
+    import rag_modular.Common.RAG_Constants as constants
     
     # Add rag_modular to path
     sys.path.append(os.path.join(os.path.dirname(__file__), 'rag_modular'))
@@ -27,22 +27,20 @@ with st.spinner("Loading application..."):
     # Only import these when the app is fully loaded
     @st.cache_resource
     def load_pipeline_dependencies():
-        from rag_modular.rag_pipeline import RAGPipeline
-        from rag_modular.config_manager import ConfigManager
-        import rag_modular.recursive_chunker
-        import rag_modular.test_rag_pipeline
-        import test_rag_combinations
+        from rag_modular.Common.rag_pipeline import RAGPipeline
+        from rag_modular.Common.config_manager import ConfigManager
+        # import RAG.rag_modular.Testing.test_rag_combinations as test_rag_combinations
         return {
             "RAGPipeline": RAGPipeline,
             "ConfigManager": ConfigManager,
-            "test_rag_combinations": test_rag_combinations
+            # "test_rag_combinations": test_rag_combinations
         }
     
     # Load dependencies with caching
     deps = load_pipeline_dependencies()
     RAGPipeline = deps["RAGPipeline"]
     ConfigManager = deps["ConfigManager"]
-    test_rag_combinations = deps["test_rag_combinations"]
+    # test_rag_combinations = deps["test_rag_combinations"]
 
 TEMP_DIR = "temp_docs"
 
@@ -318,9 +316,9 @@ with st.sidebar:
             Config_Content = f"Chunker Config: {get_pipeline().config_manager.config[constants.CONFIG_CHUNKER]}\nEmbedder Config: {get_pipeline().config_manager.config[constants.CONFIG_EMBEDDER]}\nVector Store Config{get_pipeline().config_manager.config[constants.CONFIG_VECTOR_STORE]}\nRetreiver Config: {get_pipeline().config_manager.config[constants.CONFIG_RETRIEVER]}\nLLM Config: {get_pipeline().config_manager.config[constants.CONFIG_LLM]}\nRe Ranking Config: {get_pipeline().config_manager.config[constants.CONFIG_RERANKER]}\n{get_pipeline().config_manager.config[constants.CONFIG_EVALUATOR]}"
             st.markdown(Config_Content)
 
-    if st.button("Test All Configurations", key="test_all_combinations"):
-        # Only import and run when button is clicked
-        test_rag_combinations.run_tests()
+    # if st.button("Test All Configurations", key="test_all_combinations"):
+    #     # Only import and run when button is clicked
+    #     test_rag_combinations.run_tests()
 
 # Main chat interface
 st.subheader("Chat with your Documents")
@@ -335,7 +333,7 @@ if prompt := st.chat_input("Ask a question about your documents"):
         st.markdown(prompt)
     with st.chat_message("assistant"):
         if st.session_state.documents:
-            with st.spinner("Thinking..."):
+            with st.spinner("🤔 Thinking...", show_time=True):
                 # Initialize pipeline when needed
                 pipeline = get_pipeline()
                 response = pipeline.query(prompt)

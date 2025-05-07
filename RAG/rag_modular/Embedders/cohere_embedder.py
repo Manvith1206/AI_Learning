@@ -1,8 +1,8 @@
 # cohere_embedder.py
-from .base_embedder import BaseEmbedder
+from .Embedders import BaseEmbedder
 import cohere
 import os
-import rag_modular.RAG_Constants as constants
+import rag_modular.Common.RAG_Constants as constants
 
 class CohereEmbedder(BaseEmbedder):
     def __init__(self, api_key: str = None, model: str = constants.CohereEmbedModels.COHERE_EMBED_MODEL_ENG):

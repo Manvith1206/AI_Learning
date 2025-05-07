@@ -1,6 +1,6 @@
 from .base_reranker import BaseReranker
 import re
-import rag_modular.RAG_Constants as constants
+import rag_modular.Common.RAG_Constants as constants
 
 class LLMReranker(BaseReranker):
     def __init__(self, llm_client, model_name="gemini-2.0-flash"):

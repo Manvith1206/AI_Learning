@@ -1,6 +1,6 @@
 from .base_reranker import BaseReranker
 from sklearn.metrics.pairwise import cosine_similarity
-from rag_modular.RAG_Constants import RERANK_EXPLAINATION
+from rag_modular.Common.RAG_Constants import RERANK_EXPLAINATION
 
 class CosineReranker(BaseReranker):
     """

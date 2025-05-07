@@ -1,9 +1,31 @@
+from abc import ABC, abstractmethod
+
+class BaseChunker(ABC):
+    @abstractmethod
+    def split_text(self, text):
+        pass
+
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+class RecursiveChunker(BaseChunker):
+    def __init__(self, chunk_size=600, chunk_overlap=200):
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+
+    def split_text(self, text):
+        if not text:
+            return []
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=self.chunk_size,
+            chunk_overlap=self.chunk_overlap
+        )
+        return splitter.split_text(text)
+
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import re
 from typing import List, Dict, Any
-from base_chunker import BaseChunker
-import rag_modular.RAG_Constants as constants
+import rag_modular.Common.RAG_Constants as constants
 max_sentences = 300
 
 class SemanticChunker(BaseChunker):
@@ -129,4 +151,21 @@ class SemanticChunker(BaseChunker):
             chunks.append(chunk_text)
             start_idx = end_idx
             
+        return chunks
+
+import re
+
+class SentenceChunker(BaseChunker):
+    def __init__(self, max_sentences=5):
+        self.max_sentences = max_sentences
+
+    def split_text(self, text):
+        if not text:
+            return []
+        # Use simple regex-based sentence splitting
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        chunks = []
+        for i in range(0, len(sentences), self.max_sentences):
+            chunk = ' '.join(sentences[i:i+self.max_sentences])
+            chunks.append(chunk)
         return chunks

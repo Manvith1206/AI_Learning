@@ -18,9 +18,9 @@ _original_print = builtins.print
 #     except Exception:
 #         pass
 
-from rag_modular.rag_pipeline import RAGPipeline
-from rag_modular.config_manager import ConfigManager
-import rag_modular.RAG_Constants as constants
+from rag_modular.Common.rag_pipeline import RAGPipeline
+from rag_modular.Common.config_manager import ConfigManager
+import rag_modular.Common.RAG_Constants as constants
 
 # Path to the test document
 TEST_FILE_PATH = r"E:\Manvith\Coding\AI\RAG\rag_modular\TestFile\DCA2104 Unit-08_V1.1.pdf"

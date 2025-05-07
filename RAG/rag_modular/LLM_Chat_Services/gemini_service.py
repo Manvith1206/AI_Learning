@@ -1,5 +1,5 @@
 from .base_llm_service import BaseLLMService
-from rag_modular.RAG_Constants import GeminiLLMModel
+from rag_modular.Common.RAG_Constants import GeminiLLMModel
 from google.genai import types
 
 class GeminiService(BaseLLMService):

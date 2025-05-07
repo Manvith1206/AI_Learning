@@ -5,7 +5,7 @@ from datasets import Dataset
 import os
 import streamlit as st
 import openai
-import rag_modular.RAG_Constants as constants
+import rag_modular.Common.RAG_Constants as constants
 from ragas.dataset_schema import MultiTurnSample
 
 os.environ["OPENAI_API_KEY"] = st.secrets[constants.OPENAI_API_KEY]

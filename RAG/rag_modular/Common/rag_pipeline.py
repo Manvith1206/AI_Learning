@@ -2,18 +2,18 @@ import os
 import uuid
 
 
-from .simple_evaluator import SimpleEvaluator
-from .ragas_evaluator import RagasEvaluator
+from rag_modular.Evaluators.simple_evaluator import SimpleEvaluator
+from rag_modular.Evaluators.ragas_evaluator import RagasEvaluator
 from .config_manager import ConfigManager
 import streamlit as st
 
-from rag_modular.RAG_Constants import (
+from rag_modular.Common.RAG_Constants import (
     ChunkerType, EmbedderType,
     RetrieverType, RerankerType,
     EvaluatorType, LLMServiceType, GeminiLLMModel
 )
-import rag_modular.RAG_Constants as constants
-from .cohere_service import CohereChat
+import rag_modular.Common.RAG_Constants as constants
+from rag_modular.LLM_Chat_Services.cohere_service import CohereChat
 
 
 import traceback
@@ -36,9 +36,9 @@ class RAGPipeline:
 
     # build invidual components
     def _build_chunker(self):
-        from .recursive_chunker import RecursiveChunker
-        from .sentence_chunker import SentenceChunker
-        from .semantic_chunker import SemanticChunker
+        from rag_modular.Chunkers import RecursiveChunker
+        from rag_modular.Chunkers import SentenceChunker
+        from rag_modular.Chunkers import SemanticChunker
 
         cfg = self.config_manager.get_config(constants.CONFIG_CHUNKER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -53,9 +53,9 @@ class RAGPipeline:
             return RecursiveChunker()
 
     def _build_embedder(self):
-        from .tfidf_embedder import TFIDFEmbedder
-        from .gemini_embedder import GeminiEmbedder
-        from .mistral_embedder import MistralEmbedder
+        from rag_modular.Embedders.tfidf_embedder import TFIDFEmbedder
+        from rag_modular.Embedders.gemini_embedder import GeminiEmbedder
+        from rag_modular.Embedders.mistral_embedder import MistralEmbedder
 
         cfg = self.config_manager.get_config(constants.CONFIG_EMBEDDER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -65,11 +65,11 @@ class RAGPipeline:
         elif t == EmbedderType.GEMINI.value:
             return GeminiEmbedder(api_key=st.secrets[constants.GEMINI_API_KEY], model_name=model_name)
         elif t == EmbedderType.COHERE.value:
-            from .cohere_embedder import CohereEmbedder
+            from rag_modular.Embedders.cohere_embedder import CohereEmbedder
             return CohereEmbedder(api_key=st.secrets[constants.COHERE_API_KEY],
                                   model=cfg.get(constants.CONFIG_MODEL))
         elif t == EmbedderType.VOYAGE.value:
-            from .voyage_embedder import VoyageEmbedder
+            from rag_modular.Embedders.voyage_embedder import VoyageEmbedder
             return VoyageEmbedder(api_key=st.secrets[constants.VOYAGE_API_KEY],
                                   model=cfg.get(constants.CONFIG_MODEL))
         elif t == EmbedderType.MISTRAL.value:
@@ -80,9 +80,9 @@ class RAGPipeline:
             return TFIDFEmbedder()
 
     def _build_vector_store(self):
-        from .pinecone_vector_store import PineConeVectorStore
-        from .FAISS_Vector_Store import FAISS_Vector_Store
-        from .sklearn_vector_store import SklearnVectorStore
+        from rag_modular.Vector_Stores.pinecone_vector_store import PineConeVectorStore
+        from rag_modular.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store
+        from rag_modular.Vector_Stores.sklearn_vector_store import SklearnVectorStore
 
         cfg = self.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
         params = cfg.get(constants.CONFIG_PARAM, {})
@@ -97,9 +97,9 @@ class RAGPipeline:
             return FAISS_Vector_Store()
 
     def _build_retriever(self):
-        from rag_modular.similarity_retriever import SimilarityRetriever
-        from .sentence_window_retreiver import SentenceWindowRetriever
-        from .similarity_retriever import SimilarityRetriever
+        from rag_modular.Retrieval_Methods.similarity_retriever import SimilarityRetriever
+        from rag_modular.Retrieval_Methods.sentence_window_retreiver import SentenceWindowRetriever
+        from rag_modular.Retrieval_Methods.similarity_retriever import SimilarityRetriever
 
         cfg = self.config_manager.get_config(constants.CONFIG_RETRIEVER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -108,7 +108,7 @@ class RAGPipeline:
         if t == RetrieverType.SIMILARITY.value:
             return SimilarityRetriever(**params)
         elif t == RetrieverType.HYBRID.value:
-            from .hybrid_retriever import HybridRetriever
+            from rag_modular.Retrieval_Methods.hybrid_retriever import HybridRetriever
 
             return HybridRetriever(**params)
         # elif t == RetrieverType.SENTENCE_WINDOW.value:
@@ -118,7 +118,7 @@ class RAGPipeline:
 
     def _build_llm_service(self):
         
-        from .gemini_service import GeminiService
+        from rag_modular.LLM_Chat_Services.gemini_service import GeminiService
 
         cfg = self.config_manager.get_config(constants.CONFIG_LLM)
         
@@ -131,7 +131,7 @@ class RAGPipeline:
         elif t == LLMServiceType.COHERE.value:
             return CohereChat(st.secrets[constants.COHERE_API_KEY], model_name=cfg.get(constants.CONFIG_MODEL))
         elif t == LLMServiceType.CLAUDE.value:
-            from .claude_service import ClaudeService
+            from rag_modular.LLM_Chat_Services.claude_service import ClaudeService
             import anthropic
             client = anthropic.Anthropic(api_key=st.secrets[constants.CLAUDE_API_KEY])
             
@@ -144,23 +144,23 @@ class RAGPipeline:
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         model = cfg.get(constants.CONFIG_PARAM)
         if t == RerankerType.LLM.value:
-            from .llm_reranker import LLMReranker
+            from rag_modular.Rerankers.llm_reranker import LLMReranker
 
             return LLMReranker(self.llm_service, model_name=model)
         elif t == RerankerType.COHERE.value:
-            from .cohere_re_ranker import CohereReranker
+            from rag_modular.Rerankers.cohere_re_ranker import CohereReranker
 
             return CohereReranker(st.secrets[constants.COHERE_API_KEY], model_name=model)
         elif t == RerankerType.JINA.value:
-            from .jina_reranker import JinaReranker
+            from rag_modular.Rerankers.jina_reranker import JinaReranker
 
             return JinaReranker(model_name=model)
         elif t == RerankerType.COSINE.value:
-            from .cosine_reranker import CosineReranker
+            from rag_modular.Rerankers.cosine_reranker import CosineReranker
 
             return CosineReranker(self.embedder)
         else:
-            from .cosine_reranker import CosineReranker
+            from rag_modular.Rerankers.cosine_reranker import CosineReranker
 
             return CosineReranker(self.embedder)
 
@@ -194,10 +194,10 @@ class RAGPipeline:
 
     def extractText(self, file, temp_dir=constants.TEMP_DOCS_DIR):
         try:
-            from .document_loaders.pdf_loader import PDFLoader
-            from .document_loaders.docx_loader import DOCXLoader
-            from .document_loaders.txt_loader import TXTLoader
-            from .document_loaders.csv_loader import CSVLoader
+            from rag_modular.document_loaders.pdf_loader import PDFLoader
+            from rag_modular.document_loaders.docx_loader import DOCXLoader
+            from rag_modular.document_loaders.txt_loader import TXTLoader
+            from rag_modular.document_loaders.csv_loader import CSVLoader
             loaders = {
                 constants.PDF_EXTENSION: PDFLoader(),
                 constants.DOCX_EXTENSION: DOCXLoader(),

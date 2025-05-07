@@ -2,8 +2,8 @@ import re
 from typing import List, Dict, Any
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-import rag_modular.RAG_Constants as constants
-from rag_modular.base_retriever import BaseRetriever
+import rag_modular.Common.RAG_Constants as constants
+from .base_retriever import BaseRetriever
 
 class SentenceWindowRetriever(BaseRetriever):
     """

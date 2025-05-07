@@ -1,7 +1,7 @@
 from pinecone import Pinecone, ServerlessSpec
 import os
 from .base_vector_store import BaseVectorStore
-import RAG_Constants as constants
+import rag_modular.Common.RAG_Constants as constants
 import uuid
 import numpy as np
 from scipy.sparse import csr_matrix

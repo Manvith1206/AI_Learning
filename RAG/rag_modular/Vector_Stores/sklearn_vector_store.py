@@ -1,7 +1,7 @@
 from sklearn.neighbors import NearestNeighbors
 import numpy as np
 from .base_vector_store import BaseVectorStore
-import rag_modular.RAG_Constants as constants
+import rag_modular.Common.RAG_Constants as constants
 import uuid
 
 class SklearnVectorStore(BaseVectorStore):

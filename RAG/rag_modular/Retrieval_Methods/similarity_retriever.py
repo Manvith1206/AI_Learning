@@ -1,6 +1,6 @@
 import numpy as np
 from .base_retriever import BaseRetriever
-import rag_modular.RAG_Constants as constants
+import rag_modular.Common.RAG_Constants as constants
 
 class SimilarityRetriever(BaseRetriever):
     """Retriever that uses cosine similarity to find relevant documents"""

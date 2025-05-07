@@ -9,15 +9,15 @@ import streamlit as st
 ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, ROOT)
 
-from rag_modular.rag_pipeline import RAGPipeline
-from rag_modular.config_manager import ConfigManager
-import rag_modular.RAG_Constants as constants
-from rag_modular.RAG_Constants import (
+from rag_modular.Common.rag_pipeline import RAGPipeline
+from rag_modular.Common.config_manager import ConfigManager
+import rag_modular.Common.RAG_Constants as constants
+from rag_modular.Common.RAG_Constants import (
     ChunkerType, EmbedderType, RetrieverType, 
     RerankerType, VectorStore, GeminiLLMModel,
     CohereLLMModel, JINA_RERANKER_MODELS
 )
-from rag_modular.ragas_evaluator import RagasEvaluator
+from rag_modular.Evaluators.ragas_evaluator import RagasEvaluator
 
 # Path to the test document and output file
 TEST_FILE_PATH = os.path.join(ROOT, "rag_modular", "TestFile", "DCA2104 Unit-08_V1.1.txt")
