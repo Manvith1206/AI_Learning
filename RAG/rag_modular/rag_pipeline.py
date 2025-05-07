@@ -13,6 +13,7 @@ from rag_modular.RAG_Constants import (
     EvaluatorType, LLMServiceType, GeminiLLMModel
 )
 import rag_modular.RAG_Constants as constants
+from .cohere_service import CohereChat
 
 
 import traceback
@@ -127,6 +128,8 @@ class RAGPipeline:
         
         if t == LLMServiceType.GEMINI.value:
             return GeminiService(client, model_name=cfg.get(constants.CONFIG_MODEL))
+        elif t == LLMServiceType.COHERE.value:
+            return CohereChat(st.secrets[constants.COHERE_API_KEY], model_name=cfg.get(constants.CONFIG_MODEL))
         elif t == LLMServiceType.CLAUDE.value:
             from .claude_service import ClaudeService
             import anthropic
@@ -291,15 +294,14 @@ class RAGPipeline:
 
             # Join contexts
             context = "\n\n".join(context_docs)
-            
+            history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in st.session_state.messages])
+
             # Generate answer
             answer_prompt = f"""
-            You are a highly detailed assistant that must answer questions based only on the provided context. Do not make up facts or include any information not explicitly supported by the context. If the answer is not present, respond with "The context does not provide enough information to answer this question."
-
-            Your answers must be:
-            - Detailed and well-explained (minimum 6 sentences)
-            - Faithfully based only on the context
-            - Avoid any assumptions or hallucinations
+            You are a expert in Revit and BIM and you are a expert in .NET
+            Conversation History:
+            {history_text}
+            
             # CONTEXT
             Context:
             {context}
