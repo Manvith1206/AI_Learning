@@ -4,7 +4,7 @@ from typing import List, Dict, Union, Tuple
 from .base_reranker import BaseReranker
 import requests
 import streamlit as st
-import RAG_Constants as constants
+import rag_modular.Common.RAG_Constants as constants
 
 class JinaReranker(BaseReranker):
     """

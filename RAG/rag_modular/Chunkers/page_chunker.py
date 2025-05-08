@@ -1,15 +1,23 @@
 from .base_chunker import BaseChunker
+import re
 
 class PageChunker(BaseChunker):
-    def __init__(self):
-        
+    
     def split_text(self, text):
         if not text:
             return []
         # Split the text into pages based on the number of pages
-        pages = text.split('\f')  # Assuming '\f' is the page delimiter
+        pattern = r'--- Page (\d+):.*?---\n(.*?)(?=\n--- Page \d+:|$)'  # \Z means end of string
+        pages = re.split("--- Page", text)
+        
+        
         chunks = []
-        for i in range(0, len(pages), self.max_pages):
-            chunk = '\f'.join(pages[i:i+self.max_pages])
-            chunks.append(chunk)
+        for page in pages:
+            # Clean up the page text
+            page = page.strip()
+            if page:
+                chunks.append(page)
+                print("Page: ", page)
+
+        
         return chunks

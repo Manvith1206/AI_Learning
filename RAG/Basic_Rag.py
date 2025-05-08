@@ -85,6 +85,7 @@ with st.sidebar:
         )
         
         # Chunker parameters
+        chunker_params = {}
         if chunker_type == ChunkerType.RECURSIVE.value:
             chunk_size = st.slider(constants.CHUNK_SIZE_DISPLAY_NAME, 100, 10000, 600)
             chunk_overlap = st.slider(constants.CHUNK_OVERLAP_DISPLAY_NAME, 0, 3000, 200)
@@ -103,6 +104,7 @@ with st.sidebar:
         elif chunker_type == ChunkerType.SENTENCE.value:  
             max_sentences = st.slider(constants.MAX_SENTENCES_DISPLAY_NAME, 1, 20, 5)
             chunker_params = {constants.CONFIG_MAX_SENTENCES: max_sentences}
+
         st.divider()
         # Vector Store
         vector_store = st.selectbox(
@@ -111,11 +113,13 @@ with st.sidebar:
             index=0            
         )
         if vector_store == constants.VectorStore.SCIKIT_LEARN.value:
-            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_SKLEARN, constants.CONFIG_VECTOR_STORE_METRIC: {constants.CONFIG_METRIC_COSINE}}
+            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.VectorStore.SCIKIT_LEARN.value, constants.CONFIG_VECTOR_STORE_METRIC: {constants.CONFIG_METRIC_COSINE}}
         elif vector_store == constants.VectorStore.PINE_CONE.value:
-            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_PINCONE}
+            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.VectorStore.PINE_CONE.value}
+        elif vector_store == constants.VectorStore.CHROMA.value:
+            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.VectorStore.CHROMA.value}
         else:
-            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_FAISS}
+            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.VectorStore.FAISS.value}
         st.divider()
         # Embedder selection
         embedder_type = st.selectbox(
@@ -335,8 +339,11 @@ if prompt := st.chat_input("Ask a question about your documents"):
         if st.session_state.documents:
             with st.spinner("🤔 Thinking...", show_time=True):
                 # Initialize pipeline when needed
+                print("Initializing pipeline...")
                 pipeline = get_pipeline()
+                print("Pipeline", pipeline)
                 response = pipeline.query(prompt)
+                print("Response", response)
                 st.markdown(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
                 st.markdown(response["answer"])
                 st.session_state.messages.append({

@@ -21,14 +21,19 @@ class SimilarityRetriever(BaseRetriever):
             List of retrieved documents with similarity scores
         """
         
+        if hasattr(query_embedding, "toarray"):
+            emb_arr = query_embedding.toarray().astype(np.float32)
+        else:
+            emb_arr = np.array(query_embedding, dtype=np.float32)
         # Get vector store from kwargs
         vector_store = kwargs.get(constants.CONFIG_VECTOR_STORE)
         if not vector_store:
             raise ValueError(constants.VECTOR_STORE_MUST_BE_PROVIDED_ERROR_MESSAGE)
             
         # Get search results from vector store
-        results = vector_store.search(query_embedding, top_k=top_k)
         
+        results = vector_store.search(emb_arr, top_k=top_k)
+        print(results)
         # Filter by similarity threshold if needed
         filtered_results = [
             result for result in results 

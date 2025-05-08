@@ -36,19 +36,22 @@ class RAGPipeline:
 
     # build invidual components
     def _build_chunker(self):
-        from rag_modular.Chunkers import RecursiveChunker
-        from rag_modular.Chunkers import SentenceChunker
-        from rag_modular.Chunkers import SemanticChunker
+        from rag_modular.Chunkers.recursive_chunker import RecursiveChunker
+        from rag_modular.Chunkers.sentence_chunker import SentenceChunker
+        from rag_modular.Chunkers.semantic_chunker import SemanticChunker
+        from rag_modular.Chunkers.page_chunker import PageChunker
 
         cfg = self.config_manager.get_config(constants.CONFIG_CHUNKER)
-        t = cfg.get(constants.CONFIG_TYPE_PARAM)
+        type = cfg.get(constants.CONFIG_TYPE_PARAM)
         params = cfg.get(constants.CONFIG_PARAM, {})
-        if t == ChunkerType.RECURSIVE.value:
+        if type == ChunkerType.RECURSIVE.value:
             return RecursiveChunker(**params)
-        elif t == ChunkerType.SENTENCE.value:
+        elif type == ChunkerType.SENTENCE.value:
             return SentenceChunker(**params)
-        elif t == ChunkerType.SEMANTIC.value:
+        elif type == ChunkerType.SEMANTIC.value:
             return SemanticChunker(**params)
+        elif type == ChunkerType.PAGE.value:
+            return PageChunker()
         else:
             return RecursiveChunker()
 
@@ -89,11 +92,14 @@ class RAGPipeline:
         type = cfg.get(constants.CONFIG_TYPE_PARAM)
         api_key = st.secrets[constants.PINECONE_API_KEY]
 
-        if type == constants.CONFIG_VECTOR_STORE_SKLEARN:
+        if type == constants.VectorStore.SCIKIT_LEARN.value:
             return SklearnVectorStore(**params)
-        elif type == constants.CONFIG_VECTOR_STORE_PINCONE:
+        elif type == constants.VectorStore.PINE_CONE.value:
             return PineConeVectorStore(api_key=api_key, index_name=constants.PINE_CONE_INDEX_NAME)
-        else:
+        elif type == constants.VectorStore.CHROMA.value:
+            from rag_modular.Vector_Stores.chroma_vector_store import ChromaVectorStore
+            return ChromaVectorStore(**params, collectionName=constants.CHROMA_COLLECTION_NAME)
+        elif type == constants.VectorStore.FAISS.value:
             return FAISS_Vector_Store()
 
     def _build_retriever(self):
@@ -134,7 +140,6 @@ class RAGPipeline:
             from rag_modular.LLM_Chat_Services.claude_service import ClaudeService
             import anthropic
             client = anthropic.Anthropic(api_key=st.secrets[constants.CLAUDE_API_KEY])
-            
             return ClaudeService(client, model_name=cfg.get(constants.CONFIG_MODEL))
         else:
             return GeminiService(client, model_name=cfg.get(constants.CONFIG_MODEL))
@@ -250,8 +255,24 @@ class RAGPipeline:
             st.error(f"Error processing document: {e}, Traceback: {traceback.print_exc()}")
             return None, None
 
+    def rewrite_query(self, query_text, max_assistant_chars=100):
+        if not st.session_state.messages:
+            return f"The user is asking: {query_text}"
+
+        prev_user, prev_assistant = st.session_state.messages[-1]
+        assistant_trimmed = prev_assistant.strip().replace('\n', ' ')[:max_assistant_chars] + "..."
+        
+        summary = (
+            f"The user previously asked:\n{prev_user}\n"
+            f"I responded with:\n{assistant_trimmed}\n"
+            f"Now the user wants:\n{query_text}"
+        )
+        return summary
+    
     def query(self, query_text, top_k=None):
         try:
+            print("Querying with text:", query_text)
+            # query_text = self.rewrite_query(query_text)
             # Ensure documents are available
             if not hasattr(self.vector_store, 'documents') or not self.vector_store.documents:
                 raise ValueError("No documents processed. Please upload and process a document before querying.")
@@ -267,7 +288,6 @@ class RAGPipeline:
                     query_embedding = [e.values for e in query_embedding]
                 elif hasattr(first, "embedding"):
                     query_embedding = [e.embedding for e in query_embedding]
-
                         
             results = self.retriever.retrieve(
                     query_embedding, 
@@ -276,6 +296,7 @@ class RAGPipeline:
                     vector_store=self.vector_store,
                     query_text=query_text
                     )
+            print("Results:", results)
             retrieved_docs = [result[constants.Document][constants.PAGE_CONTENT] for result in results]
                 
             # Use retriever to get relevant documents
@@ -298,11 +319,16 @@ class RAGPipeline:
 
             # Generate answer
             answer_prompt = f"""
-            You are a expert in Revit and BIM and you are a expert in .NET
-            Conversation History:
-            {history_text}
-            
+            You are a highly detailed assistant that must answer questions based only on the provided context. Do not make up facts or include any information not explicitly supported by the context. If the answer is not present, respond with "The context does not provide enough information to answer this question."
+            You are a expert in Digital Data Communications for University Students
+
+            Your answers must be:
+            - Detailed and well-explained (minimum 6 sentences)
+            - Faithfully based only on the context
+            - Avoid any assumptions or hallucinations
+
             # CONTEXT
+            # Below are contexts:
             Context:
             {context}
 

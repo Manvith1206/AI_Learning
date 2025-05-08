@@ -1,6 +1,6 @@
 from .base_reranker import BaseReranker
 import cohere as co
-import RAG_Constants as constants
+import rag_modular.Common.RAG_Constants as constants
 
 class CohereReranker(BaseReranker):
     def __init__(self, api_key: str = None, model_name: str = constants.CohereEmbedModels.COHERE_EMBED_MODEL_ENG):

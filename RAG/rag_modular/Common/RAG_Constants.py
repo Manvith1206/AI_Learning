@@ -70,6 +70,7 @@ LAST_QUERY = "last_query"
 TEMP_DOCS_DIR = "temp_docs"
 
 PINE_CONE_INDEX_NAME = "test-rag-v1"
+CHROMA_COLLECTION_NAME = "chroma-rag-v1"
 
 GEMINI_API_KEY = "GEMINI_API_KEY"
 OPENAI_API_KEY = "OPEN_AI_API_KEY"
@@ -124,6 +125,7 @@ class ChunkerType(Enum):
     RECURSIVE = "recursive"
     SENTENCE = "sentence"
     SEMANTIC = "semantic"
+    PAGE = "page"
 
 class EmbedderType(Enum):
     TFIDF = "tfidf"
@@ -166,6 +168,7 @@ class VectorStore(Enum):
     SCIKIT_LEARN = "sckit_learn"
     FAISS = "faiss"
     PINE_CONE = "pine-cone"
+    CHROMA = "chroma"
 
 # Common LLM model names
 class CohereLLMModel(Enum):
