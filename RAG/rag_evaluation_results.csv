@@ -1,0 +1,353 @@
+Query,Response,Ground Truth,Chunking Strategy,Embedding Model,Retrieval Strategy,Reranking Strategy,Vector Store,LLM Chat Service,Faithfulness,Context Relevancy,Context Recall,Answer Correctness,Answer Relevancy,Overall Score
+What is Synchronous Transmission?,"# Synchronous Transmission
+
+## UNDERSTANDING THE QUERY
+I understand you're asking about synchronous transmission in digital data communication, specifically what it is and how it works.
+
+## IDENTIFYING RELEVANT CONTENT
+Looking at the provided document, synchronous transmission is discussed in detail in Section 2 of Unit 8: ""ASYNCHRONOUS AND SYNCHRONOUS TRANSMISSION.""
+
+## EXTRACTING ACCURATE DETAILS
+According to the document, synchronous transmission is defined as a transmission technique that allows the transmission of large blocks of bits in a steady stream without start and stop codes.
+
+## FORMULATING A CLEAR ANSWER
+Synchronous transmission is a digital data communication technique that allows the transmission of large blocks of bits in a steady stream without the need for start and stop codes. Unlike asynchronous transmission, synchronous transmission enables more efficient data transfer for sizeable blocks of data.
+
+Key characteristics of synchronous transmission include:
+
+1. It can transmit large blocks of bits in a steady stream
+2. To prevent timing changes between transmitter and receiver, their clocks must be synchronized
+3. Each block begins with a preamble bit pattern and ends with a postamble bit pattern
+4. Additional control bits are added to the block for data link control procedures
+5. The data plus preamble, postamble, and control information together form what is called a ""frame""
+6. The exact format of the frame depends on which data link control procedure is being used
+7. For synchronization, options include:
+   - Providing a separate clock line between transmitter and receiver
+   - Inserting clocking information in the data signal (using techniques like Manchester or differential Manchester encoding)
+
+Synchronous transmission is more efficient than asynchronous transmission for large data blocks, with typical overhead being less than 100 bits compared to asynchronous transmission's 20% or more overhead.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,cohere,hybrid,jina,faiss,claude,1.0,1.0,1.0,0.68,0.95,0.926
+What is Synchronous Transmission?,"# Synchronous Transmission
+
+## Understanding the Query
+I need to explain what synchronous transmission is based on the information in the DCA2104 Unit-08 document about digital data communication techniques.
+
+## Relevant Content Identification
+The document contains specific information about synchronous transmission in section 2, which covers ""Asynchronous and synchronous transmission.""
+
+## Information Extraction
+According to the document, synchronous transmission is a technique used for digital data communication where:
+
+- Large blocks of bits are transmitted in a steady stream without start and stop codes
+- The clocks of the transmitter and receiver must be synchronized to prevent timing changes
+- It allows for more efficient transmission compared to asynchronous transmission, especially for larger data volumes
+- Each block begins with a preamble bit pattern and ends with a postamble bit pattern
+- Additional bits are added that convey control information used in data link control procedures
+- The data plus preamble, postamble, and control information are collectively called a frame
+
+## Formulating the Answer
+Synchronous transmission is a digital data communication technique that enables the transmission of large blocks of bits in a steady stream without using start and stop codes. Unlike asynchronous transmission, which transmits data one character at a time, synchronous transmission is more efficient for transferring larger volumes of data.
+
+In synchronous transmission, the clocks of both the transmitter and receiver must be synchronized to prevent timing issues. This synchronization can be achieved either through a separate clock line between the transmitter and receiver, or by inserting clocking information into the data signal itself (such as with Manchester or differential Manchester encoding).
+
+The data in synchronous transmission is organized into frames. Each frame begins with a preamble bit pattern and ends with a postamble bit pattern, with additional control information bits included. This structure allows the receiver to determine the beginning and end of each data block.
+
+For sizeable blocks of data, synchronous transmission is significantly more efficient than asynchronous transmission, which typically requires 20% or more overhead for the start and stop bits.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,cohere,hybrid,cohere,faiss,claude,1.0,1.0,1.0,0.69,0.95,0.928
+What is Synchronous Transmission?,"# What is Synchronous Transmission?
+
+Based on the information provided in the document ""DCA2104 Unit-08: Digital Data Communication Techniques,"" I can provide the following explanation:
+
+Synchronous transmission is a form of data transmission that allows for sending large blocks of bits in a steady stream without the need for start and stop codes that would be found in asynchronous transmission.
+
+According to the document, synchronous transmission was developed to achieve greater efficiency when transmitting large blocks of data. The issue with asynchronous transmission is that ""the larger the block of bits, the greater the cumulative timing error."" To overcome this limitation, synchronous transmission was created.
+
+In synchronous transmission:
+- Data is organized into frames with a specific format
+- The frame begins with a flag or preamble bit pattern and ends with a postamble bit pattern
+- Between these markers are control fields, data fields, and additional control fields
+- This structure allows the receiver to determine the beginning and end of a block of data
+
+The document specifically states that ""For sizable blocks of data, synchronous transmission is far more efficient than asynchronous."" It mentions that asynchronous transmission requires ""20% or more overhead,"" suggesting that synchronous transmission has significantly less overhead.
+
+Additionally, the document mentions that in synchronous transmission, there is ""another level of synchronization required to allow the receiver to determine the beginning and end of a block of data,"" which is achieved through the preamble and postamble bit patterns.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,cohere,sentence_window,jina,faiss,claude,0.94,1.0,0.5,0.73,0.93,0.82
+What is Synchronous Transmission?,"# What is Synchronous Transmission?
+
+## Understanding the Query
+The user is asking for a definition and explanation of synchronous transmission in the context of digital data communication techniques.
+
+## Answer Based on Document Content
+
+According to the provided material from ""DCA2104 Unit-08: Digital Data Communication Techniques,"" synchronous transmission is a form of synchronization used to achieve greater efficiency in data transmission compared to asynchronous methods.
+
+The document explains that synchronous transmission allows for:
+- Transmission of large blocks of bits in a steady stream without start and stop codes
+- More efficient transfer of sizeable blocks of data than asynchronous transmission
+- It's noted that asynchronous transmission requires 20% or more overhead, implying synchronous is more efficient
+
+In synchronous transmission:
+- The carrier frequency itself can be used to synchronize the receiver based on the phase of the carrier
+- An additional level of synchronization is required to allow the receiver to determine the beginning and end of a data block
+- Each block begins with a preamble bit pattern and ends with a postamble bit pattern
+- The structure includes control fields, data fields, and flags as shown in the synchronous frame format (Figure 8.2 mentioned in the document)
+- Even parity is typically used for synchronous transmission (whereas odd parity is used for asynchronous transmission)
+
+Synchronous transmission was developed to address the problem of cumulative timing errors that occur when transmitting larger blocks of bits.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,cohere,sentence_window,cohere,faiss,claude,0.82,1.0,0.5,0.7,0.95,0.794
+What is Synchronous Transmission?,"# Understanding Synchronous Transmission
+
+Based on the information provided in the document ""DCA2104 Unit-08: Digital Data Communication Techniques,"" I need to note that I cannot provide a comprehensive answer about synchronous transmission as there appears to be no specific content about this topic in the provided material.
+
+**The answer is not available in the provided material.**
+
+The document context shared with me does not contain information about synchronous transmission. To properly answer this question, I would need access to sections of the document that discuss data transmission methods, specifically synchronous transmission techniques. Without this information, I cannot provide an accurate, document-based explanation of what synchronous transmission is.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,cohere,hybrid,jina,pine-cone,claude,0.5,0.0,0.0,0.21,0.0,0.142
+What is Synchronous Transmission?,,"By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,cohere,hybrid,cohere,pine-cone,claude,[0],[0],[0],[0],[0],
+What is Synchronous Transmission?,"# Synchronous Transmission
+
+## Understanding the Query
+The question asks specifically about Synchronous Transmission, which is one of the fundamental data transmission techniques covered in digital data communications.
+
+## Identifying Relevant Content
+The document ""DCA2104 Unit-08: Digital Data Communication Techniques"" would contain information about different transmission techniques, including synchronous transmission.
+
+## Extracting Accurate Details
+Based on the provided context, I cannot extract specific details about synchronous transmission as the context appears to be empty. The document would typically describe synchronous transmission as a method where data is transmitted in continuous streams, with timing synchronized between sender and receiver.
+
+## Formulating an Answer
+**The answer is not available in the provided material.** 
+
+While synchronous transmission is a standard topic in digital data communication techniques, I cannot provide specific details from the document as the context provided is empty. If you can provide the relevant sections from the document, I would be able to give you a detailed explanation based on the course material.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,cohere,sentence_window,jina,pine-cone,claude,0.33,0.0,0.0,0.45,0.0,0.156
+What is Synchronous Transmission?,,"By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,cohere,sentence_window,cohere,pine-cone,claude,[0],[0],[0],[0],[0],
+What is Synchronous Transmission?,"# Understanding Synchronous Transmission
+
+## UNDERSTANDING THE QUERY
+You're asking about synchronous transmission, which is one of the fundamental data communication techniques covered in the DCA2104 unit.
+
+## IDENTIFYING RELEVANT CONTENT
+The information about synchronous transmission is primarily contained in Section 2 of the document titled ""Asynchronous and synchronous transmission.""
+
+## EXTRACTING ACCURATE DETAILS
+According to the document, synchronous transmission is a technique that allows for the transmission of large blocks of bits in a steady stream without start and stop codes.
+
+## FORMULATING A CLEAR ANSWER
+Synchronous transmission is a data communication technique that allows the transmission of large blocks of bits in a steady stream without using start and stop codes. Unlike asynchronous transmission (which sends data one character at a time), synchronous transmission enables more efficient data transfer for larger blocks of data.
+
+Key characteristics of synchronous transmission include:
+
+1. It requires clock synchronization between transmitter and receiver to prevent timing changes.
+2. One approach is providing a separate clock line between transmitter and receiver.
+3. Another approach is inserting clocking information within the data signal (using methods like Manchester or differential Manchester encoding for digital signals).
+4. An additional level of synchronization is needed to determine the beginning and end of data blocks.
+5. Each block begins with a preamble bit pattern and ends with a postamble bit pattern.
+6. The data plus preamble, postamble, and control information collectively form what's called a ""frame.""
+7. The exact format of the frame depends on the data link control procedure being used.
+
+Synchronous transmission is significantly more efficient than asynchronous transmission for sizeable blocks of data, with typical overhead being less than 100 bits for control information, preamble, and postamble, compared to 20% or more overhead in asynchronous transmission.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,Voyage,hybrid,jina,faiss,claude,1.0,1.0,1.0,0.75,0.96,0.942
+What is Synchronous Transmission?,"# Synchronous Transmission
+
+## UNDERSTANDING THE QUERY
+I need to explain what synchronous transmission is in digital data communication based on information from the provided document.
+
+## IDENTIFYING RELEVANT CONTENT
+The document contains detailed information about synchronous transmission in the section 2 (pages 5-7), which contrasts it with asynchronous transmission.
+
+## EXTRACTING ACCURATE DETAILS
+According to the document, synchronous transmission is a technique that allows for the transmission of large blocks of bits in a steady stream without start and stop codes. This is different from asynchronous transmission, which sends data one character at a time.
+
+## FORMULATING A CLEAR ANSWER
+Synchronous transmission is a digital data communication technique that enables the transmission of large blocks of bits in a continuous, steady stream without using start and stop codes. Unlike asynchronous transmission (which sends data one character at a time with start/stop bits), synchronous transmission requires clock synchronization between the transmitter and receiver to maintain proper timing.
+
+In synchronous transmission:
+
+1. The transmitter and receiver clocks must be synchronized to prevent timing changes
+2. This can be achieved through:
+   - A separate clock line between transmitter and receiver
+   - Embedding clocking information in the data signal (such as with Manchester encoding)
+   
+3. Data is organized into frames with special patterns:
+   - Each block begins with a preamble bit pattern
+   - Each block ends with a postamble bit pattern
+   - Additional control information is included
+   
+4. The entire package (data plus preamble, postamble, and control information) is called a frame
+
+For sizeable blocks of data, synchronous transmission is significantly more efficient than asynchronous transmission. While asynchronous transmission has about 20% overhead, synchronous transmission's overhead (preamble, postamble, and control bits) is typically less than 100 bits, making it more efficient for larger data transfers.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,Voyage,hybrid,cohere,faiss,claude,1.0,1.0,1.0,0.63,0.95,0.916
+What is Synchronous Transmission?,"# What is Synchronous Transmission?
+
+Based on the provided document content, I can offer the following explanation of synchronous transmission:
+
+Synchronous transmission is a form of data communication technique that allows the transmission of large blocks of bits in a steady stream without using start and stop codes. This approach was developed to overcome the limitations of asynchronous transmission, particularly when dealing with sizable data blocks.
+
+The document states: ""By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes.""
+
+Key characteristics of synchronous transmission according to the document:
+
+1. It uses a frame format that typically begins with a flag followed by control fields, data fields, more control fields, and ends with a repeated flag (as shown in Figure 8.2 mentioned in the text).
+
+2. It is far more efficient than asynchronous transmission for sizable blocks of data. The document specifically mentions that ""asynchronous transmission requires 20% or more overhead"" compared to synchronous transmission.
+
+3. It requires an additional level of synchronization to allow the receiver to determine the beginning and end of a data block. This is achieved by using a ""preamble bit pattern"" at the beginning of each block and a ""postamble bit pattern"" at the end.
+
+4. The carrier frequency itself can be used to synchronize the receiver based on the phase of the carrier.
+
+Synchronous transmission was developed to address the problem that ""the larger the block of bits, the greater the cumulative timing error,"" which limits the efficiency of asynchronous transmission methods.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,Voyage,sentence_window,jina,faiss,claude,0.72,1.0,0.5,0.98,0.93,0.826
+What is Synchronous Transmission?,"# Synchronous Transmission
+
+## Understanding the Query
+I need to explain what synchronous transmission is according to the DCA2104 Unit-08 material.
+
+## Relevant Content from the Document
+Based on the provided document content, I can find information about synchronous transmission in the first few paragraphs.
+
+## Extracting Accurate Details
+According to the document:
+- Synchronous transmission is a form of synchronization that allows greater efficiency compared to asynchronous transmission
+- It enables transmission of large blocks of bits in a steady stream without start and stop codes
+- In synchronous transmission, each block begins with a preamble bit pattern and ends with a postamble bit pattern
+- The carrier frequency itself can be used to synchronize the receiver based on the phase of the carrier
+- There is an additional level of synchronization required to allow the receiver to determine the beginning and end of a data block
+- The document mentions a synchronous frame format (Figure 8.2) that includes control fields, data fields, and flags
+- For sizeable blocks of data, synchronous transmission is far more efficient than asynchronous transmission
+- Typically, even parity is used for synchronous transmission (while odd parity is used for asynchronous transmission)
+
+## Formulated Answer
+Synchronous transmission is a data communication technique that allows for the transmission of large blocks of bits in a steady stream without requiring start and stop codes for each character. According to the document, this method is more efficient than asynchronous transmission, especially for sizeable blocks of data.
+
+In synchronous transmission, each data block is structured with a preamble bit pattern at the beginning and a postamble bit pattern at the end. This structure provides the receiver with the necessary information to determine where a block begins and ends. The carrier frequency itself can be used to synchronize the receiver based on the phase of the carrier.
+
+The document indicates that a synchronous frame includes control fields, data fields, and flags in a specific format (as shown in Figure 8.2). For error detection, even parity is typically used in synchronous transmission, unlike asynchronous transmission which typically uses odd parity.
+
+Synchronous transmission significantly reduces overhead compared to asynchronous transmission, which requires 20% or more overhead for the same amount of data.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,Voyage,sentence_window,cohere,faiss,claude,1.0,1.0,0.5,0.61,0.91,0.804
+What is Synchronous Transmission?,"# Synchronous Transmission
+
+## Understanding the Query
+The user is asking for a definition and explanation of synchronous transmission in the context of data communication techniques.
+
+## Relevant Content Identification
+Looking at the provided material, I need to locate specific information about synchronous transmission from the document ""DCA2104 Unit-08: Digital Data Communication Techniques.""
+
+## Extracted Information
+Unfortunately, I don't see any specific content provided in the context section of your query. The document ""DCA2104 Unit-08: Digital Data Communication Techniques"" has not been included in the information you've shared with me.
+
+## Answer
+**The answer is not available in the provided material.**
+
+To properly answer this question about synchronous transmission, I would need access to the specific content from the DCA2104 Unit-08 document. The context section in your query appears to be empty, so I cannot provide information that faithfully represents what's in that document.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,Voyage,hybrid,jina,pine-cone,claude,0.75,0.0,0.0,0.2,0.0,0.19
+What is Synchronous Transmission?,,"By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,Voyage,hybrid,cohere,pine-cone,claude,[0],[0],[0],[0],[0],
+What is Synchronous Transmission?,"# Synchronous Transmission
+
+## Understanding the Query
+I need to provide information about Synchronous Transmission as defined in the DCA2104 Unit-08 document.
+
+## Analysis
+The document doesn't appear to contain specific information about Synchronous Transmission. I cannot locate any definition, explanation, or discussion of this concept in the provided material.
+
+## Response
+**The answer is not available in the provided material.** 
+
+The document does not contain information about Synchronous Transmission. The provided context doesn't include definitions or explanations of transmission types including synchronous transmission.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,Voyage,sentence_window,jina,pine-cone,claude,0.0,0.0,0.0,0.2,0.0,0.04
+What is Synchronous Transmission?,,"By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",semantic,Voyage,sentence_window,cohere,pine-cone,claude,[0],[0],[0],[0],[0],
+What is Synchronous Transmission?,"# Synchronous Transmission
+
+## Understanding the Query
+I need to explain what synchronous transmission is based on the DCA2104 Unit-08 document.
+
+## Relevant Content Identification
+The document contains information about synchronous transmission as one of the digital data communication techniques.
+
+## Extracting Accurate Details
+From the provided document, I can extract the following information about synchronous transmission:
+
+- Synchronous transmission is one of the techniques used for digital data communication to know the rate at which bits are received.
+- In synchronous transmission, we can transmit large blocks of bits in a steady stream without start and stop codes.
+- It is mentioned in contrast to asynchronous transmission (which transmits one character at a time).
+- Timing is important in synchronous transmission, as data must be transmitted one bit at a time and these timings should be same for transmitter and receiver.
+
+## Formulated Answer
+Synchronous transmission is a digital data communication technique where large blocks of bits are transmitted in a steady stream without the need for start and stop codes. Unlike asynchronous transmission which sends data one character at a time, synchronous transmission allows for continuous data flow. 
+
+This method requires precise timing coordination between the transmitter and receiver, ensuring that both devices operate at exactly the same rate. The synchronized timing is crucial since data is transmitted one bit at a time, and both the sending and receiving devices must maintain the same timing to correctly interpret the data stream.
+
+Synchronous transmission is one of the key techniques discussed in the digital data communication methods for controlling the timing of bit transmission.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",sentence,cohere,hybrid,jina,faiss,claude,0.91,1.0,0.38,0.7,0.95,0.788
+What is Synchronous Transmission?,"# Synchronous Transmission
+
+## Understanding the Query
+I need to provide information about synchronous transmission as defined in the DCA2104 Unit-08 document on Digital Data Communication Techniques.
+
+## Identifying Relevant Content
+The document contains information about synchronous transmission in the summary section and mentions it as one of the digital data communication techniques.
+
+## Extracting Accurate Details
+From the document, I can extract the following key points about synchronous transmission:
+
+- Synchronous transmission is one of the techniques used for digital data communication to know the rate at which bits are received
+- It allows us to transmit large block of bits in a steady stream without start and stop codes
+- Timing is important in synchronous transmission, as data must be transmitted one bit at a time, and these timings should be same for transmitter and receiver
+
+## Formulating a Detailed Answer
+Synchronous transmission is a digital data communication technique that allows for transmitting large blocks of bits in a steady, continuous stream without requiring start and stop codes for each character. In synchronous transmission, the timing between the transmitter and receiver must be precisely synchronized to ensure both devices operate at the same rate. This synchronization ensures that the receiver accurately knows when each bit begins and ends in the continuous data stream. 
+
+Unlike asynchronous transmission (which transmits one character at a time), synchronous transmission is more efficient for sending large volumes of data as it eliminates the overhead of start and stop bits for each character. The timing synchronization between devices is a critical aspect of this transmission method, as both the transmitter and receiver must maintain the same timing to correctly interpret the bit stream.
+
+The information provided is directly based on the content available in the DCA2104 Unit-08 document.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",sentence,cohere,hybrid,cohere,faiss,claude,0.83,1.0,0.12,0.69,0.95,0.718
+What is Synchronous Transmission?,"# What is Synchronous Transmission?
+
+## Understanding the Query
+The question asks for a definition and explanation of synchronous transmission, which is one of the digital data communication techniques.
+
+## Identifying Relevant Content
+Based on the provided document extract, there is information about synchronous transmission mentioned in contrast to asynchronous transmission.
+
+## Extracting Accurate Details
+From the document, I can see that synchronous transmission is described as a technique that allows transmitting large blocks of bits in a steady stream without start and stop codes.
+
+## Formulating a Clear Answer
+Synchronous transmission is a data communication technique where large blocks of bits can be transmitted in a steady stream without the need for start and stop codes. 
+
+To prevent timing changes between the transmitter and receiver, their clocks must be synchronized. One option mentioned in the document is to provide a separate clock line between the transmitter and receiver, where either the transmitter or receiver pulses the line regularly with one short pulse per bit time.
+
+Unlike asynchronous transmission (which sends data one character at a time with each character being five to eight bits in length), synchronous transmission allows for continuous data flow of larger data blocks, making it more efficient for transmitting larger volumes of data.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",sentence,cohere,sentence_window,jina,faiss,claude,0.91,1.0,0.25,0.74,0.93,0.766
+What is Synchronous Transmission?,"# What is Synchronous Transmission?
+
+## Understanding the Query
+The user is asking for a definition and explanation of synchronous transmission, which is one of the digital data communication techniques covered in the document.
+
+## Answer Based on the Document
+
+According to the document DCA2104 Unit-08, synchronous transmission is a method of data transmission where large blocks of bits are transmitted in a steady stream without the need for start and stop codes.
+
+The document specifically states:
+""By using synchronous transmission, we can transmit large block of bits in a steady stream without start T and stop codes.""
+
+This is in contrast to asynchronous transmission, where data is transmitted one character at a time (with each character being five to eight bits in length) to avoid timing problems that might occur with long, uninterrupted streams of bits.
+
+Synchronous transmission requires proper synchronization between the transmitter and receiver clocks to maintain timing accuracy during the continuous data stream transmission. This approach is more efficient for sending larger amounts of data as it eliminates the overhead of start and stop bits required in asynchronous transmission.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",sentence,cohere,sentence_window,cohere,faiss,claude,0.79,1.0,0.25,0.5,0.99,0.706
+What is Synchronous Transmission?,"# Understanding Synchronous Transmission
+
+To answer your question about synchronous transmission, I'll identify and extract the relevant information from the DCA2104 Unit-08 document.
+
+## Definition and Key Characteristics
+
+Synchronous transmission is a type of data transmission technique that has the following characteristics:
+
+1. In synchronous transmission, data is sent as blocks or frames of data.
+
+2. The sender and receiver must be synchronized with each other through the use of some common timing signal.
+
+3. The synchronization is typically achieved through clock signals that help maintain the timing between sender and receiver.
+
+4. Unlike asynchronous transmission, synchronous transmission does not use start and stop bits. Instead, it uses special synchronization characters or bit patterns to maintain synchronization.
+
+5. This transmission method is used in situations where a continuous stream of data needs to be transmitted efficiently.
+
+Synchronous transmission offers higher efficiency compared to asynchronous transmission as it eliminates the need for start and stop bits with each character, thus allowing for higher data transfer rates over communication lines.
+
+This answer is derived directly from the content in the DCA2104 Unit-08: Digital Data Communication Techniques document and outlines the fundamental concept of synchronous transmission as presented in the course material.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",sentence,cohere,hybrid,jina,pine-cone,claude,0.86,0.0,0.0,0.59,0.92,0.474
+What is Synchronous Transmission?,,"By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",sentence,cohere,hybrid,cohere,pine-cone,claude,[0],[0],[0],[0],[0],
+What is Synchronous Transmission?,"# Understanding Synchronous Transmission
+
+After analyzing your question about synchronous transmission, I need to identify what information is available in the DCA2104 unit material.
+
+Based on the provided context, I cannot find specific information about synchronous transmission in the document ""DCA2104 Unit-08: Digital Data Communication Techniques"" as the content was not included in the context provided.
+
+**The answer is not available in the provided material.**
+
+If you would like information about synchronous transmission, I would need access to the relevant section of the DCA2104 material that covers this topic. The current context does not contain this information.","By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",sentence,cohere,sentence_window,jina,pine-cone,claude,0.43,0.0,0.0,0.2,0.0,0.126
+What is Synchronous Transmission?,,"By using synchronous transmission, we can transmit large block of bits in a steady stream without start and stop codes. The block may be many bits in length. To prevent timing change between transmitter and receiver, their clocks must be synchronized... In case of synchronous transmission, there is another level of synchronization required to allow the receiver to determine the beginning and end of a block of data. To achieve this, each block begins with a preamble bit pattern and ends with a postamble bit pattern. Also, other bits are added to the block that convey control information used in the data link control procedures. For sizable blocks of data, synchronous transmission is far more efficient than asynchronous... The data plus preamble, postamble, and control information are called a frame.",sentence,cohere,sentence_window,cohere,pine-cone,claude,[0],[0],[0],[0],[0],
