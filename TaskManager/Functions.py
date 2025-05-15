@@ -75,12 +75,12 @@ def add_task_with_subtasks_and_tags(task_name: str, subtasks: list, tags: list):
     context_message = form_context_for_current_tasks()
     return context_message + "\n\nTask with subtasks and tags added successfully!"
 
-def complete_task(task: str):
+def complete_task(task_name: str):
     """
     Mark a task as completed.
     """
     for currTask in st.session_state.tasks:
-        if currTask.task.strip().lower() == task.strip().lower():
+        if currTask.task.strip().lower() == task_name.strip().lower():
             print("Task found: ", currTask)
             currTask.status = True
             break
