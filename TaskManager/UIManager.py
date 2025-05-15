@@ -1,5 +1,4 @@
 import streamlit as st
-import asyncio
 
 def DisplayTaskManager():
     """
@@ -10,7 +9,19 @@ def DisplayTaskManager():
         print("Button Pressed")
         from Main import call_llm
         print("User Input: ", user_input)
-        asyncio.run(call_llm(user_input))
+        call_llm(user_input)
+
+        
+    # --- Usage Examples ---
+    with st.expander("💡 Examples"):
+        st.markdown("""
+        - Add a task to buy groceries with high priority.
+        - Delete task 1
+        - Mark task 2 as complete
+        - Add subtasks to task 1: Buy milk, Buy eggs
+        - Tag tasks 1 and 2 with urgent and personal
+        """)
+
 
 def DisplayCurrentTasks(tasks):
     """
@@ -30,13 +41,15 @@ def DisplayCurrentTasks(tasks):
     task_count = 0
     for task in tasks:
         task_count += 1
-        with st.expander(f"🗂Task {task_count}"):
+        task_id = task.task_id or task_count
+
+        with st.expander(f"Task {task_id}"):
             tab1, tab2, tab3 = st.tabs(["Task Info", "Subtasks", "Tags"])
             print("Task Info: ", task)
             with tab1:
-                task_name = task.get("task", "")
+                task_name = task.task
                 st.write(f"Task: {task_name}")
-                task_status = task.get("status") or False
+                task_status = task.status or False
                 if task_status is None:
                     task_status=False
                 if task_status == True:
@@ -46,13 +59,13 @@ def DisplayCurrentTasks(tasks):
 
                 st.write(f"Status: {task_status_display}")
             with tab2:
-                subtasks = task.get("subtasks") or []
+                subtasks = task.subtasks or []
                 if subtasks is None:
                     subtasks = []
                 for subtask in subtasks:
                     st.write(f"- {subtask}")               
             with tab3:
-                tags = task.get("tags") or []
+                tags = task.tags or []
                 for tag in tags:
                     st.write(f"- {tag}")
         

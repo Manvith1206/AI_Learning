@@ -1,13 +1,19 @@
+from dataclasses import dataclass
+
+@dataclass
 class Task:
     task = "",
     status = False,
     subtasks = [],
-    tags=[]
-    def __init__(self, task: str, status: bool = False, subtasks: list = [], tags: list = []):
+    tags=[],
+    task_id = 0
+    def __init__(self, task: str, status: bool = False, subtasks: list = [], tags: list = [], task_id: int = 0):
         self.task = task
         self.status = status
         self.subtasks = subtasks
         self.tags = tags
+        self.task_id = task_id
+@dataclass
 class Tags:
     def __init__(self, task: str, tag: str):
         self.task = task
@@ -16,28 +22,70 @@ class Tags:
     task = ""
 
 import streamlit as st
-import inspect, sys
 
 if "tasks" not in st.session_state:
     st.session_state.tasks = []
 
-def add_task(task: Task):
+def add_task(task_name: str):
     """
     Add a new task to the todo list.
     """
+    task = Task(task_name, status=False, subtasks=[], tags=[])
     print("Adding task: ", task)
     st.session_state.tasks.append(task)
+    add_task_id_to_task()
+
+    context_message = form_context_for_current_tasks()
+    return context_message
+
+def form_context_for_current_tasks():
+    current_tasks = ["Here are the current tasks:\n"]
+
+    for task in st.session_state.tasks:
+        current_tasks.append(f"ID: {task.task_id}, Title: {task.task}, Status: {'✅ Completed' if task.status else '❌ Not Completed'}\n")
+
+        if task.subtasks:
+            current_tasks.append("  Subtasks:\n")
+            for subtask in task.subtasks:
+                current_tasks.append(f"    - {subtask}")
+        else:
+            current_tasks.append("  Subtasks: None")
+
+        if task.tags:
+            current_tasks.append("  Tags: " + ", ".join(task.tags))
+        else:
+            current_tasks.append("  Tags: None")
+
+        current_tasks.append("")  # Empty line for spacing between tasks
+
+    # Convert list to a single message string
+    context_message = "\n".join(current_tasks)
+
+    return context_message
+
+def add_task_with_subtasks_and_tags(task_name: str, subtasks: list, tags: list):
+    """
+    Add a new task with subtasks and tags.
+    """
+    task = Task(task_name, status=False, subtasks=subtasks, tags=tags)
+    print("Adding task with subtasks and tags: ", task)
+    st.session_state.tasks.append(task)
+    add_task_id_to_task()
+
+    context_message = form_context_for_current_tasks()
+    return context_message + "\n\nTask with subtasks and tags added successfully!"
 
 def complete_task(task: str):
     """
     Mark a task as completed.
     """
-    print("Completing task: ", task)
     for currTask in st.session_state.tasks:
-        if currTask['task'].strip().lower() == task.strip().lower():
+        if currTask.task.strip().lower() == task.strip().lower():
             print("Task found: ", currTask)
-            currTask['status'] = True
+            currTask.status = True
             break
+
+    return "Task marked as completed!"
 
 def add_subtasks(parent_task, subtasks):
     """
@@ -45,11 +93,13 @@ def add_subtasks(parent_task, subtasks):
     """
     print("Adding subtasks: ", st.session_state.tasks)
     for task in st.session_state.tasks:
-        if task['task'].strip().lower() == parent_task.strip().lower():
-            task.setdefault('subtasks', [])
+        if task.task.strip().lower() == parent_task.strip().lower():
             print("Add Subtask: ", task)
-            task['subtasks'].extend(subtasks)
+            task.subtasks.extend(subtasks)
             break
+
+    context_msg = form_context_for_current_tasks()
+    return context_msg + "\n\nSubtasks added successfully For Specified Task!"
 
 def tag_tasks(tasks_tags: list[Tags]):
     """
@@ -57,9 +107,12 @@ def tag_tasks(tasks_tags: list[Tags]):
     """
     for item in tasks_tags:
         for t in st.session_state.tasks:
-            if t['task'] == item['task']:
-                t.setdefault('tags', [])
-                t['tags'].append(item['tag'])
+            if t.task_id == item.task_id:
+                t.tags.append(item.tags)
+
+    context_msg = form_context_for_current_tasks()
+
+    return context_msg + "\n\nTags added successfully for specified task!"
 
 def delete_task(task: Task):
     """
@@ -67,9 +120,12 @@ def delete_task(task: Task):
     """
     print("Deleting task: ", task)
     for curr_task in st.session_state.tasks:
-        if curr_task['task'].strip().lower() == task.strip().lower():
+        if curr_task.task.strip().lower() == task['task'].strip().lower():
             st.session_state.tasks.remove(curr_task)
             break
+
+    context_msg = form_context_for_current_tasks()
+    return context_msg + "\n\nTask deleted successfully!"
         
 def get_tasks_based_on_tag(tag: str):
     """
@@ -78,6 +134,19 @@ def get_tasks_based_on_tag(tag: str):
     print("Getting tasks based on tag: ", tag)
     tagged_tasks = []
     for task in st.session_state.tasks:
-        if tag in task.get('tags', []):
+        if tag in task.tags:
             tagged_tasks.append(task)
     return tagged_tasks
+def add_task_id_to_task():
+    """
+    Add task ID to all tasks.
+    """
+    for i, task in enumerate(st.session_state.tasks):
+        print("add_task_id_to_task / Task", task.task_id)
+        st.session_state.tasks[i] = Task(
+            task=task.task,
+            status=task.status,
+            subtasks=task.subtasks,
+            tags=task.tags,
+            task_id=i+1)
+    return "Task ID Added to all Tasks!"
