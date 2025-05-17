@@ -89,7 +89,8 @@ function_response_part = types.Part.from_function_response(
 # Append function call and result of the function execution to contents
 contents.append(types.Content(role="model", parts=[types.Part(function_call=tool_call)])) # Append the model's function call message
 contents.append(types.Content(role="user", parts=[function_response_part])) # Append the function response
-
+print("FunctionResponsePart", function_response_part)
+print("Contents", contents)
 final_response = client.models.generate_content(
     model="gemini-2.0-flash",
     config=config,

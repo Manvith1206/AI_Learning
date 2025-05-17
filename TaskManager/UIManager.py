@@ -6,9 +6,7 @@ def DisplayTaskManager():
     """
     user_input = st.text_input("What do you want to do today? :smile:", key="task_input_1")
     if st.button("Execute Query", key="execute_query"):
-        print("Button Pressed")
-        from Main import call_llm
-        print("User Input: ", user_input)
+        from Main_updated import call_llm
         call_llm(user_input)
 
         
@@ -37,7 +35,6 @@ def DisplayCurrentTasks(tasks):
         }
     """
     st.subheader("Current Tasks")
-    print("Current Tasks:", tasks)
     task_count = 0
     for task in tasks:
         task_count += 1
@@ -45,7 +42,6 @@ def DisplayCurrentTasks(tasks):
 
         with st.expander(f"Task {task_id}"):
             tab1, tab2, tab3 = st.tabs(["Task Info", "Subtasks", "Tags"])
-            print("Task Info: ", task)
             with tab1:
                 task_name = task.task
                 st.write(f"Task: {task_name}")

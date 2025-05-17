@@ -15,11 +15,13 @@ class Task:
         self.task_id = task_id
 @dataclass
 class Tags:
-    def __init__(self, task: str, tag: str):
+    def __init__(self, task: str, tag: str, task_id: int):
         self.task = task
         self.tag = tag
+        self.task_id = task_id
     tag = ""
     task = ""
+    task_id = 0
 
 import streamlit as st
 
@@ -31,7 +33,6 @@ def add_task(task_name: str):
     Add a new task to the todo list.
     """
     task = Task(task_name, status=False, subtasks=[], tags=[])
-    print("Adding task: ", task)
     st.session_state.tasks.append(task)
     add_task_id_to_task()
 
@@ -68,7 +69,6 @@ def add_task_with_subtasks_and_tags(task_name: str, subtasks: list, tags: list):
     Add a new task with subtasks and tags.
     """
     task = Task(task_name, status=False, subtasks=subtasks, tags=tags)
-    print("Adding task with subtasks and tags: ", task)
     st.session_state.tasks.append(task)
     add_task_id_to_task()
 
@@ -81,7 +81,6 @@ def complete_task(task_name: str):
     """
     for currTask in st.session_state.tasks:
         if currTask.task.strip().lower() == task_name.strip().lower():
-            print("Task found: ", currTask)
             currTask.status = True
             break
 
@@ -91,10 +90,8 @@ def add_subtasks(parent_task, subtasks):
     """
     Add subtasks to an existing task.
     """
-    print("Adding subtasks: ", st.session_state.tasks)
     for task in st.session_state.tasks:
         if task.task.strip().lower() == parent_task.strip().lower():
-            print("Add Subtask: ", task)
             task.subtasks.extend(subtasks)
             break
 
@@ -107,8 +104,9 @@ def tag_tasks(tasks_tags: list[Tags]):
     """
     for item in tasks_tags:
         for t in st.session_state.tasks:
-            if t.task_id == item.task_id:
-                t.tags.append(item.tags)
+            print("Item: ", item)
+            if t.task_id == item['task_id']:
+                t.tags.append(item['tag'])
 
     context_msg = form_context_for_current_tasks()
 
@@ -118,7 +116,6 @@ def delete_task(task: Task):
     """
     Delete a task from the todo list.
     """
-    print("Deleting task: ", task)
     for curr_task in st.session_state.tasks:
         if curr_task.task.strip().lower() == task['task'].strip().lower():
             st.session_state.tasks.remove(curr_task)
@@ -131,7 +128,6 @@ def get_tasks_based_on_tag(tag: str):
     """
     Get tasks based on a specific tag.
     """
-    print("Getting tasks based on tag: ", tag)
     tagged_tasks = []
     for task in st.session_state.tasks:
         if tag in task.tags:
@@ -142,7 +138,6 @@ def add_task_id_to_task():
     Add task ID to all tasks.
     """
     for i, task in enumerate(st.session_state.tasks):
-        print("add_task_id_to_task / Task", task.task_id)
         st.session_state.tasks[i] = Task(
             task=task.task,
             status=task.status,

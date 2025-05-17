@@ -2,7 +2,7 @@ import inspect
 add_task_properties = { "task_name": {"type": "string", "description": "The name of the task to add"}}
 add_task_with_subtasks_and_tags_properties = {"task_name": {"type": "string", "description": "The name of the task to add"},"subtasks": {"type": "array","items": {"type": "string"},"description": "List of subtasks for the main task, if not provided, it will be an empty list"},"tags": {"type": "array","items": {"type": "string"},"description": "List of tags for the main task, if not provided, it will be an empty list"}}
 complete_task_properties = {
-                    "task_id": {"type": "number", "description": "The task Id to mark as done"},
+                    "task_name": {"type": "number", "description": "The task Id to mark as done"},
                 }
 add_subtasks_properties = {
                 "parent_task": {"type": "string"},
@@ -18,9 +18,10 @@ tag_tasks_properties = {
                         "type": "object",
                         "properties": {
                             "task": {"type": "string"},
-                            "tag": {"type": "string"}
+                            "tag": {"type": "string"},
+                            "task_id": {"type": "number"}
                         },
-                        "required": ["task", "tag"]
+                        "required": ["task", "tag", "task_id"]
                     }
                 }
             }

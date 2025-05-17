@@ -5,7 +5,8 @@ import CommonUtils
 from UIManager import DisplayCurrentTasks, DisplayTaskManager
 from datetime import datetime
 
-client = OpenAI(api_key=st.secrets["OPEN_AI_API_KEY"])
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+print(client)
 if __name__ == "__main__":
     st.title("Task Manager :u7533:")
 
@@ -34,6 +35,11 @@ def call_llm(user_input):
     st.session_state.messages.append({"role": "system", "content": "You are a task planner that decomposes user requests into multiple function calls."})
     
     st.session_state.messages.append({"role": "user", "content": user_input})
+    print("Messages", st.session_state.messages)
+    print("Tools", CommonUtils.function_schemas)
+    print("ToolChoice", 'auto')
+    print("Model", "gpt-4-1106-preview")
+    print("Client", client)
     response = client.responses.create(
         model="gpt-4-1106-preview",
         input=st.session_state.messages,
