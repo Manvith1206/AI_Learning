@@ -44,10 +44,8 @@ class ServiceManager:
             service_type: The type of AI service to use
         """
         self.service_type = service_type
-        print("ServiceType", service_type)
 
         self.service = get_service(service_type)
-        print("Service", self.service)
         # Initialize the service with API key
         api_key = self.config_manager.get_api_key(service_type)
         if api_key:
@@ -105,20 +103,15 @@ class ServiceManager:
         functions = []
         for function in CommonUtils.function_map:
             functions.append(CommonUtils.function_map[function])
-        function_schemas = convert_functions_to_schemas(functions, self.service_type)
+        function_schemas = convert_functions_to_schemas(functions, self.service_type) 
 
         response = self.service.call_with_functions(
             messages=messages,
             functions=function_schemas,
             model=model
         )
-
-        print("ServiceManager / CallLLM: InitialResponseMessages: ", messages)
-        print("ServiceManager / CallLLM: InitialResponse: ", response)
-        
         # Extract function calls
         tool_calls = self.service.extract_function_calls(response)
-        print(len(tool_calls))
         
         # Handle function calls
         for tool_call in tool_calls:
@@ -126,33 +119,48 @@ class ServiceManager:
         
         # Get final response if there were function calls
         if tool_calls:
+            print("ServiceManager / Messages: ", messages)
             final_response = self.service.call_with_functions(
                 messages=messages,
-                functions=function_schemas,
+                functions=[],
                 model=model
             )
-        #     print("ServiceManager / CallLLM: FinalResponseMessages: ", messages)
-            print("ServiceManager / CallLLM: FinalResponse: ", response)
-
-        #     # Add assistant response to messages
-        #     if hasattr(final_response, 'output_text'):
-        #         messages.append({"role": "assistant", "content": final_response.output_text})
-        #     elif hasattr(final_response, 'content'):
-        #         if (final_response.content[0].type == 'text'):
-        #             messages.append({"role": "assistant", "content": final_response.content[0].text})
-        #     elif hasattr(final_response, 'choices'):
-        #         messages.append({"role": "assistant", "content": final_response.choices[0].message.content})
-        # else:
-        #     final_response = response
+            print("Final Response: ", final_response)
+            # Add assistant response to messages
+            if hasattr(final_response, 'output_text'):
+                messages.append({"role": "assistant", "content": final_response.output_text})
+            elif hasattr(final_response, 'content'):
+                if (final_response.content[0].type == 'text'):
+                    messages.append({"role": "assistant", "content": final_response.content[0].text})
+            elif hasattr(final_response, 'choices'):
+                messages.append({"role": "assistant", "content": final_response.choices[0].message.content})
+            # Handle Gemini response format
+            elif hasattr(final_response, 'candidates') and final_response.candidates:
+                for candidate in final_response.candidates:
+                    if hasattr(candidate, 'content') and candidate.content:
+                        for part in candidate.content.parts:
+                            if hasattr(part, 'text') and part.text:
+                                messages.append({"role": "assistant", "content": part.text})
+                                break
+        else:
+            final_response = response
             
-        #     # Add assistant response to messages
-        #     if hasattr(final_response, 'output_text'):
-        #         messages.append({"role": "assistant", "content": final_response.output_text})
-        #     elif hasattr(final_response, 'choices'):
-        #         messages.append({"role": "assistant", "content": final_response.choices[0].message.content})
+            # Add assistant response to messages
+            if hasattr(final_response, 'output_text'):
+                messages.append({"role": "assistant", "content": final_response.output_text})
+            elif hasattr(final_response, 'choices'):
+                messages.append({"role": "assistant", "content": final_response.choices[0].message.content})
+            # Handle Gemini response format
+            elif hasattr(final_response, 'candidates') and final_response.candidates:
+                for candidate in final_response.candidates:
+                    if hasattr(candidate, 'content') and candidate.content:
+                        for part in candidate.content.parts:
+                            if hasattr(part, 'text') and part.text:
+                                messages.append({"role": "assistant", "content": part.text})
+                                break
         
         return {
-            # "response": final_response,
+            "response": final_response,
             "messages": messages
         }
     
@@ -179,13 +187,13 @@ class ServiceManager:
         
         # Call the function
         result = CommonUtils.function_map[fn_name](**args)
-        
-        # Add function call to messages
-        
+                
         # Add function result to messages
         tool_use_msg, result_message = self.service.create_message_from_function_result(tool_call, result)
         messages.append(tool_use_msg)
         messages.append(result_message)
+        print("Tooluse", tool_use_msg)
+        print("resultmsg", result_message)
     
     def _get_default_model(self):
         """

@@ -89,7 +89,6 @@ class OpenAIService(AIService):
                 tools=functions,
                 tool_choice=kwargs.get('tool_choice', 'auto')
             )
-            print("Response", response.output)
             
             return response
         # Fallback for older models that use chat.completions.create

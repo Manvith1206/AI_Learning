@@ -57,7 +57,7 @@ def form_context_for_current_tasks():
         else:
             current_tasks.append("  Tags: None")
 
-        current_tasks.append("")  # Empty line for spacing between tasks
+        current_tasks.append("\n\n")  # Empty line for spacing between tasks
 
     # Convert list to a single message string
     context_message = "\n".join(current_tasks)
@@ -66,7 +66,7 @@ def form_context_for_current_tasks():
 
 def add_task_with_subtasks_and_tags(task_name: str, subtasks: list, tags: list):
     """
-    Add a new task with subtasks and tags.
+    Add a new task with subtasks and tags. This can be used to add task with only subtasks or add tasks with only tags or with subtasks and tags
     """
     task = Task(task_name, status=False, subtasks=subtasks, tags=tags)
     st.session_state.tasks.append(task)
@@ -100,13 +100,20 @@ def add_subtasks(parent_task, subtasks):
 
 def tag_tasks(tasks_tags: list[Tags]):
     """
-    Tag tasks with categories.
+    Tag tasks with categories. Can identify tasks by either task_id or task name.
     """
     for item in tasks_tags:
         for t in st.session_state.tasks:
-            print("Item: ", item)
-            if t.task_id == item['task_id']:
-                t.tags.append(item['tag'])
+            # Check if we have a task_id match
+            if 'task_id' in item and item['task_id'] and t.task_id == item['task_id']:
+                if item['tag'] not in t.tags:  # Avoid duplicate tags
+                    t.tags.append(item['tag'])
+                break
+            # If no task_id or no match by ID, try matching by task name
+            elif 'task' in item and item['task'] and t.task.strip().lower() == item['task'].strip().lower():
+                if item['tag'] not in t.tags:  # Avoid duplicate tags
+                    t.tags.append(item['tag'])
+                break
 
     context_msg = form_context_for_current_tasks()
 
@@ -116,14 +123,26 @@ def delete_task(task: Task):
     """
     Delete a task from the todo list.
     """
-    for curr_task in st.session_state.tasks:
+    
+    # Find the index of the task to delete
+    index_to_delete = None
+    for i, curr_task in enumerate(st.session_state.tasks):
         if curr_task.task.strip().lower() == task['task'].strip().lower():
-            st.session_state.tasks.remove(curr_task)
+            index_to_delete = i
             break
-
+            
+    # Delete by index if found
+    if index_to_delete is not None:
+        del st.session_state.tasks[index_to_delete]
+        
+    
+    # Print remaining tasks
+    for i, curr_task in enumerate(st.session_state.tasks):
+        print(f"Task {i}: {curr_task.task}")
+        
     context_msg = form_context_for_current_tasks()
     return context_msg + "\n\nTask deleted successfully!"
-        
+
 def get_tasks_based_on_tag(tag: str):
     """
     Get tasks based on a specific tag.

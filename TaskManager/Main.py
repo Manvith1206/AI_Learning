@@ -6,7 +6,6 @@ from UIManager import DisplayCurrentTasks, DisplayTaskManager
 from datetime import datetime
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-print(client)
 if __name__ == "__main__":
     st.title("Task Manager :u7533:")
 
@@ -19,7 +18,6 @@ if "messages" not in st.session_state:
 def handle_tool(tool_call):
     fn_name = tool_call.name
     args = json.loads(tool_call.arguments)
-    print("Function Name: ", fn_name, " Time: ", datetime.now())
     result = CommonUtils.function_map[fn_name](**args)
 
     # append model's function call message
@@ -35,11 +33,7 @@ def call_llm(user_input):
     st.session_state.messages.append({"role": "system", "content": "You are a task planner that decomposes user requests into multiple function calls."})
     
     st.session_state.messages.append({"role": "user", "content": user_input})
-    print("Messages", st.session_state.messages)
-    print("Tools", CommonUtils.function_schemas)
-    print("ToolChoice", 'auto')
-    print("Model", "gpt-4-1106-preview")
-    print("Client", client)
+    
     response = client.responses.create(
         model="gpt-4-1106-preview",
         input=st.session_state.messages,
@@ -57,6 +51,7 @@ def call_llm(user_input):
     for tool_call in tool_calls:
         handle_tool(tool_call)
 
+    print("Messages: ", st.session_state.messages)
     response_2 = client.responses.create(
             model="gpt-4-1106-preview",
             input=st.session_state.messages,

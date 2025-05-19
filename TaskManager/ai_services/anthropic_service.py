@@ -84,7 +84,6 @@ class AnthropicService(AIService):
             
         # Convert messages to Anthropic format
         anthropic_messages = self._convert_messages_to_anthropic_format(messages)
-        print("Functions: ", functions)
         # Anthropic uses 'tools' instead of 'functions'
         response = self.client.messages.create(
             model=model,
@@ -160,7 +159,6 @@ class AnthropicService(AIService):
                         'id': content_item.id  # For compatibility
                     })
         
-        print("ToolCalls", len(tool_calls))
         return tool_calls
     
     def create_message_from_function_result(self, function_call: Dict[str, Any], result: Any):

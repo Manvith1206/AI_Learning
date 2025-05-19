@@ -21,25 +21,16 @@ def DisplayTaskManager():
         """)
 
 
-def DisplayCurrentTasks(tasks):
+def DisplayCurrentTasks():
     """
     Display the current tasks in the task manager.
-    Args:
-        tasks (list): List of tasks to display.
-        Object Structure:
-        Task = {
-            "task": "Task description",
-            "status": False,
-            "subtasks": [],
-            "tags": []
-        }
     """
     st.subheader("Current Tasks")
+    
     task_count = 0
-    for task in tasks:
+    for task in st.session_state.tasks:
         task_count += 1
         task_id = task.task_id or task_count
-
         with st.expander(f"Task {task_id}"):
             tab1, tab2, tab3 = st.tabs(["Task Info", "Subtasks", "Tags"])
             with tab1:
@@ -65,3 +56,4 @@ def DisplayCurrentTasks(tasks):
                 for tag in tags:
                     st.write(f"- {tag}")
         
+

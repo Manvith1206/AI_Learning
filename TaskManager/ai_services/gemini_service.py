@@ -122,7 +122,6 @@ class GeminiService(AIService):
         if not self.client:
             raise ValueError("Gemini client not initialized. Call initialize() first.")
             
-        print('Messages', messages)
         # Convert messages to Gemini format
         gemini_contents = self._convert_messages_to_gemini_format(messages)
         
@@ -146,92 +145,103 @@ class GeminiService(AIService):
     
     def _convert_messages_to_gemini_format(self, messages: List[Dict[str, Any]]):
         """
-        Convert messages from the common format to Gemini's format.
-        
-        Args:
-            messages: List of message objects in the common format
-            
-        Returns:
-            List of message objects in Gemini's format
+        Convert a list of messages from our common format to Gemini's format.
         """
         gemini_contents = []
-        system_message = None
+        system_prompt_text = None
+
+        # Extract system prompt first if it exists (Gemini prefers it separately or early)
+        for msg in messages:
+            if isinstance(msg, dict) and "role" in msg:
+                if msg['role'] == "system":
+                    system_prompt_text = msg['content']
+                    break # Assuming one system prompt
         
-        # Extract system message if present
+        # If a system prompt exists and the service instance can hold it, set it.
+        # Note: google.generativeai.GenerativeModel has a system_instruction parameter.
+        # This conversion focuses on the 'contents' part. Handling system_instruction 
+        # would typically be done when initializing the model or a chat session.
+        # For now, we'll prepend it to the first user message if not handled at a higher level.
+
+        is_first_user_message = True
         for message in messages:
-            role = message['role'] or ""
+            role, content = "", ""
+            tool_calls = None
+            if isinstance(message, dict) and "role" in message:
+                role = message["role"]
+            if isinstance(message, dict) and "content" in message:
+                content = message["content"]
+            if isinstance(message, dict) and "tool_calls" in message:
+                tool_calls = message["tool_calls"]
 
             if role == "system":
-                system_message = message['content']
-                break
-        
-        for message in messages:
-            role = message['role'] or ""
-            if role != "":
-                if role == "system":
-                    # System message is handled with the first user message
-                    continue
-                elif role == "user":
-                    # Add system message to the first user message if present
-                    if system_message and not gemini_contents:
-                        content = f"System instructions: {system_message}\n\nUser: {message['content']}"
-                        gemini_contents.append(types.Content(
-                            role="user",
-                            parts=[types.Part(text=content)]
-                        ))
-                    else:
-                        gemini_contents.append(types.Content(
-                            role="user",
-                            parts=[types.Part(text=message['content'])]
-                        ))
-                elif role == "assistant":
-                    gemini_contents.append(types.Content(
-                        role="assistant",
-                        parts=[types.Part(text=message['content'])]
-                    ))
-                else:
-                    gemini_contents.append(types.Content(
-                        parts=[types.Part(text=message['content'])]
-                    ))
+                continue # Handled above or by a dedicated system_instruction mechanism
 
-            # elif message['type'] == "function_call_output" or hasattr(message, 'call_id'):
-            #     # This is a function result from a previous interaction
-            #     function_name = None
-            #     result = None
-                
-            #     # Extract function name and result
-            #     if hasattr(message, 'call_id'):
-            #         # From our common format
-            #         for prev_msg in messages:
-            #             if hasattr(prev_msg, 'call_id') and prev_msg.call_id == message.call_id:
-            #                 function_name = prev_msg.name
-            #                 break
-            #         result = message.output
-            #     elif message['call_id']:
-            #         # From our common format as dict
-            #         for prev_msg in messages:
-            #             if prev_msg['call_id'] == message['call_id']:
-            #                 function_name = prev_msg['name']
-            #                 break
-            #         result = message.get('output')
-                
-            #     if function_name and result:
-            #         # Create function response part
-            #         function_response_part = types.Part.from_function_response(
-            #             name=function_name,
-            #             response={"result": str(result)}
-            #         )
+            gemini_role = "user" # Default
+            parts = []
+
+            if role == "user":
+                gemini_role = "user"
+                text_to_send = str(content or "")
+                if system_prompt_text and is_first_user_message:
+                    # Prepend system prompt to the first user message's text part
+                    # This is a common workaround if not using native system_instruction
+                    text_to_send = f"System Instructions:\n{system_prompt_text}\n\n{text_to_send}"
+                    system_prompt_text = None # Consume it
+                is_first_user_message = False
+                if text_to_send:
+                    parts.append(types.Part(text=text_to_send))
+
+            elif role == "assistant":
+                gemini_role = "model"
+                if tool_calls:
+                    for tc in tool_calls:
+                        function_details = tc.get("function")
+                        if function_details:
+                            name = function_details.get("name")
+                            try:
+                                args = json.loads(function_details.get("arguments", "{}"))
+                            except json.JSONDecodeError:
+                                args = {}
+                            parts.append(types.Part(function_call=types.FunctionCall(name=name, args=args)))
+                if content: # Assistant's textual response
+                    parts.append(types.Part(text=str(content)))
+            
+            elif isinstance(message, dict) and "type" in message:  
+                if role == "function" or message['type'] == "tool_result" or message['type'] == "function_call_output":
+                    gemini_role = "tool" # Gemini uses 'tool' role for function responses
+                    if isinstance(message, dict) and "name" in message:
+                        function_name = message['name']
+                    function_response_content = str(message['content'])
+                    tool_call_id = message['tool_call_id'] or message['call_id'] # For matching if needed by API, though Part.from_function_response doesn't use id explicitly
+
+                    # Gemini expects the 'response' in Part.from_function_response to be a dict.
+                    response_data = {}
+                    try:
+                        # Try to parse the content if it's a JSON string representing a dict.
+                        parsed_data = json.loads(function_response_content)
+                        if isinstance(parsed_data, dict):
+                            response_data = parsed_data
+                        else:
+                            response_data = {"result": parsed_data}
+                    except (json.JSONDecodeError, TypeError):
+                        # If not a JSON dict, wrap the raw content.
+                        response_data = {"result": function_response_content}
                     
-            #         # Add function response to contents
-            #         gemini_contents.append(types.Content(
-            #             role="user",
-            #             parts=[function_response_part]
-            #         ))
-            # elif hasattr(message, 'name') or message['name']:
-            #     # This is a function call from the model
-            #     # We'll handle this in extract_function_calls and create_message_from_function_result
-            #     # Just add it as a placeholder here
-            #     pass
+                    parts.append(types.Part.from_function_response(
+                        name=function_name,
+                        response=response_data
+                        # tool_call_id is not directly used by from_function_response here
+                    ))
+            else:
+                print(f"DEBUG: Unknown role or unhandled message type for Gemini conversion: {message}")
+                continue
+
+            if parts:
+                gemini_contents.append(types.Content(role=gemini_role, parts=parts))
+            elif role == "user" and not parts: # Handle empty user message if necessary, Gemini might error
+                parts.append(types.Part(text="")) # Send empty text for user role if no content
+                gemini_contents.append(types.Content(role=gemini_role, parts=parts))
                 
         return gemini_contents
     
@@ -254,13 +264,32 @@ class GeminiService(AIService):
                     for part in candidate.content.parts:
                         if hasattr(part, 'function_call') and part.function_call:
                             # Create a function call object similar to our common format
-                            print("FunctionCall", part.function_call)
-                            function_calls.append({
-                                'name': part.function_call.name,
-                                'arguments': json.dumps(part.function_call.args),
-                                'call_id': f"gemini_function_{len(function_calls)}"
-                            })
+                            try:
+                                # Handle args properly - could be a dict or a string
+                                args = part.function_call.args
+                                if isinstance(args, str):
+                                    args_str = args
+                                else:
+                                    args_str = json.dumps(args)
+                                
+                                # Create a unique call_id for this function call
+                                call_id = f"gemini_function_{len(function_calls)}"
+                                
+                                # Add to function calls list
+                                function_calls.append({
+                                    'name': part.function_call.name,
+                                    'arguments': args_str,
+                                    'call_id': call_id
+                                })
+                                
+                                # Debug output
+                                print(f"Extracted function call: {part.function_call.name} with args: {args_str}")
+                            except Exception as e:
+                                print(f"Error extracting function call: {e}")
         
+        if not function_calls:
+            print("No function calls found in Gemini response")
+            
         return function_calls
     
     def create_message_from_function_result(self, function_call: Dict[str, Any], result: Any):
@@ -272,10 +301,11 @@ class GeminiService(AIService):
             result: The result of the function call
             
         Returns:
-            Message object to be added to the conversation
+            Two message objects to be added to the conversation:
+            1. The assistant's tool call message
+            2. The tool response message
         """
-        # For Gemini, we need to format the function result in a way that matches our common format
-        # but will be converted correctly in _convert_messages_to_gemini_format
+        # Extract function name and call_id
         name = function_call.get('name')
         if not name and hasattr(function_call, 'name'):
             name = function_call.name
@@ -284,14 +314,29 @@ class GeminiService(AIService):
         if not call_id and hasattr(function_call, 'call_id'):
             call_id = function_call.call_id
         
-                
-        function_response_part = types.Part.from_function_response(
-            name=name,
-            response={"result": result},
-        )
-        print("GeminiService / MessagesFromResponseResult / FunctionCall: ", function_call)
-        print("GeminiService / MessagesFromResponseResult / FunctionResult: ", function_response_part)
-        function_response_part = types.Content(role="user", parts=[function_call])
-        function_response_part = types.Content(role="user", parts=[function_response_part])
-
-        return function_call, function_response_part
+        # Extract arguments
+        raw_args = function_call.get("arguments") or getattr(function_call, "arguments", None)
+        args = raw_args if isinstance(raw_args, dict) else json.loads(raw_args)
+        
+        # Create the assistant message with tool call
+        assistant_message = {
+            "role": "assistant",
+            "content": "",  # Empty content since this is a function call
+            "tool_calls": [{
+                "function": {
+                    "name": name,
+                    "arguments": json.dumps(args)
+                },
+                "id": call_id
+            }]
+        }
+        
+        # Create the function result message
+        function_result_message = {
+            "role": "tool",
+            "tool_call_id": call_id,
+            "name": name,
+            "content": str(result)
+        }
+        
+        return assistant_message, function_result_message

@@ -28,8 +28,11 @@ if "service_type" not in st.session_state:
     st.session_state.service_type = "openai"
 
 # Initialize service manager
-service_manager = ServiceManager(service_type=st.session_state.service_type)
+def initialize_service_manager(service_type: str):
+    service_manager = ServiceManager(service_type=service_type)
+    return service_manager
 
+service_manager = initialize_service_manager(st.session_state.service_type)
 # Register functions for function calling
 service_manager.register_functions([
     add_task,
@@ -52,9 +55,16 @@ def call_llm(user_input):
     if not any(msg.get("role") == "system" for msg in st.session_state.messages):
         st.session_state.messages.append({
             "role": "system", 
-            "content": "You are a task planner that decomposes user requests into multiple function calls."
+            "content": """
+            You are a task planner that decomposes user requests into multiple function calls. 
+            User may request to add multiple tasks 
+            Greet user with good manners and in friendly manner
+            """
         })
+
     
+    service_manager = initialize_service_manager(st.session_state.service_type)
+
     # Call the AI service
     result = service_manager.call_llm(
         user_input=user_input,
@@ -66,14 +76,15 @@ def call_llm(user_input):
     st.session_state.messages = result["messages"]
     
     # Display current tasks and messages
-    DisplayCurrentTasks(st.session_state.tasks)
+    DisplayCurrentTasks()
     for message in st.session_state.messages:
         # Handle standard message types (user/assistant)
-        if isinstance(message, dict) and "role" in message:
-            if message["role"] != "system":    
+        if isinstance(message, dict) and "role" in message and "content" in message:
+            if message["role"] != "system" and message["role"] != "tool":    
                 if isinstance(message['content'], str):
-                    with st.chat_message(message["role"]):
-                        st.markdown(message['content'])
+                    if (message["content"] != ''):
+                        with st.chat_message(message["role"]):
+                            st.markdown(message['content'])
         # Log any other message formats
         else:
             print(f"Unhandled message format: {type(message)}")
@@ -90,14 +101,13 @@ def main():
         available_services,
         index=available_services.index(st.session_state.service_type)
     )
-    
     # Change service if selection changed
     if selected_service != st.session_state.service_type:
+        st.session_state.tasks = []
+        st.session_state.messages = []
+        service_manager = initialize_service_manager(selected_service)
         st.session_state.service_type = selected_service
         service_manager.change_service(selected_service)
-        st.session_state.messages = []  # Clear messages when changing service
-        st.rerun()
-    print("Service:", selected_service)
 
     # # API key input
     # api_key = st.sidebar.text_input(

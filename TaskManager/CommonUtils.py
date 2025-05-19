@@ -2,7 +2,7 @@ import inspect
 add_task_properties = { "task_name": {"type": "string", "description": "The name of the task to add"}}
 add_task_with_subtasks_and_tags_properties = {"task_name": {"type": "string", "description": "The name of the task to add"},"subtasks": {"type": "array","items": {"type": "string"},"description": "List of subtasks for the main task, if not provided, it will be an empty list"},"tags": {"type": "array","items": {"type": "string"},"description": "List of tags for the main task, if not provided, it will be an empty list"}}
 complete_task_properties = {
-                    "task_name": {"type": "number", "description": "The task Id to mark as done"},
+                    "task_name": {"type": "string", "description": "The task name to mark as done"},
                 }
 add_subtasks_properties = {
                 "parent_task": {"type": "string"},
@@ -17,9 +17,9 @@ tag_tasks_properties = {
                     "items": {
                         "type": "object",
                         "properties": {
-                            "task": {"type": "string"},
-                            "tag": {"type": "string"},
-                            "task_id": {"type": "number"}
+                            "task": {"type": "string", "description": "The task name to tag"},
+                            "tag": {"type": "string", "description": "The tag to add to the task"},
+                            "task_id": {"type": "number", "description": "The task id of the task to tag"}
                         },
                         "required": ["task", "tag", "task_id"]
                     }
@@ -249,10 +249,3 @@ function_map = {
     "add_task_with_subtasks_and_tags": Functions.add_task_with_subtasks_and_tags
 }
 
-for function in function_map:
-    fs = GetFunctionSchemaForOpenAI(function_map[function])
-    print(type(fs))
-    function_schemas.append(fs)
-    print("-----")
-print(type(function_schemas))
-print(type(function_schemas[0]))
