@@ -350,11 +350,11 @@ class RAGPipeline:
                 contexts = contexts or self.last_query[constants.CONTEXTS]
 
             eval_questions = []
-            with open('RAG/generated_questions.text', 'r') as file:
-                for line in file:
-                    # Remove newline character and convert to integer
-                    item = line.strip()
-                    eval_questions.append(item)
+            # with open('RAG/generated_questions.text', 'r') as file:
+            #     for line in file:
+            #         # Remove newline character and convert to integer
+            #         item = line.strip()
+            #         eval_questions.append(item)
             
             if not (question and answer and contexts):
                 raise ValueError("No query data available for evaluation")

@@ -28,8 +28,8 @@ TEST_QUESTION = "What is Synchronous Transmission"
 
 # Load test questions for evaluation
 QUESTIONS_FILE = os.path.join(ROOT, "generated_questions.text")
-with open(QUESTIONS_FILE, "r", encoding="utf-8") as f:
-    TEST_QUESTIONS = [line.strip() for line in f if line.strip()]
+# with open(QUESTIONS_FILE, "r", encoding="utf-8") as f:
+#     TEST_QUESTIONS = [line.strip() for line in f if line.strip()]
 
 class DummyFile:
     """
