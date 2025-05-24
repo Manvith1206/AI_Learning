@@ -32,11 +32,11 @@ class SemanticChunker(BaseChunker):
 
         return chunks
     
-    def _cosine_similarity(self, vec1: np.ndarray, vec2: np.ndarray) -> float:
+    def _cosine_similarity(self, vec1: np.ndarray, vec2: np.ndarray):
         """Calculate cosine similarity between two vectors."""
         return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
     
-    def _preprocess_text(self, text: str) -> str:
+    def _preprocess_text(self, text: str):
         """Basic text preprocessing."""
         # Remove extra whitespace
         text = re.sub(r'\s+', ' ', text)
@@ -44,7 +44,7 @@ class SemanticChunker(BaseChunker):
         text = re.sub(r'\n{3,}', '\n\n', text)
         return text.strip()
     
-    def _segment_into_sentences(self, text: str) -> List[str]:
+    def _segment_into_sentences(self, text: str):
         """
         Split text into sentences using regex pattern matching.
         This is an alternative to NLTK's sentence tokenization.
@@ -70,7 +70,7 @@ class SemanticChunker(BaseChunker):
         # Filter out empty sentences
         return [s for s in final_sentences if s.strip()]
     
-    def _find_chunk_boundaries(self, embeddings: np.ndarray) -> List[int]:
+    def _find_chunk_boundaries(self, embeddings: np.ndarray):
         """
         Find semantic boundaries based on similarity between adjacent sentence embeddings.
         Returns list of indices where chunks should end.
@@ -97,7 +97,7 @@ class SemanticChunker(BaseChunker):
         
         return boundaries
     
-    def chunk_text(self, text: str) -> List[Dict[Any, Any]]:
+    def chunk_text(self, text: str):
         """
         Main method to semantically chunk the input text.
         

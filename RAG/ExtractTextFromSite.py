@@ -128,7 +128,6 @@ with open("revit_links.txt", 'r', encoding='utf-8') as file:
 # Extract content from each linked page
 all_text = ""
 for i, link in enumerate(toc_links):
-    print(f"Processing: {link}")
     try:
         driver.get(link)
         time.sleep(2)

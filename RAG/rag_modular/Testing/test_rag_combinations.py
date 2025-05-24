@@ -2,7 +2,7 @@ import os
 import sys
 import csv
 import time
-import pandas as pd
+# import pandas as pd # Not used
 import streamlit as st
 
 # Add project root to sys.path
@@ -13,7 +13,7 @@ from rag_modular.Common.rag_pipeline import RAGPipeline
 from rag_modular.Common.config_manager import ConfigManager
 import rag_modular.Common.RAG_Constants as constants
 from rag_modular.Common.RAG_Constants import (
-    ChunkerType, EmbedderType, RetrieverType, 
+    ChunkerType, EmbedderType, RetrieverType,
     RerankerType, VectorStore, GeminiLLMModel,
     CohereLLMModel, JINA_RERANKER_MODELS
 )
@@ -21,7 +21,7 @@ from rag_modular.Evaluators.ragas_evaluator import RagasEvaluator
 
 # Path to the test document and output file
 TEST_FILE_PATH = os.path.join(ROOT, "rag_modular", "TestFile", "DCA2104 Unit-08_V1.1.txt")
-RESULTS_CSV_PATH = os.path.join(ROOT, "rag_evaluation_results.csv")
+RESULTS_CSV_PATH = os.path.join(ROOT, "rag_evaluation_results_iterative.csv") # Changed output file name
 
 if "Extractedtexts" not in st.session_state:
     st.session_state.Extractedtexts = None

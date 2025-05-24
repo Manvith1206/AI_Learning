@@ -13,3 +13,19 @@ class GeminiService(BaseLLMService):
             contents=prompt
         )
         return response.text
+    
+    def function_call(self, functions, prompt, **kwargs):
+        tools = [types.Tool(function_declarations=[func]) for func in functions]
+
+        config = types.GenerateContentConfig(
+            tools=tools,
+            temperature=kwargs.get("temperature", 0.7)
+        )
+
+        response = self.client.models.generate_content(
+        model=self.model_name,
+        contents=prompt,
+        config=config
+    )
+        return response
+        

@@ -33,7 +33,6 @@ class SimilarityRetriever(BaseRetriever):
         # Get search results from vector store
         
         results = vector_store.search(emb_arr, top_k=top_k)
-        print(results)
         # Filter by similarity threshold if needed
         filtered_results = [
             result for result in results 

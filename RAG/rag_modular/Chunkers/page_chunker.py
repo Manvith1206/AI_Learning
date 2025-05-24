@@ -17,7 +17,6 @@ class PageChunker(BaseChunker):
             page = page.strip()
             if page:
                 chunks.append(page)
-                print("Page: ", page)
 
         
         return chunks

@@ -11,20 +11,33 @@ class VoyageEmbedder(BaseEmbedder):
         key = api_key
         self.client = voyageai.Client(api_key=key)
         self.model = model
-        self.embeddings = None
+        self.embeddings = [] # Initialize as empty list for batching
+        
+    def batch_chunks(self, chunks, batch_size=80):
+        """Yield successive batches of size batch_size."""
+        for i in range(0, len(chunks), batch_size):
+            print("batching is in progress")
+            yield chunks[i:i + batch_size]
         
     def fit(self, texts):
         """
         For Voyage embeddings we don't need a separate fit step;
         we just embed the texts and cache if desired.
         """ 
-        emb = self.client.embed(texts, self.model)
-        self.embeddings = emb.embeddings
+        self.texts = texts
+        all_embeddings = []
+        for batch in self.batch_chunks(texts, batch_size=80): # Adjust batch_size as needed for Voyage
+            emb = self.client.embed(texts=batch, model=self.model)
+            all_embeddings.extend(emb.embeddings)
+        self.embeddings = all_embeddings
 
         return self.embeddings
     def transform(self, texts):
         """
         Embed new Texts on demand
         """ 
-        resp = self.client.embed(texts=texts, model=self.model)
-        return resp.embeddings
+        all_embeddings = []
+        for batch in self.batch_chunks(texts, batch_size=80): # Adjust batch_size as needed for Voyage
+            resp = self.client.embed(texts=batch, model=self.model)
+            all_embeddings.extend(resp.embeddings)
+        return all_embeddings

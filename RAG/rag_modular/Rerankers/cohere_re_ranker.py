@@ -19,8 +19,11 @@ class CohereReranker(BaseReranker):
         response = self.client.rerank(
             query=query,
             documents=documents,
-            model=self.model
+            model=self.model,
+            top_n=5
         )
+
+        print("Coeherereanking/ resposne", response)
         
         # Create a list of (document, score) tuples
         doc_score_pairs = [(documents[result.index], result.relevance_score) for result in response.results]
@@ -32,5 +35,7 @@ class CohereReranker(BaseReranker):
         sorted_documents = [doc for doc, score in sorted_results]
                             
         explaination = f"Cohere Re ranking Model {self.model} re ranked the docs"
+        print("SortedDocs: ", sorted_documents)
+
         return sorted_documents, explaination
 

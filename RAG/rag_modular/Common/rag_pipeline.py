@@ -6,6 +6,7 @@ from rag_modular.Evaluators.simple_evaluator import SimpleEvaluator
 from rag_modular.Evaluators.ragas_evaluator import RagasEvaluator
 from .config_manager import ConfigManager
 import streamlit as st
+import re
 
 from rag_modular.Common.RAG_Constants import (
     ChunkerType, EmbedderType,
@@ -14,7 +15,7 @@ from rag_modular.Common.RAG_Constants import (
 )
 import rag_modular.Common.RAG_Constants as constants
 from rag_modular.LLM_Chat_Services.cohere_service import CohereChat
-
+from rag_modular.Common.query_classifier_llm import QueryClassifier
 
 import traceback
 
@@ -22,6 +23,7 @@ class RAGPipeline:
     def __init__(self, config_manager=None):
         self.config_manager = config_manager or ConfigManager()
         self.setup_components()
+        self.query_classifier = None
 
     # setup components
     def setup_components(self):
@@ -33,6 +35,7 @@ class RAGPipeline:
         self.llm_service = self._build_llm_service()
         self.reranker = self._build_reranker()
         self.evaluator = self._build_evaluator()
+        self.query_classifier = QueryClassifier(self.llm_service)
 
     # build invidual components
     def _build_chunker(self):
@@ -40,6 +43,7 @@ class RAGPipeline:
         from rag_modular.Chunkers.sentence_chunker import SentenceChunker
         from rag_modular.Chunkers.semantic_chunker import SemanticChunker
         from rag_modular.Chunkers.page_chunker import PageChunker
+        from rag_modular.Chunkers.semantic_chunker_with_langchain import SemanticChunkerWithLangChain
 
         cfg = self.config_manager.get_config(constants.CONFIG_CHUNKER)
         type = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -52,6 +56,8 @@ class RAGPipeline:
             return SemanticChunker(**params)
         elif type == ChunkerType.PAGE.value:
             return PageChunker()
+        elif type == ChunkerType.SEMANTIC_WITH_LANGCHAIN.value:
+            return SemanticChunkerWithLangChain()
         else:
             return RecursiveChunker()
 
@@ -219,6 +225,20 @@ class RAGPipeline:
                 text = loaders[file_ext].load_document(file_path)
             else:
                 raise ValueError(f"Unsupported file type: {file_ext}")
+            
+            # # Remove headers and footers
+            # text = re.sub(r"DCA2104: Basics of Data Communication Manipal University Jaipur$MUJ$", "", text)
+
+            # # Remove page numbers or line numbers
+            # text = re.sub(r"Unit \d+:.*", "", text)
+            # text = re.sub(r"\d+\s*$", "", text)
+
+            # # Remove extra whitespaces and newlines
+            # text = re.sub(r"\s+", " ", text).strip()
+            
+            with open("ExtractedTextFromPdf.txt", "w", encoding="utf-8") as file:
+                file.write(text)
+
             if not text:
                 return None, None
             else:
@@ -269,53 +289,87 @@ class RAGPipeline:
         )
         return summary
     
+    def greetUser(self, query_text):
+        if self.query_classifier.is_greeting(query_text):
+            return {
+                constants.ANSWER: self.query_classifier.get_greeting_response(),
+                constants.CONTEXTS: "",
+                constants.RERANK_EXPLANATION: ""
+            }
+        
+    def irrelvant(self, query_text):
+        context_docs = self.get_context_docs(query_text)
+        if self.query_classifier.is_irrelevant(query_text, context_docs):
+            return {
+                constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
+                constants.CONTEXTS: context_docs,
+                constants.RERANK_EXPLANATION: ""
+            }
+        
+    def get_context_docs(self, query_text, top_k=None):
+        if not hasattr(self.vector_store, 'documents') or not self.vector_store.documents:
+                raise ValueError("No documents processed. Please upload and process a document before querying.")
+        # Use configured top_k if not specified
+        if top_k is None:
+            top_k = self.top_k
+        
+        # Generate query embedding
+        query_embedding = self.embedder.transform([query_text])
+        if isinstance(query_embedding, list) and query_embedding:
+            first = query_embedding[0]
+            if hasattr(first, "values"):
+                query_embedding = [e.values for e in query_embedding]
+            elif hasattr(first, "embedding"):
+                query_embedding = [e.embedding for e in query_embedding]
+                    
+        results = self.retriever.retrieve(
+                query_embedding, 
+                self.vector_store.documents, 
+                top_k=top_k,
+                vector_store=self.vector_store,
+                query_text=query_text
+                )
+        retrieved_docs = [result[constants.Document][constants.PAGE_CONTENT] for result in results]
+            
+        # Use retriever to get relevant documents
+        if not retrieved_docs:
+            raise ValueError(constants.UNABLE_TO_RETRIEVE_MESSAGE)
+        
+        # Rerank documents
+        reranked_docs, explanation = self.reranker.rerank(query_text, retrieved_docs, top_k=top_k)
+        
+        
+        context_docs = None
+        if reranked_docs:
+            context_docs = "\n\n".join(reranked_docs)
+        else:
+            context_docs = "\n\n".join(retrieved_docs)
+
+        return context_docs, explanation, retrieved_docs
+    
     def query(self, query_text, top_k=None):
         try:
-            print("Querying with text:", query_text)
+            if self.query_classifier.is_greeting(query_text):
+                return {
+                constants.ANSWER: self.query_classifier.get_greeting_response(),
+                constants.CONTEXTS: "",
+                constants.RERANK_EXPLANATION: ""
+            }
             # query_text = self.rewrite_query(query_text)
             # Ensure documents are available
-            if not hasattr(self.vector_store, 'documents') or not self.vector_store.documents:
-                raise ValueError("No documents processed. Please upload and process a document before querying.")
-            # Use configured top_k if not specified
-            if top_k is None:
-                top_k = self.top_k
             
-            # Generate query embedding
-            query_embedding = self.embedder.transform([query_text])
-            if isinstance(query_embedding, list) and query_embedding:
-                first = query_embedding[0]
-                if hasattr(first, "values"):
-                    query_embedding = [e.values for e in query_embedding]
-                elif hasattr(first, "embedding"):
-                    query_embedding = [e.embedding for e in query_embedding]
-                        
-            results = self.retriever.retrieve(
-                    query_embedding, 
-                    self.vector_store.documents, 
-                    top_k=top_k,
-                    vector_store=self.vector_store,
-                    query_text=query_text
-                    )
-            print("Results:", results)
-            retrieved_docs = [result[constants.Document][constants.PAGE_CONTENT] for result in results]
-                
-            # Use retriever to get relevant documents
-            if not retrieved_docs:
-                raise ValueError(constants.UNABLE_TO_RETRIEVE_MESSAGE)
-            
-            # Rerank documents
-            reranked_docs, explanation = self.reranker.rerank(query_text, retrieved_docs, top_k=top_k)
-            
-            
-            context_docs = None
-            if reranked_docs:
-                context_docs = "\n\n".join(reranked_docs)
-            else:
-                context_docs = "\n\n".join(retrieved_docs)
-
+            context_docs, explanation, retrieved_docs = self.get_context_docs(query_text)
+            if self.query_classifier.is_irrelevant(query_text, context_docs):
+                return {
+                constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
+                constants.CONTEXTS: context_docs,
+                constants.RERANK_EXPLANATION: ""
+            }
             # Join contexts
             context = "\n\n".join(context_docs)
             history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in st.session_state.messages])
+            with open("Contexts.txt", "w", encoding="utf-8") as file:
+                file.write(context)
 
             # Generate answer
             answer_prompt = f"""
@@ -376,13 +430,6 @@ class RAGPipeline:
                 question = question or self.last_query[constants.QUESTION]
                 answer = answer or self.last_query[constants.ANSWER]
                 contexts = contexts or self.last_query[constants.CONTEXTS]
-
-            eval_questions = []
-            with open('RAG/generated_questions.text', 'r') as file:
-                for line in file:
-                    # Remove newline character and convert to integer
-                    item = line.strip()
-                    eval_questions.append(item)
             
             if not (question and answer and contexts):
                 raise ValueError("No query data available for evaluation")

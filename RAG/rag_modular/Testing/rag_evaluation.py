@@ -191,7 +191,6 @@ def evaluate_rag_combination(
             }
         
         # Run query
-        print(f"Running query: {query}")
         query_start_time = time.time()
         response = pipeline.query(query)
         query_time = time.time() - query_start_time
@@ -286,13 +285,6 @@ def run_evaluation():
                     for reranker_type, reranker_config in RERANKER_PARAM_GRID:
                         for query in TEST_QUERIES:
                             counter += 1
-                            print(f"\nEvaluating combination {counter}/{total_combinations}:")
-                            print(f"Chunker: {chunker_type}")
-                            print(f"Embedder: {embedder_type}")
-                            print(f"Vector Store: {vs_type}")
-                            print(f"Retriever: {retriever_type}")
-                            print(f"Reranker: {reranker_type}")
-                            print(f"Query: {query}")
                             
                             # Evaluate the combination
                             result = evaluate_rag_combination(
@@ -331,11 +323,9 @@ def run_evaluation():
                                 writer = csv.writer(f)
                                 writer.writerow(row)
                             
-                            print(f"Result: {result.get('status', 'unknown')}")
                             if result.get("status") == "failed":
                                 print(f"Error: {result.get('error', 'unknown error')}")
     
-    print(f"\nEvaluation complete. Results saved to {RESULTS_CSV_PATH}")
     
     # Load and return the results DataFrame
     return pd.read_csv(RESULTS_CSV_PATH)
@@ -359,7 +349,6 @@ def run_single_combination(
     reranker_config = next((c for t, c in RERANKER_PARAM_GRID if t == reranker_type), None)
     
     if not all([chunker_config, embedder_config, vs_config, retriever_config, reranker_config]):
-        print("One or more configurations not found")
         return
     
     # Evaluate the combination

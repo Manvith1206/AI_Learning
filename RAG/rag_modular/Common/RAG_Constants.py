@@ -126,6 +126,7 @@ class ChunkerType(Enum):
     SENTENCE = "sentence"
     SEMANTIC = "semantic"
     PAGE = "page"
+    SEMANTIC_WITH_LANGCHAIN = "semantic_with_langchain"
 
 class EmbedderType(Enum):
     TFIDF = "tfidf"
@@ -157,7 +158,7 @@ class LLMServiceType(Enum):
 # Common LLM model names
 class GeminiLLMModel(Enum):
     GEMINI_FLASH = "gemini-2.0-flash"
-    GEMINI_PRO = "gemini-2.5-pro"
+    GEMINI_PRO = "gemini-2.5-pro-preview-05-06"
     
     @property
     def display_name(self):

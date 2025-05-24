@@ -16,6 +16,12 @@ class SklearnVectorStore(BaseVectorStore):
         # assign documents and generate IDs
         self.documents = documents
         self.ids = []
+        if not documents: # If there are no documents, there's nothing to add or embed.
+            self.embeddings = np.array([]) # Store empty numpy array for consistency
+            self.nn_model = None # Ensure model is not fitted
+            print("Warning: No documents provided to SklearnVectorStore.add_embeddings. Store will be empty.")
+            return
+
         for document in documents:
             if isinstance(document, dict):
                 doc_id = document.get("id", str(uuid.uuid4()))
@@ -36,9 +42,18 @@ class SklearnVectorStore(BaseVectorStore):
             embeddings = embeddings.toarray()
         if not isinstance(embeddings, np.ndarray):
             embeddings = np.array(embeddings, dtype=np.float32)
+        
+        # Check if embeddings are empty after processing
+        if embeddings.size == 0:
+            self.embeddings = np.array([]) # Store empty numpy array
+            self.nn_model = None # No model to fit if no embeddings
+            print("Warning: Embeddings list was empty or resulted in an empty array. SklearnVectorStore will be empty.")
+            return
+
         # store embeddings and fit model
         self.embeddings = embeddings
-        n_neighbors = min(5, len(documents))
+        # n_neighbors should be at least 1 if embeddings is not empty, and not more than num samples.
+        n_neighbors = min(max(1, len(documents)), 5) 
         self.nn_model = NearestNeighbors(n_neighbors=n_neighbors, metric=self.metric)
         self.nn_model.fit(embeddings)
 

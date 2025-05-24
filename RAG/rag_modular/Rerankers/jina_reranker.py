@@ -36,7 +36,7 @@ class JinaReranker(BaseReranker):
         data = {
             "model": self.model,
             "query": query,
-            "top_n": top_k,
+            "top_n": 5,
             "documents": documents,
             "return_documents": False
         }

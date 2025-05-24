@@ -10,24 +10,31 @@ class LLMReranker(BaseReranker):
         
         chunk_list = "\n".join([f"{i+1}. {doc}" for i, doc in enumerate(documents)])
         rerank_prompt = f"""
-            You are given a user query and a list of retrieved document chunks. 
-            For each chunk, determine how relevant it is to the query, then select the best chunk(s) that would help answer the query. 
-            Explain your reasoning for selecting the chunk(s).
+            Role: 
+            Assume the role of a research assistant tasked with evaluating the relevance of 
+            document chunks to a user query.
+
+            Task: 
+            You will receive a user query along with a list of retrieved document chunks. 
+            Your objective is to assess the relevance of each chunk to the query.
+            After your evaluation, you will rerank the chunks based on their relevance and provide a formal 
+            explanation of your reasoning for the new ranking.
 
             Query: {query}
 
             Chunks:
             {chunk_list}
 
+            Output Format:
             Please respond in the following format:
-            Best Chunk(s): [list the chunk numbers]
-            Explanation: [your reasoning]
+            Reranked Chunk(s): [list the chunk numbers]
+            Explanation: [your reasoning for reranking the chunks]
             """
         response = self.llm_client.generate_response(
             prompt=rerank_prompt
         )
         response_text = response.strip()
-        best_chunks_match = re.search(r"Best Chunk\(s\):\s*\[([^\]]+)\]", response_text)
+        best_chunks_match = re.search(r"Reranked Chunk\(s\):\s*\[([^\]]+)\]", response_text)
         explanation_match = re.search(r"Explanation:\s*(.*)", response_text, re.DOTALL)
         selected_indices = []
         if best_chunks_match:

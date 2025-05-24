@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import sys
 import pandas as pd
+import time # Added for timing operations
 
 def main():
     st.set_page_config(
@@ -61,7 +62,7 @@ if "LLM_Model_Options" not in st.session_state:
     st.session_state.LLM_Model_Options = [e.value for e in GeminiLLMModel]
 
 # Function to lazily initialize the pipeline when needed
-def get_pipeline():
+def get_pipeline() -> RAGPipeline:
     if not st.session_state.get("pipeline_created", False):
         with st.spinner("Initializing RAG pipeline..."):
             st.session_state.pipeline = RAGPipeline(st.session_state.pipeline_config)
@@ -104,6 +105,7 @@ with st.sidebar:
         elif chunker_type == ChunkerType.SENTENCE.value:  
             max_sentences = st.slider(constants.MAX_SENTENCES_DISPLAY_NAME, 1, 20, 5)
             chunker_params = {constants.CONFIG_MAX_SENTENCES: max_sentences}
+            
 
         st.divider()
         # Vector Store
@@ -261,6 +263,7 @@ with st.sidebar:
                 # Only initialize pipeline when needed
                 pipeline = get_pipeline()
                 texts = pipeline.extractText(uploaded_file)
+                
                 documents, chunks = pipeline.process_document(uploaded_file, texts)
                     
                 if documents and chunks:
@@ -330,6 +333,51 @@ st.subheader("Chat with your Documents")
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+
+function_schemas = [
+    {
+      "name": "greetUser",
+      "description": "Handles greeting queries from users and returns appropriate responses",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query_text": {
+            "type": "string",
+            "description": "The user's input text to check if it's a greeting"
+          }
+        },
+        "required": ["query_text"]
+      }
+    },
+    {
+      "name": "irrelevant",
+      "description": "Handles irrelevant queries by checking if the user's question is outside the scope of available context",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query_text": {
+            "type": "string",
+            "description": "The user's input text to check for irrelevance against available context"
+          }
+        },
+        "required": ["query_text"]
+      }
+    },
+    {
+      "name": "query",
+      "description": "Handles relevant queries normal rag flow",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query_text": {
+            "type": "string",
+            "description": "The user's input text to check for irrelevance against available context"
+          }
+        },
+        "required": ["query_text"]
+      }
+    }]
+
 # Chat input
 if prompt := st.chat_input("Ask a question about your documents"):
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -339,11 +387,9 @@ if prompt := st.chat_input("Ask a question about your documents"):
         if st.session_state.documents:
             with st.spinner("🤔 Thinking...", show_time=True):
                 # Initialize pipeline when needed
-                print("Initializing pipeline...")
                 pipeline = get_pipeline()
-                print("Pipeline", pipeline)
+
                 response = pipeline.query(prompt)
-                print("Response", response)
                 st.markdown(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
                 st.markdown(response["answer"])
                 st.session_state.messages.append({
