@@ -26,22 +26,21 @@ with st.spinner("Loading application..."):
     sys.path.append(os.path.join(os.path.dirname(__file__), 'rag_modular'))
     
     # Only import these when the app is fully loaded
-    @st.cache_resource
     def load_pipeline_dependencies():
         from rag_modular.Common.rag_pipeline import RAGPipeline
         from rag_modular.Common.config_manager import ConfigManager
-        # import RAG.rag_modular.Testing.test_rag_combinations as test_rag_combinations
+        import rag_modular.Testing.test_rag_combinations as test_rag_combinations
         return {
             "RAGPipeline": RAGPipeline,
             "ConfigManager": ConfigManager,
-            # "test_rag_combinations": test_rag_combinations
+            "test_rag_combinations": test_rag_combinations
         }
     
     # Load dependencies with caching
     deps = load_pipeline_dependencies()
     RAGPipeline = deps["RAGPipeline"]
     ConfigManager = deps["ConfigManager"]
-    # test_rag_combinations = deps["test_rag_combinations"]
+    test_rag_combinations = deps["test_rag_combinations"]
 
 TEMP_DIR = "temp_docs"
 
@@ -88,8 +87,8 @@ with st.sidebar:
         # Chunker parameters
         chunker_params = {}
         if chunker_type == ChunkerType.RECURSIVE.value:
-            chunk_size = st.slider(constants.CHUNK_SIZE_DISPLAY_NAME, 100, 10000, 600)
-            chunk_overlap = st.slider(constants.CHUNK_OVERLAP_DISPLAY_NAME, 0, 3000, 200)
+            chunk_size = st.slider(constants.CHUNK_SIZE_DISPLAY_NAME, 100, 10000, 150)
+            chunk_overlap = st.slider(constants.CHUNK_OVERLAP_DISPLAY_NAME, 0, 3000, 70)
             chunker_params = {constants.CONFIG_CHUNK_SIZE_PARAM: chunk_size, constants.CONFIG_CHUNK_OVERLAP_PARAM: chunk_overlap}
         elif chunker_type == ChunkerType.SEMANTIC.value:
             min_chunk_size = st.number_input(constants.MIN_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 600)
@@ -115,7 +114,7 @@ with st.sidebar:
             index=0            
         )
         if vector_store == constants.VectorStore.SCIKIT_LEARN.value:
-            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.VectorStore.SCIKIT_LEARN.value, constants.CONFIG_VECTOR_STORE_METRIC: {constants.CONFIG_METRIC_COSINE}}
+            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.VectorStore.SCIKIT_LEARN.value, constants.CONFIG_PARAM: {constants.CONFIG_VECTOR_STORE_METRIC :constants.CONFIG_METRIC_COSINE}}
         elif vector_store == constants.VectorStore.PINE_CONE.value:
             vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.VectorStore.PINE_CONE.value}
         elif vector_store == constants.VectorStore.CHROMA.value:
@@ -141,7 +140,7 @@ with st.sidebar:
             elif embedder_type == EmbedderType.MISTRAL.value:
                 emb_options = constants.MISTRAL_EMBED_MODELS
             emb_model = st.selectbox(constants.EMBED_MODEL_DISPLAY_NAME, options=[e.value for e in emb_options])
-            embedder_params = {constants.CONFIG_TYPE_PARAM: embedder_type, constants.CONFIG_MODEL: emb_model}
+            embedder_params = {constants.CONFIG_TYPE_PARAM: embedder_type, constants.CONFIG_PARAM: {constants.CONFIG_MODEL: emb_model}}
         else:
             embedder_params={constants.CONFIG_TYPE_PARAM: embedder_type}
         
@@ -183,32 +182,33 @@ with st.sidebar:
             st.session_state.LLM_Model_Options = [e.value for e in constants.JINA_RERANKER_MODELS]
         if re_ranker_params[constants.CONFIG_TYPE_PARAM] == RerankerType.LLM.value or re_ranker_params[constants.CONFIG_TYPE_PARAM] == RerankerType.COHERE.value or re_ranker_params[constants.CONFIG_TYPE_PARAM] == RerankerType.JINA.value:
             model = st.selectbox(constants.MODEL_NAME_DISPLAY_NAME, options=[e for e in st.session_state.LLM_Model_Options], index=0)
-            re_ranker_params[constants.CONFIG_MODEL] = model
+            re_ranker_params[constants.CONFIG_PARAM] = {constants.CONFIG_MODEL: model}
 
+        top_k = st.slider("Top-K Documents", 1, 20, 5)
+        
         # Retriever parameters
         if retriever_type == RetrieverType.SIMILARITY.value:
             similarity_threshold = st.slider(constants.SIMILARITY_THRESHOLD_DISPLAY_NAME, 0.0, 1.0, 0.0, 0.01)
             # Only pass similarity_threshold to retriever
-            retriever_params = {constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: similarity_threshold}
+            retriever_params = {constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: similarity_threshold, constants.CONFIG_TOP_K_PARAM: top_k}
         elif retriever_type == RetrieverType.HYBRID.value:  # hybrid
             keyword_weight = st.slider(constants.KEYWORD_WEIGHT_DISPLAY_NAME, 0.0, 1.0, 0.3, 0.05)
-            retriever_params = {constants.CONFIG_KEYWORD_WEIGHT: keyword_weight}
+            retriever_params = {constants.CONFIG_KEYWORD_WEIGHT: keyword_weight, constants.CONFIG_TOP_K_PARAM: top_k}
         # elif retriever_type == RetrieverType.SENTENCE_WINDOW.value:  # sentence window
         #     window_size = st.number_input(constants.WINDOW_SIZE_DISPLAY_NAME, min_value=0, max_value=10)
         #     retriever_params = {constants.CONFIG_WINDOW_SIZE: window_size}
             
         
         # Top-k setting
-        top_k = st.slider("Top-K Documents", 1, 20, 5)
         # Apply retrieval config
         with st.spinner("Applying Retrieval Params"):
             if st.button("Apply Retrieval Params", key="apply_retrieval"):
-                retriever_config = {constants.CONFIG_TYPE_PARAM: retriever_type, constants.CONFIG_PARAM: retriever_params, constants.CONFIG_TOP_K_PARAM: top_k}
+                retriever_config = {constants.CONFIG_TYPE_PARAM: retriever_type, constants.CONFIG_PARAM: retriever_params}
                 if re_ranker_type == RerankerType.LLM.value:
                     service = st.selectbox("LLM Service", options=[e.value for e in constants.LLMServiceType])
-                    reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: model}
+                    reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: {constants.CONFIG_MODEL: model}}
                 elif re_ranker_type == RerankerType.COHERE.value or re_ranker_type == RerankerType.JINA.value:
-                    reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: model}
+                    reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: {constants.CONFIG_MODEL: model}}
                 else:
                     reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: {}}
 
@@ -244,7 +244,9 @@ with st.sidebar:
         llm_model_options = {model.display_name: model for model in constants.GeminiLLMModel}
 
     user_selected_llm_model = st.selectbox(constants.LLM_CHAT_SERVICE, options=llm_model_options.keys(), index=0)
-    chat_response_config = {constants.CONFIG_TYPE_PARAM: llm_service, constants.CONFIG_MODEL: llm_model_options[user_selected_llm_model].value}
+    chat_response_config = {constants.CONFIG_TYPE_PARAM: llm_service, 
+                            constants.CONFIG_PARAM: 
+                            {constants.CONFIG_MODEL: llm_model_options[user_selected_llm_model].value}}
     
     if st.button("Apply Chat Response Config", key="apply_chat_response"):
         get_pipeline().update_component(constants.CONFIG_LLM, chat_response_config)
@@ -323,9 +325,9 @@ with st.sidebar:
             Config_Content = f"Chunker Config: {get_pipeline().config_manager.config[constants.CONFIG_CHUNKER]}\nEmbedder Config: {get_pipeline().config_manager.config[constants.CONFIG_EMBEDDER]}\nVector Store Config{get_pipeline().config_manager.config[constants.CONFIG_VECTOR_STORE]}\nRetreiver Config: {get_pipeline().config_manager.config[constants.CONFIG_RETRIEVER]}\nLLM Config: {get_pipeline().config_manager.config[constants.CONFIG_LLM]}\nRe Ranking Config: {get_pipeline().config_manager.config[constants.CONFIG_RERANKER]}\n{get_pipeline().config_manager.config[constants.CONFIG_EVALUATOR]}"
             st.markdown(Config_Content)
 
-    # if st.button("Test All Configurations", key="test_all_combinations"):
-    #     # Only import and run when button is clicked
-    #     test_rag_combinations.run_tests()
+    if st.button("Test All Configurations", key="test_all_combinations"):
+        # Only import and run when button is clicked
+        test_rag_combinations.run_tests()
 
 # Main chat interface
 st.subheader("Chat with your Documents")

@@ -5,10 +5,11 @@ import rag_modular.Common.RAG_Constants as constants
 class SimilarityRetriever(BaseRetriever):
     """Retriever that uses cosine similarity to find relevant documents"""
     
-    def __init__(self, similarity_threshold=0.0):
+    def __init__(self, similarity_threshold=0.0, top_k = 5):
         self.similarity_threshold = similarity_threshold
+        self.top_k = top_k
     
-    def retrieve(self, query_embedding, documents, top_k=5, **kwargs):
+    def retrieve(self, query_embedding, documents, **kwargs):
         """
         Retrieve documents based on vector similarity
         
@@ -32,7 +33,8 @@ class SimilarityRetriever(BaseRetriever):
             
         # Get search results from vector store
         
-        results = vector_store.search(emb_arr, top_k=top_k)
+        results = vector_store.search(emb_arr, top_k=self.top_k)
+        print("Results: ", results)
         # Filter by similarity threshold if needed
         filtered_results = [
             result for result in results 

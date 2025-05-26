@@ -20,7 +20,7 @@ from rag_modular.Common.RAG_Constants import (
 from rag_modular.Evaluators.ragas_evaluator import RagasEvaluator
 
 # Path to the test document and output file
-TEST_FILE_PATH = os.path.join(ROOT, "rag_modular", "TestFile", "DCA2104 Unit-08_V1.1.txt")
+TEST_FILE_PATH = "E:/Manvith/Coding/AI/RAG/rag_modular/Testing/TestFile/DCA2104 Unit-08_V1.1.pdf"
 RESULTS_CSV_PATH = os.path.join(ROOT, "rag_evaluation_results_iterative.csv") # Changed output file name
 
 if "Extractedtexts" not in st.session_state:
@@ -64,6 +64,14 @@ def test_rag_combination(config_manager, chunker_config, embedder_config,
         # Run query
         print(f"Running query: {query}")
         response = pipeline.query(query)
+
+        # Conditional debugging for Gemini Embeddings
+        if embedder_config and embedder_config.get(constants.CONFIG_TYPE_PARAM) == EmbedderType.GEMINI.value:
+            print("/n--- DEBUGGING GEMINI EMBEDDINGS ---")
+            print(f"Test Query: {query}")
+            print(f"Retrieved Contexts for LLM: {response[constants.CONTEXTS]}")
+            print(f"LLM Answer: {response[constants.ANSWER]}")
+            print("--- END DEBUGGING GEMINI EMBEDDINGS ---/n")
         
         # Run RAGAS evaluation
         print(f"Running RAGAS evaluation...")
@@ -111,34 +119,40 @@ def run_tests():
     """Run tests for all combinations and save results to CSV"""
     # Define the combinations to test
     chunker_configs = [
-        # (ChunkerType.RECURSIVE.value, {
-        #     constants.CONFIG_TYPE_PARAM: ChunkerType.RECURSIVE.value, 
-        #     constants.CONFIG_PARAM: {
-        #         constants.CONFIG_CHUNK_SIZE_PARAM: 600, 
-        #         constants.CONFIG_CHUNK_OVERLAP_PARAM: 200
-        #     }
-        # }),
-        (ChunkerType.SEMANTIC.value, {
-            constants.CONFIG_TYPE_PARAM: ChunkerType.SEMANTIC.value, 
+        (ChunkerType.RECURSIVE.value, {
+            constants.CONFIG_TYPE_PARAM: ChunkerType.RECURSIVE.value, 
             constants.CONFIG_PARAM: {
-                constants.CONFIG_MIN_CHUNK_SIZE_DISPLAY_NAME: 150, 
-                constants.CONFIG_MAX_CHUNK_SIZE_DISPLAY_NAME: 550, 
-                constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.7, 
-                constants.CONFIG_MODEL_NAME: constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI
+                constants.CONFIG_CHUNK_SIZE_PARAM: 150, 
+                constants.CONFIG_CHUNK_OVERLAP_PARAM: 70
             }
         }),
+        # (ChunkerType.SEMANTIC.value, {
+        #     constants.CONFIG_TYPE_PARAM: ChunkerType.SEMANTIC.value, 
+        #     constants.CONFIG_PARAM: {
+        #         constants.CONFIG_MIN_CHUNK_SIZE_DISPLAY_NAME: 150, 
+        #         constants.CONFIG_MAX_CHUNK_SIZE_DISPLAY_NAME: 550, 
+        #         constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.7, 
+        #         constants.CONFIG_MODEL_NAME: constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI
+        #     }
+        # }),
         (ChunkerType.SENTENCE.value, {
             constants.CONFIG_TYPE_PARAM: ChunkerType.SENTENCE.value, 
             constants.CONFIG_PARAM: {
                 constants.CONFIG_MAX_SENTENCES: 5
             }
-        })
+        }),
+        ChunkerType.SENTENCE.value, {
+            constants.CONFIG_TYPE_PARAM: ChunkerType.SEMANTIC_WITH_LANGCHAIN.value, 
+            constants.CONFIG_PARAM: {
+                
+            }
+        }
     ]
     
     embedder_configs = [
-        # (EmbedderType.TFIDF.value, {
-        #     constants.CONFIG_TYPE_PARAM: EmbedderType.TFIDF.value
-        # }),
+        (EmbedderType.TFIDF.value, {
+            constants.CONFIG_TYPE_PARAM: EmbedderType.TFIDF.value
+        }),
         (EmbedderType.GEMINI.value, {
             constants.CONFIG_TYPE_PARAM: EmbedderType.GEMINI.value, 
             constants.CONFIG_MODEL: constants.GeminiEmbedModels.GEMINI_TEXT_EMBED_MODEL.value,
@@ -166,9 +180,9 @@ def run_tests():
         #     constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_SKLEARN,
         #     constants.CONFIG_VECTOR_STORE_METRIC: constants.CONFIG_METRIC_COSINE
         # }),
-        (VectorStore.PINE_CONE.value, {
-            constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_PINCONE
-        })
+        # (VectorStore.PINE_CONE.value, {
+        #     constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_PINCONE
+        # })
     ]
     
     retriever_configs = [
@@ -198,14 +212,14 @@ def run_tests():
     
     reranker_configs = [
          
-        # (RerankerType.LLM.value, {
-        #     constants.CONFIG_TYPE_PARAM: RerankerType.LLM.value, 
-        #     constants.CONFIG_PARAM: GeminiLLMModel.GEMINI_FLASH.value
-        # }),
-        (RerankerType.JINA.value, {
-            constants.CONFIG_TYPE_PARAM: RerankerType.JINA.value, 
-            constants.CONFIG_PARAM: JINA_RERANKER_MODELS.JINA_RERANKER_MULTILINGUAL.value
+        (RerankerType.LLM.value, {
+            constants.CONFIG_TYPE_PARAM: RerankerType.LLM.value, 
+            constants.CONFIG_PARAM: GeminiLLMModel.GEMINI_FLASH.value
         }),
+        # (RerankerType.JINA.value, {
+        #     constants.CONFIG_TYPE_PARAM: RerankerType.JINA.value, 
+        #     constants.CONFIG_PARAM: JINA_RERANKER_MODELS.JINA_RERANKER_MULTILINGUAL.value
+        # }),
         
         (RerankerType.COHERE.value, {
             constants.CONFIG_TYPE_PARAM: RerankerType.COHERE.value, 
@@ -213,9 +227,9 @@ def run_tests():
         }),
     ]
 
-    llm_service_configs = [(constants.LLMServiceType.CLAUDE.value, {
-        constants.CONFIG_TYPE_PARAM: constants.LLMServiceType.CLAUDE.value, 
-        constants.CONFIG_MODEL: constants.CLAUDE_MODELS.CLAUDE_SONNET_THREE_7.value
+    llm_service_configs = [(constants.LLMServiceType.GEMINI.value, {
+        constants.CONFIG_TYPE_PARAM: constants.LLMServiceType.GEMINI.value, 
+        constants.CONFIG_MODEL: constants.GeminiLLMModel.GEMINI_PRO.value
     })]
     
     # Create CSV file with headers
@@ -271,7 +285,7 @@ def run_tests():
                         pipeline.update_component(constants.CONFIG_RERANKER, reranker_config)
                         for llm_service_name, llm_service_config in llm_service_configs:
                             counter += 1
-                            print(f"\nTesting combination {counter}/{total_combinations}:")
+                            print(f"/nTesting combination {counter}/{total_combinations}:")
                             print(f"Chunker: {chunker_name}")
                             print(f"Embedder: {embedder_name}")
                             print(f"Vector Store: {vs_name}")
@@ -293,7 +307,7 @@ def run_tests():
                                 pipeline,
                                 texts
                             )
-                            
+                            print("Combinations/Result: ", result)
                             # Write result to CSV
                             with open(RESULTS_CSV_PATH, 'a', newline='', encoding='utf-8') as f:
                                 writer = csv.writer(f)
@@ -341,7 +355,7 @@ def run_tests():
                             if result["status"] == "failed":
                                 print(f"Error: {result['error']}")
     
-    print(f"\nTesting complete. Results saved to {RESULTS_CSV_PATH}")
+    print(f"/nTesting complete. Results saved to {RESULTS_CSV_PATH}")
     
 
 if __name__ == "__main__":

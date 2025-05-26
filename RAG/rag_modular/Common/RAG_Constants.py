@@ -149,6 +149,7 @@ class RerankerType(Enum):
 class EvaluatorType(Enum):
     SIMPLE = "simple"
     RAGAS = "ragas"
+    CUSTOM = "custom"
 
 class LLMServiceType(Enum):
     GEMINI = "gemini"

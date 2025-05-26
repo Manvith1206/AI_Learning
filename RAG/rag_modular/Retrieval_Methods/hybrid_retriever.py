@@ -7,10 +7,11 @@ class HybridRetriever(BaseRetriever):
     (e.g., keyword + semantic search)
     """
     
-    def __init__(self, keyword_weight=0.3):
+    def __init__(self, keyword_weight=0.3, top_k = 5):
         self.keyword_weight = keyword_weight
+        self.top_k = top_k
         
-    def retrieve(self, query_embedding, documents, top_k=5, **kwargs):
+    def retrieve(self, query_embedding, documents, **kwargs):
         """
         Retrieve documents using a hybrid approach
         
@@ -33,7 +34,7 @@ class HybridRetriever(BaseRetriever):
             raise ValueError(constants.QUERY_TEXT_MUST_BE_PROVIDED_ERROR_MESSAGE)
             
         # Get semantic search results
-        semantic_results = vector_store.search(query_embedding, top_k=top_k*2)
+        semantic_results = vector_store.search(query_embedding, top_k=self.top_k*2)
         
         # Simple keyword matching (as a basic example)
         # In a real implementation, you might use BM25 or another keyword algorithm

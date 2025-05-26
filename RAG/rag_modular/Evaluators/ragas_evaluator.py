@@ -45,7 +45,8 @@ class RagasEvaluator(BaseEvaluator):
             constants.QUESTION: questions,
             constants.ANSWER: answers,
             constants.CONTEXTS: contexts_list,
-            "ground_truth": ground_truths_list
+            "ground_truth": ground_truths_list,
+            "reference": ground_truths_list
         })
 
         with st.spinner("Running RAG evaluation..."):

@@ -20,7 +20,7 @@ class CohereReranker(BaseReranker):
             query=query,
             documents=documents,
             model=self.model,
-            top_n=5
+            top_n=3
         )
 
         print("Coeherereanking/ resposne", response)

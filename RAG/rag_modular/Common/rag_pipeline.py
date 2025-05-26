@@ -4,6 +4,14 @@ import uuid
 
 from rag_modular.Evaluators.simple_evaluator import SimpleEvaluator
 from rag_modular.Evaluators.ragas_evaluator import RagasEvaluator
+from rag_modular.Evaluators.custom_evaluator import (
+    CustomEvaluator,
+    GeminiLLMService as CustomGeminiLLMService, # Alias to avoid name conflict
+    FaithfulnessMetric,
+    ContextPrecisionMetric,
+    ContextRecallMetric,
+    AnswerRelevancyMetric
+)
 from .config_manager import ConfigManager
 import streamlit as st
 import re
@@ -68,7 +76,8 @@ class RAGPipeline:
 
         cfg = self.config_manager.get_config(constants.CONFIG_EMBEDDER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
-        model_name = cfg.get(constants.CONFIG_MODEL)
+        params = cfg.get(constants.CONFIG_PARAM, {})
+        model_name = params.get(constants.CONFIG_MODEL)
         if t == EmbedderType.TFIDF.value:
             return TFIDFEmbedder()
         elif t == EmbedderType.GEMINI.value:
@@ -76,14 +85,14 @@ class RAGPipeline:
         elif t == EmbedderType.COHERE.value:
             from rag_modular.Embedders.cohere_embedder import CohereEmbedder
             return CohereEmbedder(api_key=st.secrets[constants.COHERE_API_KEY],
-                                  model=cfg.get(constants.CONFIG_MODEL))
+                                  model=model_name)
         elif t == EmbedderType.VOYAGE.value:
             from rag_modular.Embedders.voyage_embedder import VoyageEmbedder
             return VoyageEmbedder(api_key=st.secrets[constants.VOYAGE_API_KEY],
-                                  model=cfg.get(constants.CONFIG_MODEL))
+                                  model=model_name)
         elif t == EmbedderType.MISTRAL.value:
             return MistralEmbedder(api_key=st.secrets[constants.MISTRAL_API_KEY],
-                                  model=cfg.get(constants.CONFIG_MODEL),
+                                  model=model_name,
                                   )
         else:
             return TFIDFEmbedder()
@@ -116,7 +125,7 @@ class RAGPipeline:
         cfg = self.config_manager.get_config(constants.CONFIG_RETRIEVER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         params = cfg.get(constants.CONFIG_PARAM, {})
-        self.top_k = cfg.get(constants.CONFIG_TOP_K_PARAM, getattr(self, 'top_k', 5))
+        self.top_k = params.get(constants.CONFIG_TOP_K_PARAM, getattr(self, 'top_k', 5))
         if t == RetrieverType.SIMILARITY.value:
             return SimilarityRetriever(**params)
         elif t == RetrieverType.HYBRID.value:
@@ -133,27 +142,31 @@ class RAGPipeline:
         from rag_modular.LLM_Chat_Services.gemini_service import GeminiService
 
         cfg = self.config_manager.get_config(constants.CONFIG_LLM)
-        
+        print("Config: ", cfg)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         from google import genai
         client = genai.Client(api_key=st.secrets[constants.GEMINI_API_KEY])
-        
+        params = cfg.get(constants.CONFIG_PARAM)
+        model_name = params.get(constants.CONFIG_MODEL)
+
         if t == LLMServiceType.GEMINI.value:
-            return GeminiService(client, model_name=cfg.get(constants.CONFIG_MODEL))
+            return GeminiService(client, model_name=model_name)
         elif t == LLMServiceType.COHERE.value:
-            return CohereChat(st.secrets[constants.COHERE_API_KEY], model_name=cfg.get(constants.CONFIG_MODEL))
+            return CohereChat(st.secrets[constants.COHERE_API_KEY], model_name=model_name)
         elif t == LLMServiceType.CLAUDE.value:
             from rag_modular.LLM_Chat_Services.claude_service import ClaudeService
             import anthropic
             client = anthropic.Anthropic(api_key=st.secrets[constants.CLAUDE_API_KEY])
-            return ClaudeService(client, model_name=cfg.get(constants.CONFIG_MODEL))
+            return ClaudeService(client, model_name=model_name)
         else:
-            return GeminiService(client, model_name=cfg.get(constants.CONFIG_MODEL))
+            return GeminiService(client, model_name=model_name)
 
     def _build_reranker(self):
         cfg = self.config_manager.get_config(constants.CONFIG_RERANKER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
-        model = cfg.get(constants.CONFIG_PARAM)
+        params = cfg.get(constants.CONFIG_PARAM)
+        print("params", params)
+        model = params.get(constants.CONFIG_MODEL)
         if t == RerankerType.LLM.value:
             from rag_modular.Rerankers.llm_reranker import LLMReranker
 
@@ -177,10 +190,35 @@ class RAGPipeline:
 
     def _build_evaluator(self):
         cfg = self.config_manager.get_config(constants.CONFIG_EVALUATOR)
-        t = cfg.get(constants.CONFIG_TYPE_PARAM)
-        if t == EvaluatorType.RAGAS.value:
+        evaluator_type = cfg.get(constants.CONFIG_TYPE_PARAM)
+
+        if evaluator_type == EvaluatorType.RAGAS.value:
             return RagasEvaluator(**cfg.get(constants.CONFIG_PARAM, {}))
+        elif evaluator_type == EvaluatorType.CUSTOM.value:
+            try:
+                gemini_api_key = st.secrets.get(constants.GEMINI_API_KEY)
+                if not gemini_api_key:
+                    st.error(f"Gemini API key ({constants.GEMINI_API_KEY}) not found in st.secrets for Custom Evaluator.")
+                    st.warning("Falling back to SimpleEvaluator.")
+                    return SimpleEvaluator()
+                
+                llm_service_for_custom_eval = CustomGeminiLLMService(api_key=gemini_api_key, generative_model_name=constants.GeminiLLMModel.GEMINI_PRO.value)
+                
+                metrics_for_custom_eval = [
+                    FaithfulnessMetric(llm_service=llm_service_for_custom_eval),
+                    ContextPrecisionMetric(llm_service=llm_service_for_custom_eval),
+                    ContextRecallMetric(llm_service=llm_service_for_custom_eval),
+                    AnswerRelevancyMetric(llm_service=llm_service_for_custom_eval)
+                ]
+                return CustomEvaluator(metrics=metrics_for_custom_eval)
+            except Exception as e:
+                st.error(f"Failed to initialize Custom Evaluator: {e}")
+                st.warning("Falling back to SimpleEvaluator due to an error in Custom Evaluator setup.")
+                return SimpleEvaluator()
+        elif evaluator_type == EvaluatorType.SIMPLE.value:
+            return SimpleEvaluator()
         else:
+            st.warning(f"Unknown or unset evaluator type: {evaluator_type}. Defaulting to SimpleEvaluator.")
             return SimpleEvaluator()
 
     # update components
@@ -251,7 +289,9 @@ class RAGPipeline:
     # process documents
     def process_document(self, file, texts=None):
         try:
+            print("Texts", texts)
             chunks =  self.chunker.split_text(text=texts)
+            print("Chunks", chunks)
 
             documents = []
             for chunk in chunks:
@@ -261,9 +301,9 @@ class RAGPipeline:
                     constants.PAGE_CONTENT: chunk,
                     constants.METADATA: {"source": file.name}
                 })
+            print("Docs", documents)
             texts = [doc[constants.PAGE_CONTENT] for doc in documents]
             embeddings = self.embedder.fit(texts)
-            st.success(f"Embedder: {self.embedder}")
             
             
             documents = self.vector_store.format_documents(documents)
@@ -325,7 +365,6 @@ class RAGPipeline:
         results = self.retriever.retrieve(
                 query_embedding, 
                 self.vector_store.documents, 
-                top_k=top_k,
                 vector_store=self.vector_store,
                 query_text=query_text
                 )
@@ -342,10 +381,12 @@ class RAGPipeline:
         context_docs = None
         if reranked_docs:
             context_docs = "\n\n".join(reranked_docs)
+            context_docs_list = reranked_docs
         else:
             context_docs = "\n\n".join(retrieved_docs)
+            context_docs_list = retrieved_docs
 
-        return context_docs, explanation, retrieved_docs
+        return context_docs, explanation, context_docs_list
     
     def query(self, query_text, top_k=None):
         try:
@@ -358,7 +399,7 @@ class RAGPipeline:
             # query_text = self.rewrite_query(query_text)
             # Ensure documents are available
             
-            context_docs, explanation, retrieved_docs = self.get_context_docs(query_text)
+            context_docs, explanation, context_docs_list = self.get_context_docs(query_text)
             if self.query_classifier.is_irrelevant(query_text, context_docs):
                 return {
                 constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
@@ -391,6 +432,9 @@ class RAGPipeline:
             
             Question: {query_text}
 
+            Chat History:
+            {history_text}
+
             Answer:
             """
             answer = self.llm_service.generate_response(answer_prompt)
@@ -399,7 +443,7 @@ class RAGPipeline:
             self.last_query = {
                 constants.QUESTION: query_text,
                 constants.ANSWER: answer,
-                constants.CONTEXTS: retrieved_docs
+                constants.CONTEXTS: context_docs_list
             }
             
             

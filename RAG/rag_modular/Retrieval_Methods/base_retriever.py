@@ -4,7 +4,7 @@ class BaseRetriever(ABC):
     """Base class for retrieval strategies"""
     
     @abstractmethod
-    def retrieve(self, query_embedding, documents, top_k=5, **kwargs):
+    def retrieve(self, query_embedding, documents, **kwargs):
         """
         Retrieve relevant documents based on query embedding
         
