@@ -1,3 +1,4 @@
+import time
 from .base_evaluator import BaseEvaluator
 from ragas.metrics import answer_relevancy, faithfulness, answer_correctness, context_precision, context_recall
 from ragas import evaluate
@@ -21,6 +22,8 @@ class RagasEvaluator(BaseEvaluator):
             metrics: List of RAGAS metrics to use (default: faithfulness)
         """
         self.metrics = metrics or [faithfulness, context_precision, answer_correctness, context_recall, answer_relevancy]
+        self.time_taken = 0
+        self.cost = 0
 
     def evaluate(self, question, answer, contexts, ground_truths=None):
         """
@@ -35,6 +38,7 @@ class RagasEvaluator(BaseEvaluator):
         Returns:
             Dictionary of evaluation metrics
         """
+        start_time = time.time()  
         questions = [question]
         answers = [answer]
         contexts_list = [contexts]
@@ -62,5 +66,6 @@ class RagasEvaluator(BaseEvaluator):
         metrics_dict[constants.CONTEXT_PRECISION] = round((result[constants.CONTEXT_PRECISION][0]), 2)
         metrics_dict[constants.CONTEXT_RECALL] = round((result[constants.CONTEXT_RECALL][0]), 2)
         metrics_dict[constants.ANSWER_RELEVANCY] = round((result[constants.ANSWER_RELEVANCY][0]), 2)
-        
+        end_time = time.time()
+        self.time_taken = end_time - start_time
         return metrics_dict

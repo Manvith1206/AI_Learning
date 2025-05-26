@@ -1,3 +1,4 @@
+import time
 from .base_embedder import BaseEmbedder
 from google import genai
 import os
@@ -11,6 +12,8 @@ class GeminiEmbedder(BaseEmbedder):
         self.model = model_name
         self.texts = None
         self.embeddings = []
+        self.time_taken = 0
+        self.cost = 0
     
     def batch_chunks(self, chunks, batch_size=80):
         """Yield successive batches of size batch_size."""
@@ -19,6 +22,7 @@ class GeminiEmbedder(BaseEmbedder):
             yield chunks[i:i + batch_size]
 
     def fit(self, texts):
+        start_time = time.time()  # Start timing the embedding process
         self.texts = texts  # Store original texts if needed for other purposes
 
         all_new_embeddings_values = []  # To store embeddings from all batches
@@ -36,6 +40,7 @@ class GeminiEmbedder(BaseEmbedder):
                     model=self.model,
                     contents=text_batch  # Pass the individual batch (list of strings)
                 )
+                print("Batch embedding response:", resp.usage_metadata)  # Debugging line to check response structure
             except Exception as e:
                 # Consider logging the error and deciding how to handle failed batches
                 # For example, you could skip this batch or raise the exception.
@@ -67,10 +72,13 @@ class GeminiEmbedder(BaseEmbedder):
         
         # self.embeddings should now store all the generated embeddings for the input texts
         self.embeddings = all_new_embeddings_values
-        
+        end_time = time.time()  # End timing the embedding process
+        self.time_taken = end_time - start_time
+
         return self.embeddings
     
     def transform(self, texts):
+        start_time = time.time()  # Start timing the embedding process
         all_new_embeddings_values = []  # To store embeddings from all batches
 
         # Iterate over batches of texts.
@@ -117,5 +125,9 @@ class GeminiEmbedder(BaseEmbedder):
         
         # self.embeddings should now store all the generated embeddings for the input texts
         self.embeddings = all_new_embeddings_values
-        
+        end_time = time.time()
+        self.time_taken = end_time - start_time
         return self.embeddings
+    
+    def get_cost_and_time_taken(self):
+        return self.cost, self.time_taken

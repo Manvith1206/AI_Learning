@@ -1,5 +1,6 @@
 from .base_reranker import BaseReranker
 import cohere as co
+import time
 import rag_modular.Common.RAG_Constants as constants
 
 class CohereReranker(BaseReranker):
@@ -14,8 +15,11 @@ class CohereReranker(BaseReranker):
             raise ValueError("Cohere API key not provided. Set COHERE_API_KEY or pass api_key.")
         self.client = co.Client(key)
         self.model = model_name
+        self.time_taken = 0
+        self.cost = 0
 
     def rerank(self, query, documents, **kwargs):
+        start_time = time.time()
         response = self.client.rerank(
             query=query,
             documents=documents,
@@ -37,5 +41,12 @@ class CohereReranker(BaseReranker):
         explaination = f"Cohere Re ranking Model {self.model} re ranked the docs"
         print("SortedDocs: ", sorted_documents)
 
+        end_time = time.time()
+        self.time_taken = end_time - start_time
+
         return sorted_documents, explaination
+
+    def get_cost_and_time_taken(self):
+        """Returns the time taken for the rerank operation."""
+        return self.cost, self.time_taken
 

@@ -1,5 +1,6 @@
 from .base_retriever import BaseRetriever
 import rag_modular.Common.RAG_Constants as constants
+import time
 
 class HybridRetriever(BaseRetriever):
     """
@@ -10,8 +11,11 @@ class HybridRetriever(BaseRetriever):
     def __init__(self, keyword_weight=0.3, top_k = 5):
         self.keyword_weight = keyword_weight
         self.top_k = top_k
+        self.time_taken = 0
+        self.cost = 0
         
     def retrieve(self, query_embedding, documents, **kwargs):
+        start_time = time.time()
         """
         Retrieve documents using a hybrid approach
         
@@ -74,4 +78,10 @@ class HybridRetriever(BaseRetriever):
         
         # Sort by combined score and take top_k
         combined_results.sort(key=lambda x: x[constants.Score], reverse=True)
+        end_time = time.time()
+        self.time_taken = end_time - start_time
         return combined_results[:top_k]
+
+    def get_cost_and_time_taken(self):
+        """Returns the time taken for the retrieve operation."""
+        return self.cost, self.time_taken

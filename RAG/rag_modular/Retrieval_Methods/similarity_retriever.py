@@ -1,6 +1,7 @@
 import numpy as np
 from .base_retriever import BaseRetriever
 import rag_modular.Common.RAG_Constants as constants
+import time
 
 class SimilarityRetriever(BaseRetriever):
     """Retriever that uses cosine similarity to find relevant documents"""
@@ -8,6 +9,8 @@ class SimilarityRetriever(BaseRetriever):
     def __init__(self, similarity_threshold=0.0, top_k = 5):
         self.similarity_threshold = similarity_threshold
         self.top_k = top_k
+        self.time_taken = 0
+        self.cost = 0
     
     def retrieve(self, query_embedding, documents, **kwargs):
         """
@@ -21,7 +24,7 @@ class SimilarityRetriever(BaseRetriever):
         Returns:
             List of retrieved documents with similarity scores
         """
-        
+        start_time = time.time()
         if hasattr(query_embedding, "toarray"):
             emb_arr = query_embedding.toarray().astype(np.float32)
         else:
@@ -40,5 +43,10 @@ class SimilarityRetriever(BaseRetriever):
             result for result in results 
             if result[constants.Score] >= self.similarity_threshold
         ]
-        
+        end_time = time.time()
+        self.time_taken = end_time - start_time
         return filtered_results
+    
+    def get_cost_and_time_taken(self):
+        """Returns the time taken for the retrieve operation."""
+        return self.cost, self.time_taken

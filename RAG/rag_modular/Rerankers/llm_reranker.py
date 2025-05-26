@@ -1,11 +1,14 @@
 from .base_reranker import BaseReranker
 import re
+import time
 import rag_modular.Common.RAG_Constants as constants
 
 class LLMReranker(BaseReranker):
     def __init__(self, llm_client, model_name="gemini-2.0-flash"):
         self.llm_client = llm_client
         self.model_name = model_name
+        self.time_taken = 0
+        self.cost = 0
     def rerank(self, query, documents, **kwargs):
         
         chunk_list = "\n".join([f"{i+1}. {doc}" for i, doc in enumerate(documents)])
@@ -30,6 +33,7 @@ class LLMReranker(BaseReranker):
             Reranked Chunk(s): [list the chunk numbers]
             Explanation: [your reasoning for reranking the chunks]
             """
+        start_time = time.time()
         response = self.llm_client.generate_response(
             prompt=rerank_prompt
         )
@@ -45,4 +49,10 @@ class LLMReranker(BaseReranker):
         if not selected_documents:
             selected_documents = documents
             explanation = constants.LLM_DID_NOT_SELECT_INFO_MESSAGE
+        end_time = time.time()
+        self.time_taken = end_time - start_time
         return selected_documents, explanation
+
+    def get_cost_and_time_taken(self):
+        """Returns the time taken for the rerank operation."""
+        return self.cost, self.time_taken

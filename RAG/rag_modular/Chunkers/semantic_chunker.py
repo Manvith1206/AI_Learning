@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import re
@@ -26,12 +27,22 @@ class SemanticChunker(BaseChunker):
         self.similarity_threshold = similarity_threshold
         self.min_chunk_size = min_chunk_size
         self.max_chunk_size = max_chunk_size
+        self.time_taken = 0
+        self.cost = 0
     def split_text(self, text):
         # Chunk the document
+        start_time = time.time()
         chunks = self.chunk_text(text)
+        end_time = time.time()
 
+        self.time_taken = end_time - start_time
         return chunks
     
+    def get_cost_and_time_taken(self):
+        """
+        Returns the time taken and cost for the last split operation.
+        """
+        return self.cost, self.time_taken
     def _cosine_similarity(self, vec1: np.ndarray, vec2: np.ndarray):
         """Calculate cosine similarity between two vectors."""
         return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))

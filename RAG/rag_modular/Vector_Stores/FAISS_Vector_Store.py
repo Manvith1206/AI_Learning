@@ -6,6 +6,7 @@ import rag_modular.Common.RAG_Constants as constants
 import numpy as np
 import faiss
 import uuid
+import time
 
 class FAISS_Vector_Store(BaseVectorStore):
     def __init__(self):
@@ -14,8 +15,11 @@ class FAISS_Vector_Store(BaseVectorStore):
         self.index = None
         self.db = None
         self.ids = None
+        self.time_taken = 0
+        self.cost = 0
 
     def add_embeddings(self, embeddings, documents):
+        start_time = time.time()
         vector_store_path = "vector_store_index_path"
         # Unify embeddings: list, numpy array, or sparse -> dense np.float32
         self.documents = documents
@@ -44,6 +48,8 @@ class FAISS_Vector_Store(BaseVectorStore):
         index.add(emb_arr)
         self.index = index
         faiss.write_index(index, vector_store_path)
+        end_time = time.time()
+        self.time_taken = end_time - start_time
 
     def search(self, query_embedding, top_k=5):
         """Search for most similar documents in FAISS index."""
@@ -86,3 +92,6 @@ class FAISS_Vector_Store(BaseVectorStore):
     def format_documents(self, documents):
         
         return documents
+
+    def get_cost_and_time_taken(self):
+        return self.cost, self.time_taken

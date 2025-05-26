@@ -13,9 +13,11 @@ class PineConeVectorStore(BaseVectorStore):
         self.index_name = index_name
         self.dimension = None
         self.pc = Pinecone(api_key=api_key)
-        
+        self.time_taken = 0
+        self.cost = 0
 
     def add_embeddings(self, embeddings, documents):
+        start_time = time.time()
         self.documents = documents
         self.embeddings = embeddings
         vectors = []
@@ -76,6 +78,8 @@ class PineConeVectorStore(BaseVectorStore):
 
         # Upsert vectors into Pinecone
         self.index.upsert(vectors)
+        end_time = time.time()
+        self.time_taken = end_time - start_time
 
     def search(self, query_embedding, top_k=5):
         if self.index is None:
@@ -114,3 +118,6 @@ class PineConeVectorStore(BaseVectorStore):
 
     def format_documents(self, documents):
         return documents
+        
+    def get_cost_and_time_taken(self):
+        return self.cost, self.time_taken

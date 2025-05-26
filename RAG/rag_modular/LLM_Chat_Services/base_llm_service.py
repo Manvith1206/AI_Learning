@@ -4,3 +4,9 @@ class BaseLLMService(ABC):
     @abstractmethod
     def generate_response(self, prompt, **kwargs):
         pass
+    @abstractmethod
+    def get_cost_and_time_taken(self):
+        """
+        Get the cost and time taken for the LLM service call
+        """
+        pass

@@ -10,3 +10,6 @@ class BaseVectorStore(ABC):
     @abstractmethod
     def format_documents(self, documents):
         pass
+    @abstractmethod
+    def get_cost_and_time_taken(self):
+        pass

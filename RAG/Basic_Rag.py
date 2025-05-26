@@ -38,7 +38,7 @@ with st.spinner("Loading application..."):
     
     # Load dependencies with caching
     deps = load_pipeline_dependencies()
-    RAGPipeline = deps["RAGPipeline"]
+    RAG_Pipeline = deps["RAGPipeline"]
     ConfigManager = deps["ConfigManager"]
     test_rag_combinations = deps["test_rag_combinations"]
 
@@ -61,10 +61,10 @@ if "LLM_Model_Options" not in st.session_state:
     st.session_state.LLM_Model_Options = [e.value for e in GeminiLLMModel]
 
 # Function to lazily initialize the pipeline when needed
-def get_pipeline() -> RAGPipeline:
+def get_pipeline():
     if not st.session_state.get("pipeline_created", False):
         with st.spinner("Initializing RAG pipeline..."):
-            st.session_state.pipeline = RAGPipeline(st.session_state.pipeline_config)
+            st.session_state.pipeline = RAG_Pipeline(st.session_state.pipeline_config)
             st.session_state.pipeline_created = True
     return st.session_state.pipeline
 
@@ -400,3 +400,25 @@ if prompt := st.chat_input("Ask a question about your documents"):
                 })
         else:
             st.error("Please upload and process documents first.")
+
+step_title = "Chunker"
+RagPipelineStepToGetCostAndTimeDict = {
+    constants.CONFIG_CHUNKER: get_pipeline().get_chunker_cost_and_time(),
+    constants.CONFIG_CHUNKER: get_pipeline().get_embedder_cost_and_time(),
+    constants.CONFIG_CHUNKER: get_pipeline().get_retriever_cost_and_time(),
+    constants.CONFIG_CHUNKER: get_pipeline().get_reranker_cost_and_time(),
+    constants.CONFIG_CHUNKER: get_pipeline().get_evaluator_cost_and_time(),
+    constants.CONFIG_CHUNKER: get_pipeline().get_vector_store_cost_and_time(),
+    constants.CONFIG_CHUNKER: get_pipeline().get_llm_service_cost_and_time()
+}
+
+def displayUI(key):
+    chunker_time, chunker_cost = RagPipelineStepToGetCostAndTimeDict[key]()
+    with st.expander(f"📊 {step_title} - Performance & Cost", expanded=False):
+        col1, col2, col3 = st.columns(3)
+        col1.metric("🕒 Time Taken", chunker_time)
+        col2.metric("💲 Estimated Cost", chunker_cost)
+        col3.markdown("Chunker Name: ", get_pipeline().config_manager.config[constants.CONFIG_CHUNKER][constants.CONFIG_TYPE_PARAM])
+
+for key in RagPipelineStepToGetCostAndTimeDict.keys():
+    displayUI(key)

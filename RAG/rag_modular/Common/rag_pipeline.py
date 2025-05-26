@@ -45,6 +45,21 @@ class RAGPipeline:
         self.evaluator = self._build_evaluator()
         self.query_classifier = QueryClassifier(self.llm_service)
 
+    def get_chunker_cost_and_time(self):
+        return self.chunker.get_cost_and_time_taken()
+    def get_embedder_cost_and_time(self):
+        return self.embedder.get_cost_and_time_taken()
+    def get_vector_store_cost_and_time(self):
+        return self.vector_store.get_cost_and_time_taken()
+    def get_retriever_cost_and_time(self):
+        return self.retriever.get_cost_and_time_taken()
+    def get_llm_service_cost_and_time(self):
+        return self.llm_service.get_cost_and_time_taken()
+    def get_reranker_cost_and_time(self):
+        return self.reranker.get_cost_and_time_taken()
+    def get_evaluator_cost_and_time(self):
+        return self.evaluator.get_cost_and_time_taken()
+    
     # build invidual components
     def _build_chunker(self):
         from rag_modular.Chunkers.recursive_chunker import RecursiveChunker

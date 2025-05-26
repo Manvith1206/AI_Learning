@@ -3,6 +3,7 @@ import numpy as np
 from .base_vector_store import BaseVectorStore
 import rag_modular.Common.RAG_Constants as constants
 import uuid
+import time
 
 class SklearnVectorStore(BaseVectorStore):
     def __init__(self, metric='cosine'):
@@ -11,8 +12,11 @@ class SklearnVectorStore(BaseVectorStore):
         self.documents = None
         self.embeddings = None
         self.ids = None
+        self.time_taken = 0
+        self.cost = 0
 
     def add_embeddings(self, embeddings, documents):
+        start_time = time.time()
         # assign documents and generate IDs
         self.documents = documents
         self.ids = []
@@ -56,6 +60,8 @@ class SklearnVectorStore(BaseVectorStore):
         n_neighbors = min(max(1, len(documents)), 5) 
         self.nn_model = NearestNeighbors(n_neighbors=n_neighbors, metric=self.metric)
         self.nn_model.fit(embeddings)
+        end_time = time.time()
+        self.time_taken = end_time - start_time
 
     def search(self, query_embedding, top_k=5):
         if self.nn_model is None:
@@ -77,3 +83,6 @@ class SklearnVectorStore(BaseVectorStore):
 
     def format_documents(self, documents):
         return documents
+    
+    def get_cost_and_time_taken(self):
+        return self.cost, self.time_taken

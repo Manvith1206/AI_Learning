@@ -24,6 +24,8 @@ class MistralEmbedder(BaseEmbedder):
         self._initial_delay = initial_delay
         self._max_retries = max_retries
         self._max_delay = max_delay
+        self.time_taken = 0
+        self.cost = 0
         
         # Initialize tokenizer for token counting
         self._tokenizer = tiktoken.get_encoding("cl100k_base")
@@ -107,6 +109,7 @@ class MistralEmbedder(BaseEmbedder):
     
     def transform(self, texts):
         """Convert a query string to an embedding vector with retry logic"""
+        start_time = time.time()
         # Handle single text or list of texts
         if isinstance(texts, str):
             texts = [texts]
@@ -117,12 +120,15 @@ class MistralEmbedder(BaseEmbedder):
         embeddings = []
         for item in response.data:
             embeddings.append(item.embedding)
-            
+        end_time = time.time()
+
+        self.time_taken = end_time - start_time
         # Return a list of embeddings (2D array)
         return embeddings
     
     def fit(self, texts ):
         """Convert a list of document strings to embedding vectors with automatic batching and rate limiting"""
+        start_time = time.time()
         all_embeddings = []
         
         # Create batches based on token count
@@ -140,8 +146,13 @@ class MistralEmbedder(BaseEmbedder):
             # Extract embeddings from the response and add to results
             batch_embeddings = [item.embedding for item in response.data]
             all_embeddings.extend(batch_embeddings)
-        
+        end_time = time.time()
+        self.time_taken = end_time - start_time
+
         return all_embeddings
+    
+    def get_cost_and_time_taken(self):
+        return self.cost, self.time_taken
     
     @property
     def dimension(self) -> int:

@@ -3,6 +3,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 from typing import List, Dict, Union, Tuple
 from .base_reranker import BaseReranker
 import requests
+import time
 import streamlit as st
 import rag_modular.Common.RAG_Constants as constants
 
@@ -23,7 +24,8 @@ class JinaReranker(BaseReranker):
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
         else:
             self.device = device
-
+        self.time_taken = 0
+        self.cost = 0
     
     def rerank(self, query, documents, **kwargs):
         import requests
@@ -33,6 +35,7 @@ class JinaReranker(BaseReranker):
             'Content-Type': 'application/json',
             'Authorization': st.secrets[constants.JINA_RERANKER_API_KEY]
         }
+        start_time = time.time()
         data = {
             "model": self.model,
             "query": query,
@@ -55,6 +58,11 @@ class JinaReranker(BaseReranker):
                             
         explaination = f"Jina Re ranking Model {self.model} re ranked the docs"
         
+        end_time = time.time()
+        self.time_taken = end_time - start_time
         return sorted_documents, explaination
 
+    def get_cost_and_time_taken(self):
+        """Returns the time taken for the rerank operation."""
+        return self.cost, self.time_taken
 

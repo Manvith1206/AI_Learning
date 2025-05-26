@@ -18,3 +18,9 @@ class BaseEvaluator(ABC):
             Dictionary of evaluation metrics
         """
         pass
+    @abstractmethod
+    def get_cost_and_time_taken(self):
+        """
+        Get the cost and time taken for the evaluation process
+        """
+        pass

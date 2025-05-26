@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import time
 from typing import List, Dict, Any, Protocol
 import re
 
@@ -327,8 +328,7 @@ class CustomEvaluator(BaseEvaluator):
             Dictionary of evaluation scores, with metric names as keys.
         """
         results = {}
-        
-        print("LLMService: ", config)
+        start_time = time.time()
         print("Custom Evalautor")
         print("Question: ", question)
         print("Answer: ", answer)
@@ -341,6 +341,9 @@ class CustomEvaluator(BaseEvaluator):
             except Exception as e:
                 print(f"Error calculating metric {metric.metric_name}: {e}")
                 results[metric.metric_name] = None # Or 0.0, or handle as per requirement
+
+        end_time = time.time()
+        self.time_taken = end_time - start_time
         return results
 
 
