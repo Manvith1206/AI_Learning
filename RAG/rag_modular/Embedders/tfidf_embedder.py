@@ -26,3 +26,5 @@ class TFIDFEmbedder(BaseEmbedder):
         self.time_taken += end_time - start_time
         
         return vectors
+    def get_cost_and_time_taken(self):
+        return self.cost, self.time_taken

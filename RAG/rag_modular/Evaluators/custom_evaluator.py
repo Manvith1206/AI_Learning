@@ -9,143 +9,14 @@ import google.generativeai as genai
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import rag_modular.Common.RAG_Constants as constants
-
-# --- LLM Service Interface ---
-class LLMService(Protocol):
-    """Protocol for a generic LLM service."""
-
-    def evaluate_statement(self, statement: str, context: str, prompt_template: str):
-        """Evaluates if a statement is supported by the given context using a specific prompt."""
-        ...
-
-    def generate_text(self, prompt: str):
-        """Generates text based on a given prompt."""
-        ...
-
-    def generate_questions(self, answer: str, prompt_template: str, num_questions: int = 3):
-        """Generates questions for which the given answer would be appropriate."""
-        ...
-
-    def calculate_similarity(self, text1: str, text2: str):
-        """Calculates semantic similarity between two texts (e.g., using embeddings and cosine similarity)."""
-        # This might involve calling an embedding model and then a similarity function.
-        # For simplicity, this might be a direct call if the LLM service supports it,
-        # or it might need a separate embedding component.
-        ...
-
-# --- Concrete LLM Services ---
-class GeminiLLMService(LLMService):
-    """LLM Service implementation using Google Gemini."""
-    def __init__(self, api_key: str, generative_model_name: str = "gemini-1.5-flash-latest", embedding_model_name: str = constants.GeminiEmbedModels.GEMINI_TEXT_EMBED_MODEL.value):
-        genai.configure(api_key=api_key)
-        self.generative_model = genai.GenerativeModel(generative_model_name)
-        self.embedding_model_name = embedding_model_name # Store for embed_content
-        print(f"GeminiLLMService initialized with generative model: {generative_model_name} and embedding model: {embedding_model_name}")
-
-    def evaluate_statement(self, statement: str, context: str, prompt_template: str):
-        prompt = prompt_template.format(statement=statement, context=context)
-        try:
-            response = self.generative_model.generate_content(prompt)
-            decision = response.text.strip().lower()
-            return "yes" in decision
-        except Exception as e:
-            print(f"Error during Gemini statement evaluation: {e}")
-            return False # Default to false on error
-
-    def generate_text(self, prompt: str):
-        try:
-            response = self.generative_model.generate_content(prompt)
-            return response.text.strip()
-        except Exception as e:
-            print(f"Error during Gemini text generation: {e}")
-            return "" # Default to empty string on error
-
-    def generate_questions(self, answer: str, prompt_template: str, num_questions: int = 3):
-        prompt = prompt_template.format(answer=answer, num_questions=num_questions)
-        try:
-            response_text = self.generate_text(prompt)
-            # Assuming the LLM returns questions separated by newlines
-            questions = [q.strip() for q in response_text.split('\n') if q.strip()]
-            return questions[:num_questions]
-        except Exception as e:
-            print(f"Error during Gemini question generation: {e}")
-            return []
-
-    def calculate_similarity(self, text1: str, text2: str):
-        try:
-            # Gemini's embed_content can take a list of texts
-            result = genai.embed_content(model=self.embedding_model_name, content=[text1, text2])
-            embedding1 = np.array(result['embedding'][0]).reshape(1, -1)
-            embedding2 = np.array(result['embedding'][1]).reshape(1, -1)
-            similarity = cosine_similarity(embedding1, embedding2)[0][0]
-            return float(similarity)
-        except Exception as e:
-            print(f"Error during Gemini similarity calculation: {e}")
-            return 0.0 # Default to 0.0 on error
-
-# --- Concrete LLM Service (Example: OpenAI) ---
-# You would implement concrete classes like OpenAIService, GeminiService, etc.
-# For now, we'll assume a mock or a conceptual implementation.
-
-class OpenAILLMService(LLMService):
-    def __init__(self, api_key: str, model_name: str = "gpt-3.5-turbo"):
-        # In a real scenario, initialize the OpenAI client here
-        # from openai import OpenAI
-        # self.client = OpenAI(api_key=api_key)
-        self.model_name = model_name
-        print(f"OpenAILLMService initialized with model: {model_name}")
-
-    def evaluate_statement(self, statement: str, context: str, prompt_template: str):
-        # prompt = prompt_template.format(statement=statement, context=context)
-        # response = self.client.chat.completions.create(
-        #     model=self.model_name,
-        #     messages=[{"role": "system", "content": "You are an expert verifier."},
-        #               {"role": "user", "content": prompt}],
-        #     max_tokens=10,
-        #     temperature=0
-        # )
-        # decision = response.choices[0].message.content.strip().lower()
-        # return "yes" in decision
-        print(f"Mock OpenAI: Evaluating statement '{statement}' against context. Assuming 'yes'.")
-        return True # Mock implementation
-
-    def generate_text(self, prompt: str):
-        # response = self.client.chat.completions.create(
-        #     model=self.model_name,
-        #     messages=[{"role": "user", "content": prompt}],
-        #     max_tokens=150,
-        #     temperature=0.7
-        # )
-        # return response.choices[0].message.content.strip()
-        print(f"Mock OpenAI: Generating text for prompt. Returning placeholder.")
-        return "Mock generated text." # Mock implementation
-
-    def generate_questions(self, answer: str, prompt_template: str, num_questions: int = 3):
-        # prompt = prompt_template.format(answer=answer, num_questions=num_questions)
-        # response = self.generate_text(prompt)
-        # # Assuming the LLM returns questions separated by newlines or a specific format
-        # questions = [q.strip() for q in response.split('\n') if q.strip()]
-        # return questions[:num_questions]
-        print(f"Mock OpenAI: Generating {num_questions} questions for answer. Returning placeholders.")
-        return [f"Mock question {i+1} for the answer." for i in range(num_questions)] # Mock
-
-    def calculate_similarity(self, text1: str, text2: str):
-        # This would typically involve getting embeddings for text1 and text2
-        # and then computing cosine similarity. For simplicity, returning a mock value.
-        # from sklearn.metrics.pairwise import cosine_similarity
-        # from some_embedding_service import get_embedding
-        # emb1 = get_embedding(text1)
-        # emb2 = get_embedding(text2)
-        # return cosine_similarity(emb1, emb2)[0][0]
-        print(f"Mock OpenAI: Calculating similarity between texts. Returning placeholder value.")
-        return 0.85 # Mock implementation
+from rag_modular.Evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
 
 # --- Evaluation Metric Base Class ---
 class EvaluationMetric(ABC):
     """Abstract base class for an evaluation metric."""
     metric_name: str = "base_metric"
 
-    def __init__(self, llm_service: LLMService):
+    def __init__(self, llm_service: LLM_Evaluation_Service):
         self.llm_service = llm_service
 
     @abstractmethod
@@ -164,7 +35,7 @@ class FaithfulnessMetric(EvaluationMetric):
         "Statement:\n{statement}"
     )
 
-    def __init__(self, llm_service: LLMService, prompt_template: str = None):
+    def __init__(self, llm_service: LLM_Evaluation_Service, prompt_template: str = None):
         super().__init__(llm_service)
         self.prompt_template = prompt_template or self.default_prompt_template
 
@@ -200,7 +71,7 @@ class ContextPrecisionMetric(EvaluationMetric):
         "Context Chunk:\n{context_chunk}"
     )
 
-    def __init__(self, llm_service: LLMService, prompt_template: str = None):
+    def __init__(self, llm_service: LLM_Evaluation_Service, prompt_template: str = None):
         super().__init__(llm_service)
         self.prompt_template = prompt_template or self.default_prompt_template
 
@@ -241,7 +112,7 @@ class ContextRecallMetric(EvaluationMetric):
         "Ground Truth Statement:\n{statement}"
     )
 
-    def __init__(self, llm_service: LLMService, prompt_template: str = None):
+    def __init__(self, llm_service: LLM_Evaluation_Service, prompt_template: str = None):
         super().__init__(llm_service)
         self.prompt_template = prompt_template or self.default_prompt_template
 
@@ -270,12 +141,24 @@ class ContextRecallMetric(EvaluationMetric):
 class AnswerRelevancyMetric(EvaluationMetric):
     metric_name: str = "custom_answer_relevancy"
     default_question_generation_prompt_template: str = (
-        "Generate {num_questions} diverse questions for which the following answer would be a suitable and relevant response. "
-        "Return each question on a new line.\n\n"
-        "Answer:\n{answer}"
+        """
+        Original Question: {original_question}
+        Answer: {answer}
+
+        Generate {num_questions} questions that are similar to the original question and would have the same answer.
+        The generated questions should:
+        1. Preserve the main intent and meaning of the original question
+        2. Use similar key terms and entities  
+        3. Have the same question type (what, how, why, etc.)
+        4. Be answerable by the same response
+
+        Output Format:
+        Generated Questions:
+        1. Question 1
+        """
     )
 
-    def __init__(self, llm_service: LLMService, question_gen_prompt: str = None, num_generated_questions: int = 3):
+    def __init__(self, llm_service: LLM_Evaluation_Service, question_gen_prompt: str = None, num_generated_questions: int = 3):
         super().__init__(llm_service)
         self.question_gen_prompt_template = question_gen_prompt or self.default_question_generation_prompt_template
         self.num_generated_questions = num_generated_questions
@@ -285,10 +168,12 @@ class AnswerRelevancyMetric(EvaluationMetric):
             return 0.0
 
         generated_questions = self.llm_service.generate_questions(
+            question,
             answer, 
             self.question_gen_prompt_template,
             self.num_generated_questions
         )
+        print("GeneratedQuestions: ", generated_questions)
 
         if not generated_questions:
             return 0.0
@@ -303,7 +188,7 @@ class AnswerRelevancyMetric(EvaluationMetric):
 class CustomEvaluator(BaseEvaluator):
     """Evaluator that uses custom metrics and LLM services."""
 
-    def __init__(self, metrics: List[EvaluationMetric], llm_service: LLMService = None):
+    def __init__(self, metrics: List[EvaluationMetric], llm_service: LLM_Evaluation_Service = None):
         """
         Initialize with a list of evaluation metrics and an LLM service.
         If llm_service is None, it implies metrics are pre-configured with their own LLM services.
@@ -329,11 +214,7 @@ class CustomEvaluator(BaseEvaluator):
         """
         results = {}
         start_time = time.time()
-        print("Custom Evalautor")
-        print("Question: ", question)
-        print("Answer: ", answer)
-        print("Contexts: ", contexts)
-        print("GroundTruths: ", ground_truths)
+        
         for metric in self.metrics:
             try:
                 score = metric.calculate(question, answer, contexts, ground_truths)
@@ -345,6 +226,9 @@ class CustomEvaluator(BaseEvaluator):
         end_time = time.time()
         self.time_taken = end_time - start_time
         return results
+    
+    def get_cost_and_time_taken(self):
+        return 0,0
 
 
 # # --- Example Usage (for testing purposes) ---

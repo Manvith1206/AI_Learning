@@ -6,7 +6,6 @@ from rag_modular.Evaluators.simple_evaluator import SimpleEvaluator
 from rag_modular.Evaluators.ragas_evaluator import RagasEvaluator
 from rag_modular.Evaluators.custom_evaluator import (
     CustomEvaluator,
-    GeminiLLMService as CustomGeminiLLMService, # Alias to avoid name conflict
     FaithfulnessMetric,
     ContextPrecisionMetric,
     ContextRecallMetric,
@@ -131,6 +130,8 @@ class RAGPipeline:
             return ChromaVectorStore(**params, collectionName=constants.CHROMA_COLLECTION_NAME)
         elif type == constants.VectorStore.FAISS.value:
             return FAISS_Vector_Store()
+        else:
+            return SklearnVectorStore(**params)
 
     def _build_retriever(self):
         from rag_modular.Retrieval_Methods.similarity_retriever import SimilarityRetriever
@@ -157,7 +158,6 @@ class RAGPipeline:
         from rag_modular.LLM_Chat_Services.gemini_service import GeminiService
 
         cfg = self.config_manager.get_config(constants.CONFIG_LLM)
-        print("Config: ", cfg)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         from google import genai
         client = genai.Client(api_key=st.secrets[constants.GEMINI_API_KEY])
@@ -204,6 +204,7 @@ class RAGPipeline:
             return CosineReranker(self.embedder)
 
     def _build_evaluator(self):
+        from rag_modular.Evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
         cfg = self.config_manager.get_config(constants.CONFIG_EVALUATOR)
         evaluator_type = cfg.get(constants.CONFIG_TYPE_PARAM)
 
@@ -217,7 +218,9 @@ class RAGPipeline:
                     st.warning("Falling back to SimpleEvaluator.")
                     return SimpleEvaluator()
                 
-                llm_service_for_custom_eval = CustomGeminiLLMService(api_key=gemini_api_key, generative_model_name=constants.GeminiLLMModel.GEMINI_PRO.value)
+                llm_service_for_custom_eval = LLM_Evaluation_Service(client=self.llm_service, 
+                                                                     model_name=self.llm_service.model_name,
+                                                                     embedder=self.embedder)
                 
                 metrics_for_custom_eval = [
                     FaithfulnessMetric(llm_service=llm_service_for_custom_eval),
@@ -304,9 +307,7 @@ class RAGPipeline:
     # process documents
     def process_document(self, file, texts=None):
         try:
-            print("Texts", texts)
             chunks =  self.chunker.split_text(text=texts)
-            print("Chunks", chunks)
 
             documents = []
             for chunk in chunks:
@@ -316,7 +317,6 @@ class RAGPipeline:
                     constants.PAGE_CONTENT: chunk,
                     constants.METADATA: {"source": file.name}
                 })
-            print("Docs", documents)
             texts = [doc[constants.PAGE_CONTENT] for doc in documents]
             embeddings = self.embedder.fit(texts)
             
@@ -405,22 +405,22 @@ class RAGPipeline:
     
     def query(self, query_text, top_k=None):
         try:
-            if self.query_classifier.is_greeting(query_text):
-                return {
-                constants.ANSWER: self.query_classifier.get_greeting_response(),
-                constants.CONTEXTS: "",
-                constants.RERANK_EXPLANATION: ""
-            }
+            # if self.query_classifier.is_greeting(query_text):
+            #     return {
+            #     constants.ANSWER: self.query_classifier.get_greeting_response(),
+            #     constants.CONTEXTS: "",
+            #     constants.RERANK_EXPLANATION: ""
+            # }
             # query_text = self.rewrite_query(query_text)
             # Ensure documents are available
             
             context_docs, explanation, context_docs_list = self.get_context_docs(query_text)
-            if self.query_classifier.is_irrelevant(query_text, context_docs):
-                return {
-                constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
-                constants.CONTEXTS: context_docs,
-                constants.RERANK_EXPLANATION: ""
-            }
+            # if self.query_classifier.is_irrelevant(query_text, context_docs):
+            #     return {
+            #     constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
+            #     constants.CONTEXTS: context_docs,
+            #     constants.RERANK_EXPLANATION: ""
+            # }
             # Join contexts
             context = "\n\n".join(context_docs)
             history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in st.session_state.messages])

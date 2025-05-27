@@ -52,29 +52,7 @@ class QueryClassifier:
                 return {"type": "relevant", "confidence": 0.8}
         
         # Define the function schema for the LLM
-        function_schema = {
-            "name": "classify_query",
-            "description": "Classify a user query as greeting, relevant, or irrelevant",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "query_type": {
-                        "type": "string",
-                        "enum": ["greeting", "relevant", "irrelevant"],
-                        "description": "The type of query"
-                    },
-                    "confidence": {
-                        "type": "number",
-                        "description": "Confidence score between 0 and 1"
-                    },
-                    "explanation": {
-                        "type": "string",
-                        "description": "Brief explanation for the classification"
-                    }
-                },
-                "required": ["query_type", "confidence", "explanation"]
-            }
-        }
+        function_schema = self.llm_service.get_function_schema()
         
         # Create the prompt for classification
         prompt = self._create_classification_prompt(query_text, context_docs)
@@ -85,34 +63,18 @@ class QueryClassifier:
                 functions=[function_schema],
                 prompt=prompt
             )
-            
             # Parse the response
-            if hasattr(response, 'candidates') and response.candidates:
-                for candidate in response.candidates:
-                    if hasattr(candidate, 'content') and candidate.content:
-                        for part in candidate.content.parts:
-                            if hasattr(part, 'function_call') and part.function_call:
-                                # For newer LLM APIs that return structured function calls
-                                function_args = part.function_call.args
-                                return {
-                                    "type": function_args.get("query_type", "relevant"),
-                                    "confidence": function_args.get("confidence", 0.5),
-                                    "explanation": function_args.get("explanation", "")
-                                }
-            else:
-                # Try to parse the response as JSON
-                try:
-                    result = json.loads(response)
-                    return {
-                        "type": result.get("query_type", "relevant"),
-                        "confidence": result.get("confidence", 0.5),
-                        "explanation": result.get("explanation", "")
-                    }
-                except (json.JSONDecodeError, AttributeError, TypeError):
-                    # Fallback to basic classification
-                    return self._fallback_classification(query_text, context_docs)
+            function_args = self.llm_service.get_function_args(response)
+            if isinstance(function_args, str):
+                function_args = json.loads(function_args)
+            return {
+                "type": function_args.get("query_type", "relevant"),
+                "confidence": function_args.get("confidence", 0.5),
+                "explanation": function_args.get("explanation", "")
+            }
+            
         except Exception as e:
-            print(f"Error in LLM classification: {str(e)}")
+            print(f"Error in LLM classification: {str(e)}, {str(e.__traceback__)}")
             return self._fallback_classification(query_text, context_docs)
     
     def _create_classification_prompt(self, query_text: str, context_docs: Optional[List[str]]):

@@ -227,7 +227,7 @@ class GeminiService(AIService):
                     except (json.JSONDecodeError, TypeError):
                         # If not a JSON dict, wrap the raw content.
                         response_data = {"result": function_response_content}
-                    
+
                     parts.append(types.Part.from_function_response(
                         name=function_name,
                         response=response_data

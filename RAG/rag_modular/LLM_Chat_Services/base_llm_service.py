@@ -10,3 +10,9 @@ class BaseLLMService(ABC):
         Get the cost and time taken for the LLM service call
         """
         pass
+    @abstractmethod
+    def get_function_schema(self):
+        pass
+    @abstractmethod
+    def get_function_args(self):
+        pass

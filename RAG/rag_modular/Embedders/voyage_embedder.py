@@ -2,6 +2,7 @@ import time
 import voyageai
 import voyageai.client
 from .base_embedder import BaseEmbedder
+import rag_modular.Common.RAG_Constants as constants
 
 class VoyageEmbedder(BaseEmbedder):
     def __init__(self, api_key, model):
@@ -45,10 +46,26 @@ class VoyageEmbedder(BaseEmbedder):
         start_time = time.time()
 
         all_embeddings = []
+        current_cost_value = 0
         for batch in self.batch_chunks(texts, batch_size=80): # Adjust batch_size as needed for Voyage
             resp = self.client.embed(texts=batch, model=self.model)
+            current_cost_value += self.get_cost_based_on_model(resp.total_tokens)
             all_embeddings.extend(resp.embeddings)
         end_time = time.time()
         self.time_taken += end_time - start_time
-        
+        self.cost = current_cost_value
         return all_embeddings
+    def get_cost_and_time_taken(self):
+        return self.cost, self.time_taken
+    
+    def get_cost_based_on_model(self, tokens):
+        if self.model == constants.VoyageEmbedModels.VOYAGE_EMBED_DEFAULT_MODEL.value:
+            return (tokens / 1000000) * 0.18
+        elif self.model == constants.VoyageEmbedModels.VOYAGE_CODE_2_EMBED_MODEL.value:
+            return (tokens / 1000000) * 0.12
+        elif self.model == constants.CLAUDE_MODELS.CLAUDE_SONNET_THREE_5.value:
+            return (tokens / 1000000) * 3
+        elif self.model == constants.CLAUDE_MODELS.CLAUDE_OPUS_THREE.value:
+            return (tokens / 1000000) * 15
+        else:
+            return 0

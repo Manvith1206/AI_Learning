@@ -59,7 +59,8 @@ class RagasEvaluator(BaseEvaluator):
                 metrics=self.metrics,
                 raise_exceptions=True
             )
-        
+        print("Cost", result.cost_cb)
+        print("TotalCost", result.total_cost)
 
         metrics_dict = {}
         metrics_dict[constants.FAITHFULNESS] = round((result[constants.FAITHFULNESS][0]), 2)
@@ -69,3 +70,8 @@ class RagasEvaluator(BaseEvaluator):
         end_time = time.time()
         self.time_taken = end_time - start_time
         return metrics_dict
+    def get_cost_and_time_taken(self):
+        """
+        Get the cost and time taken for the evaluation
+        """
+        return self.cost, self.time_taken

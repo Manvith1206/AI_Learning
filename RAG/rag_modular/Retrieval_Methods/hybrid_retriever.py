@@ -80,7 +80,7 @@ class HybridRetriever(BaseRetriever):
         combined_results.sort(key=lambda x: x[constants.Score], reverse=True)
         end_time = time.time()
         self.time_taken = end_time - start_time
-        return combined_results[:top_k]
+        return combined_results[:self.top_k]
 
     def get_cost_and_time_taken(self):
         """Returns the time taken for the retrieve operation."""

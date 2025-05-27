@@ -56,3 +56,10 @@ class SimpleEvaluator(BaseEvaluator):
         metrics["overall_score"] = sum(v for v in metrics.values()) / len(metrics)
         
         return metrics
+
+    def get_cost_and_time_taken(self):
+        """
+        Get the cost and time taken for the evaluation
+        """
+        # SimpleEvaluator does not have cost or time metrics
+        return 0, 0

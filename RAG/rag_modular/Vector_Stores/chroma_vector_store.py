@@ -83,3 +83,6 @@ class ChromaVectorStore(BaseVectorStore):
             formatted_documents.append(formatted_doc)
 
         return formatted_documents
+    
+    def get_cost_and_time_taken(self):
+        pass
