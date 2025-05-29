@@ -4,11 +4,12 @@ import time
 import rag_modular.Common.RAG_Constants as constants
 
 class LLMReranker(BaseReranker):
-    def __init__(self, llm_client, model_name="gemini-2.0-flash"):
+    def __init__(self, llm_client, model="gemini-2.0-flash", top_k_for_reranking: int = 5):
         self.llm_client = llm_client
-        self.model_name = model_name
+        self.model_name = model
         self.time_taken = 0
         self.cost = 0
+        self.top_k_for_reranking = top_k_for_reranking
     def rerank(self, query, documents, **kwargs):
         
         chunk_list = "\n".join([f"{i+1}. {doc}" for i, doc in enumerate(documents)])
@@ -37,6 +38,7 @@ class LLMReranker(BaseReranker):
         response = self.llm_client.generate_response(
             prompt=rerank_prompt
         )
+        print("topk", self.top_k_for_reranking)
         response_text = response.strip()
         best_chunks_match = re.search(r"Reranked Chunk\(s\):\s*\[([^\]]+)\]", response_text)
         explanation_match = re.search(r"Explanation:\s*(.*)", response_text, re.DOTALL)
@@ -46,6 +48,9 @@ class LLMReranker(BaseReranker):
             selected_indices = [int(idx.strip())-1 for idx in indices_str.split(",") if idx.strip().isdigit()]
         explanation = explanation_match.group(1).strip() if explanation_match else constants.NO_EXPLAINATION_NEEDED_MESSAGE
         selected_documents = [documents[i] for i in selected_indices if 0 <= i < len(documents)]
+        print("SelectedDocs: ", selected_documents)
+        print("Documents: ", documents)
+        selected_documents = selected_documents[:self.top_k_for_reranking]
         if not selected_documents:
             selected_documents = documents
             explanation = constants.LLM_DID_NOT_SELECT_INFO_MESSAGE

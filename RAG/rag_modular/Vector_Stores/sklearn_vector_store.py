@@ -62,6 +62,7 @@ class SklearnVectorStore(BaseVectorStore):
         self.nn_model.fit(embeddings)
         end_time = time.time()
         self.time_taken = end_time - start_time
+        print("Add Embeddings Succesfull")
 
     def search(self, query_embedding, top_k=5):
         if self.nn_model is None:

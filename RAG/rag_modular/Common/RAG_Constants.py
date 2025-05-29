@@ -32,6 +32,7 @@ CONFIG_VECTOR_STORE_FAISS = "faiss"
 CONFIG_VECTOR_STORE_METRIC = "metric"
 CONFIG_SIMILARITY_THRESHOLD_PARAM = "similarity_threshold"
 CONFIG_TOP_K_PARAM = "top_k"
+CONFIG_TOP_K_FOR_RERANKING_PARAM = "top_k_for_reranking"
 CONFIG_METRIC_COSINE = "cosine"
 CONFIG_MODEL = "model"
 CONFIG_CHUNKER_TYPE = "chunker_type"
@@ -81,11 +82,20 @@ JINA_RERANKER_API_KEY = "JINA_RERANKER_API_KEY"
 MISTRAL_API_KEY = "MISTRAL_API_KEY"
 CLAUDE_API_KEY = "CLAUDE_API_KEY"
 
+# Metric Names for ragas
 FAITHFULNESS = "faithfulness"
 ANSWER_CORRECTNESS = "answer_correctness"
 CONTEXT_PRECISION = "context_precision"
 CONTEXT_RECALL = "context_recall"
 ANSWER_RELEVANCY = "answer_relevancy"
+
+
+# Metric Names for deep eval
+DEEP_EVAL_FAITHFULNESS = "Faithfulness"
+DEEP_EVAL_ANSWER_CORRECTNESS = "Answer Correctness"
+DEEP_EVAL_CONTEXT_PRECISION = "Contextual Precision"
+DEEP_EVAL_CONTEXT_RECALL = "Contextual Recall"
+DEEP_EVAL_ANSWER_RELEVANCY = "Answer Relevancy"
 
 # Model Names
 SENTENCE_TRANSFORMER_MODEL_ALL_MINI = "all-MiniLM-L6-v2"
@@ -150,6 +160,7 @@ class EvaluatorType(Enum):
     SIMPLE = "simple"
     RAGAS = "ragas"
     CUSTOM = "custom"
+    DEEP_EVAL = "deep_eval"
 
 class LLMServiceType(Enum):
     GEMINI = "gemini"

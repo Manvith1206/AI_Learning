@@ -4,7 +4,7 @@ import time
 import rag_modular.Common.RAG_Constants as constants
 
 class CohereReranker(BaseReranker):
-    def __init__(self, api_key: str = None, model_name: str = constants.CohereEmbedModels.COHERE_EMBED_MODEL_ENG):
+    def __init__(self, api_key: str = None, model: str = constants.CohereEmbedModels.COHERE_EMBED_MODEL_ENG, top_k_for_reranking: int = 3):
         """
         api_key: your COHERE_API_KEY (or set via env var COHERE_API_KEY)
         model:   the Cohere embed model to use
@@ -14,9 +14,10 @@ class CohereReranker(BaseReranker):
         if not key:
             raise ValueError("Cohere API key not provided. Set COHERE_API_KEY or pass api_key.")
         self.client = co.Client(key)
-        self.model = model_name
+        self.model = model
         self.time_taken = 0
         self.cost = 0
+        self.top_k_for_reranking = top_k_for_reranking
 
     def rerank(self, query, documents, **kwargs):
         start_time = time.time()
@@ -24,8 +25,9 @@ class CohereReranker(BaseReranker):
             query=query,
             documents=documents,
             model=self.model,
-            top_n=3
+            top_n=self.top_k_for_reranking
         )
+        print("topk", self.top_k_for_reranking)
 
         print("Coeherereanking/ resposne", response)
         

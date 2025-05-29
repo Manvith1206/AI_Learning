@@ -32,18 +32,18 @@ with tab1:
         def load_pipeline_dependencies():
             from rag_modular.Common.rag_pipeline import RAGPipeline
             from rag_modular.Common.config_manager import ConfigManager
-            import rag_modular.Testing.test_rag_combinations as test_rag_combinations
+            # import rag_modular.Testing.rag_evaluation_v2 as test_rag_combinations
             return {
                 "RAGPipeline": RAGPipeline,
                 "ConfigManager": ConfigManager,
-                "test_rag_combinations": test_rag_combinations
+                # "test_rag_combinations": test_rag_combinations
             }
         
         # Load dependencies with caching
         deps = load_pipeline_dependencies()
         RAG_Pipeline = deps["RAGPipeline"]
         ConfigManager = deps["ConfigManager"]
-        test_rag_combinations = deps["test_rag_combinations"]
+        # test_rag_combinations = deps["test_rag_combinations"]
 
     TEMP_DIR = "temp_docs"
 
@@ -171,17 +171,17 @@ with tab1:
                 index=0
             )
 
-            
+            top_k_for_reranking = st.slider("Top-K-Docs for Re-ranking", 1, 20, 5, key="top_k_rerank")
             if re_ranker_type == RerankerType.COSINE.value: # cosine
-                re_ranker_params = {constants.CONFIG_TYPE_PARAM: RerankerType.COSINE.value}
+                re_ranker_params = {constants.CONFIG_TYPE_PARAM: RerankerType.COSINE.value, constants.CONFIG_PARAM: {constants.CONFIG_TOP_K_FOR_RERANKING_PARAM: top_k_for_reranking}}
             elif re_ranker_type == RerankerType.LLM.value:  # llm
-                re_ranker_params = {constants.CONFIG_TYPE_PARAM: RerankerType.LLM.value}
+                re_ranker_params = {constants.CONFIG_TYPE_PARAM: RerankerType.LLM.value, constants.CONFIG_PARAM: {constants.CONFIG_TOP_K_FOR_RERANKING_PARAM: top_k_for_reranking}}
                 st.session_state.LLM_Model_Options = [e.value for e in constants.GeminiLLMModel]
             elif re_ranker_type == RerankerType.COHERE.value:# cohere
-                re_ranker_params = {constants.CONFIG_TYPE_PARAM: RerankerType.COHERE.value}
+                re_ranker_params = {constants.CONFIG_TYPE_PARAM: RerankerType.COHERE.value, constants.CONFIG_PARAM: {constants.CONFIG_TOP_K_FOR_RERANKING_PARAM: top_k_for_reranking}}
                 st.session_state.LLM_Model_Options = [e.value for e in constants.CohereLLMModel]
             elif re_ranker_type == RerankerType.JINA.value:
-                re_ranker_params = {constants.CONFIG_TYPE_PARAM: RerankerType.JINA.value}
+                re_ranker_params = {constants.CONFIG_TYPE_PARAM: RerankerType.JINA.value, constants.CONFIG_PARAM: {constants.CONFIG_TOP_K_FOR_RERANKING_PARAM: top_k_for_reranking}}
                 st.session_state.LLM_Model_Options = [e.value for e in constants.JINA_RERANKER_MODELS]
             if re_ranker_params[constants.CONFIG_TYPE_PARAM] == RerankerType.LLM.value or re_ranker_params[constants.CONFIG_TYPE_PARAM] == RerankerType.COHERE.value or re_ranker_params[constants.CONFIG_TYPE_PARAM] == RerankerType.JINA.value:
                 model = st.selectbox(constants.MODEL_NAME_DISPLAY_NAME, options=[e for e in st.session_state.LLM_Model_Options], index=0)
@@ -214,9 +214,9 @@ with tab1:
                         reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: {constants.CONFIG_MODEL: model}}
                     else:
                         reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: {}}
-
+                    print("Reranker Prams: ", reranker_config)
                     get_pipeline().update_component(constants.CONFIG_RETRIEVER, retriever_config)
-                    get_pipeline().update_component(constants.CONFIG_RERANKER, reranker_config)
+                    get_pipeline().update_component(constants.CONFIG_RERANKER, re_ranker_params)
                     st.success("Retrieval configuration updated.")
         
         with config_tabs[2]:
@@ -309,7 +309,6 @@ with tab1:
                     st.session_state.last_evaluation = metrics
                 except Exception as e:
                     st.error(f"Error during evaluation: {str(e)}")
-                st.balloons()
             else:
                 st.warning("No query to evaluate. Ask a question first.")
         
@@ -329,9 +328,10 @@ with tab1:
                 Config_Content = f"Chunker Config: {get_pipeline().config_manager.config[constants.CONFIG_CHUNKER]}\nEmbedder Config: {get_pipeline().config_manager.config[constants.CONFIG_EMBEDDER]}\nVector Store Config{get_pipeline().config_manager.config[constants.CONFIG_VECTOR_STORE]}\nRetreiver Config: {get_pipeline().config_manager.config[constants.CONFIG_RETRIEVER]}\nLLM Config: {get_pipeline().config_manager.config[constants.CONFIG_LLM]}\nRe Ranking Config: {get_pipeline().config_manager.config[constants.CONFIG_RERANKER]}\n{get_pipeline().config_manager.config[constants.CONFIG_EVALUATOR]}"
                 st.markdown(Config_Content)
 
+        import rag_modular.Testing.rag_evaluation_v2 as test_rag_combinations
         if st.button("Test All Configurations", key="test_all_combinations"):
             # Only import and run when button is clicked
-            test_rag_combinations.run_tests()
+            test_rag_combinations.test_combinations()
 
     # Main chat interface
     st.subheader("Chat with your Documents")

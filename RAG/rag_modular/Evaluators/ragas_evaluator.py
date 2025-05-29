@@ -8,6 +8,8 @@ import streamlit as st
 import openai
 import rag_modular.Common.RAG_Constants as constants
 from ragas.dataset_schema import MultiTurnSample
+from ragas.llms import LangchainLLMWrapper
+from langchain_openai import ChatOpenAI
 
 os.environ["OPENAI_API_KEY"] = st.secrets[constants.OPENAI_API_KEY]
 
@@ -52,12 +54,21 @@ class RagasEvaluator(BaseEvaluator):
             "ground_truth": ground_truths_list,
             "reference": ground_truths_list
         })
+        print("Question: ", question)
+        print("Answer: ", answer)
+        print("Contexts: ", contexts_list)
+        print("Ground Truths: ", ground_truths)
 
+        chatLLM = ChatOpenAI(
+            model="gpt-4o",
+            temperature=0.0,
+        )
         with st.spinner("Running RAG evaluation..."):
             result = evaluate(
                 data,
                 metrics=self.metrics,
-                raise_exceptions=True
+                raise_exceptions=True,
+                llm=chatLLM
             )
         print("Cost", result.cost_cb)
         print("TotalCost", result.total_cost)

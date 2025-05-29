@@ -15,7 +15,7 @@ class ClaudeService(BaseLLMService):
         response = self.client.messages.create(
             model=self.model_name,
             max_tokens=2048,
-            temperature=0.2,
+            temperature=0.1,
             messages=[{"role": "user", "content": prompt}]
         )
         end_time = time.time()

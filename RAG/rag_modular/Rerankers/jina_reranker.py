@@ -11,7 +11,7 @@ class JinaReranker(BaseReranker):
     """
     A reranker using JINA AI's reranker models from Hugging Face.
     """
-    def __init__(self, model_name: str = "jinaai/jina-reranker-v1-base-en", device: str = None):
+    def __init__(self, model: str = "jinaai/jina-reranker-v1-base-en", top_k_for_reranking: int = 5):
         """
         Initialize the JINA reranker with a specified model.
         
@@ -19,14 +19,11 @@ class JinaReranker(BaseReranker):
             model_name: The name of the JINA reranker model
             device: Device to run the model on ('cpu', 'cuda', etc.). If None, uses CUDA if available.
         """
-        self.model = model_name
-        if device is None:
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        else:
-            self.device = device
+        self.model = model
         self.time_taken = 0
         self.cost = 0
-    
+        self.top_k_for_reranking = top_k_for_reranking
+
     def rerank(self, query, documents, **kwargs):
         import requests
         top_k = kwargs.get('top_k', 5)
@@ -39,12 +36,13 @@ class JinaReranker(BaseReranker):
         data = {
             "model": self.model,
             "query": query,
-            "top_n": 5,
+            "top_n": self.top_k_for_reranking,
             "documents": documents,
             "return_documents": False
         }
 
         response = requests.post(url, headers=headers, json=data)
+        print("topk", self.top_k_for_reranking)
 
          # Create a list of (document, score) tuples
         results = response.json().get('results', [])

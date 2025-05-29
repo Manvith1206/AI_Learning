@@ -25,6 +25,8 @@ from rag_modular.LLM_Chat_Services.cohere_service import CohereChat
 from rag_modular.Common.query_classifier_llm import QueryClassifier
 
 import traceback
+from rag_modular.Evaluators.deep_eval_evaluator import DeepEval
+from rag_modular.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store # Added for caching
 
 class RAGPipeline:
     def __init__(self, config_manager=None):
@@ -120,7 +122,7 @@ class RAGPipeline:
         params = cfg.get(constants.CONFIG_PARAM, {})
         type = cfg.get(constants.CONFIG_TYPE_PARAM)
         api_key = st.secrets[constants.PINECONE_API_KEY]
-
+        print("Vector Store Type: ", type)
         if type == constants.VectorStore.SCIKIT_LEARN.value:
             return SklearnVectorStore(**params)
         elif type == constants.VectorStore.PINE_CONE.value:
@@ -131,7 +133,7 @@ class RAGPipeline:
         elif type == constants.VectorStore.FAISS.value:
             return FAISS_Vector_Store()
         else:
-            return SklearnVectorStore(**params)
+            return SklearnVectorStore(metric=constants.CONFIG_METRIC_COSINE)
 
     def _build_retriever(self):
         from rag_modular.Retrieval_Methods.similarity_retriever import SimilarityRetriever
@@ -182,26 +184,28 @@ class RAGPipeline:
         params = cfg.get(constants.CONFIG_PARAM)
         print("params", params)
         model = params.get(constants.CONFIG_MODEL)
+        top_k = params.get(constants.CONFIG_TOP_K_FOR_RERANKING_PARAM)
+        print("Build reranker: TopK", top_k)
         if t == RerankerType.LLM.value:
             from rag_modular.Rerankers.llm_reranker import LLMReranker
 
-            return LLMReranker(self.llm_service, model_name=model)
+            return LLMReranker(self.llm_service,**params)
         elif t == RerankerType.COHERE.value:
             from rag_modular.Rerankers.cohere_re_ranker import CohereReranker
 
-            return CohereReranker(st.secrets[constants.COHERE_API_KEY], model_name=model)
+            return CohereReranker(st.secrets[constants.COHERE_API_KEY], **params)
         elif t == RerankerType.JINA.value:
             from rag_modular.Rerankers.jina_reranker import JinaReranker
 
-            return JinaReranker(model_name=model)
+            return JinaReranker(**params)
         elif t == RerankerType.COSINE.value:
             from rag_modular.Rerankers.cosine_reranker import CosineReranker
 
-            return CosineReranker(self.embedder)
+            return CosineReranker(self.embedder, top_k)
         else:
             from rag_modular.Rerankers.cosine_reranker import CosineReranker
 
-            return CosineReranker(self.embedder)
+            return CosineReranker(self.embedder, top_k=top_k)
 
     def _build_evaluator(self):
         from rag_modular.Evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
@@ -235,6 +239,8 @@ class RAGPipeline:
                 return SimpleEvaluator()
         elif evaluator_type == EvaluatorType.SIMPLE.value:
             return SimpleEvaluator()
+        elif evaluator_type == EvaluatorType.DEEP_EVAL.value:
+            return DeepEval(**cfg.get(constants.CONFIG_PARAM, {}))
         else:
             st.warning(f"Unknown or unset evaluator type: {evaluator_type}. Defaulting to SimpleEvaluator.")
             return SimpleEvaluator()
@@ -322,13 +328,14 @@ class RAGPipeline:
             
             
             documents = self.vector_store.format_documents(documents)
+            print("Self Vector Store: ", self.vector_store)
             self.vector_store.add_embeddings(embeddings, documents)
-            
 
             return documents, chunks
         except Exception as e:
             st.error(f"Error processing document: {e}, Traceback: {traceback.print_exc()}")
             return None, None
+
 
     def rewrite_query(self, query_text, max_assistant_chars=100):
         if not st.session_state.messages:
@@ -415,6 +422,7 @@ class RAGPipeline:
             # Ensure documents are available
             
             context_docs, explanation, context_docs_list = self.get_context_docs(query_text)
+            print("CcontextDocsLen: ", len(context_docs))
             # if self.query_classifier.is_irrelevant(query_text, context_docs):
             #     return {
             #     constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
@@ -429,14 +437,21 @@ class RAGPipeline:
 
             # Generate answer
             answer_prompt = f"""
+            <system>
             You are a highly detailed assistant that must answer questions based only on the provided context. Do not make up facts or include any information not explicitly supported by the context. If the answer is not present, respond with "The context does not provide enough information to answer this question."
             You are a expert in Digital Data Communications for University Students
+            You have knowledge of Digital Data Communication Techniques like Synchronous and Asynchronous transmission and different line configurations
+            
+            Answer the question directly and concisely using only the provided context. 
+            Focus on the specific question asked without adding extra information.
+            <system/>
 
             Your answers must be:
             - Detailed and well-explained (minimum 6 sentences)
             - Faithfully based only on the context
             - Avoid any assumptions or hallucinations
-
+            
+            <user>
             # CONTEXT
             # Below are contexts:
             Context:
@@ -446,6 +461,7 @@ class RAGPipeline:
             Below is the query asked by User:
             
             Question: {query_text}
+            </user>
 
             Chat History:
             {history_text}

@@ -7,6 +7,7 @@ import numpy as np
 import faiss
 import uuid
 import time
+import pickle
 
 class FAISS_Vector_Store(BaseVectorStore):
     def __init__(self):
@@ -20,7 +21,6 @@ class FAISS_Vector_Store(BaseVectorStore):
 
     def add_embeddings(self, embeddings, documents):
         start_time = time.time()
-        vector_store_path = "vector_store_index_path"
         # Unify embeddings: list, numpy array, or sparse -> dense np.float32
         self.documents = documents
         # Generate and store document IDs
@@ -47,7 +47,6 @@ class FAISS_Vector_Store(BaseVectorStore):
         index = faiss.IndexFlatIP(dimension)
         index.add(emb_arr)
         self.index = index
-        faiss.write_index(index, vector_store_path)
         end_time = time.time()
         self.time_taken = end_time - start_time
 

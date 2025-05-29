@@ -2,6 +2,7 @@ import time
 from .base_llm_service import BaseLLMService
 from rag_modular.Common.RAG_Constants import GeminiLLMModel
 from google.genai import types
+from google import genai
 
 class GeminiService(BaseLLMService):
     def __init__(self, client, model_name=GeminiLLMModel.GEMINI_FLASH.value):
@@ -13,8 +14,12 @@ class GeminiService(BaseLLMService):
         start_time = time.time()
         response = self.client.models.generate_content(
             model=self.model_name,
-            contents=prompt
+            contents=prompt,
+            config=types.GenerateContentConfig(
+            temperature=0.1
         )
+        )
+
         end_time = time.time()
         self.time_taken = end_time - start_time
         return response.text
