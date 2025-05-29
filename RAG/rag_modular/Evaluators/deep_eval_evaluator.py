@@ -4,14 +4,17 @@ from deepeval.metrics import FaithfulnessMetric, AnswerRelevancyMetric, Contextu
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 import rag_modular.Common.RAG_Constants as constants
+from deepeval.models.llms import gemini_model
+import streamlit as st
 
 class DeepEval(BaseEvaluator):
     def __init__(self, metrics=None):
+        model = gemini_model.GeminiModel(model_name=constants.GeminiLLMModel.GEMINI_FLASH.value, api_key=st.secrets[constants.GEMINI_API_KEY])
         self.metrics = metrics or [
-            FaithfulnessMetric(threshold=0.7, model="gpt-4o", include_reason=True),
-            AnswerRelevancyMetric(threshold=0.7, model="gpt-4o", include_reason=True),
-            ContextualPrecisionMetric(threshold=0.7, model="gpt-4o", include_reason=True),
-            ContextualRecallMetric(threshold=0.7, model="gpt-4o", include_reason=True)
+            FaithfulnessMetric(threshold=0.7, model=model, include_reason=True),
+            AnswerRelevancyMetric(threshold=0.7, model=model, include_reason=True),
+            ContextualPrecisionMetric(threshold=0.7, model=model, include_reason=True),
+            ContextualRecallMetric(threshold=0.7, model=model, include_reason=True)
         ]
         self.time_taken = 0
         self.cost = 0

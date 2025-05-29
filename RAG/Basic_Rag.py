@@ -328,10 +328,10 @@ with tab1:
                 Config_Content = f"Chunker Config: {get_pipeline().config_manager.config[constants.CONFIG_CHUNKER]}\nEmbedder Config: {get_pipeline().config_manager.config[constants.CONFIG_EMBEDDER]}\nVector Store Config{get_pipeline().config_manager.config[constants.CONFIG_VECTOR_STORE]}\nRetreiver Config: {get_pipeline().config_manager.config[constants.CONFIG_RETRIEVER]}\nLLM Config: {get_pipeline().config_manager.config[constants.CONFIG_LLM]}\nRe Ranking Config: {get_pipeline().config_manager.config[constants.CONFIG_RERANKER]}\n{get_pipeline().config_manager.config[constants.CONFIG_EVALUATOR]}"
                 st.markdown(Config_Content)
 
-        import rag_modular.Testing.rag_evaluation_v2 as test_rag_combinations
+        import rag_modular.Testing.test_rag_combinations as test_rag_combinations
         if st.button("Test All Configurations", key="test_all_combinations"):
             # Only import and run when button is clicked
-            test_rag_combinations.test_combinations()
+            test_rag_combinations.test_rag_combination()
 
     # Main chat interface
     st.subheader("Chat with your Documents")

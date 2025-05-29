@@ -5,6 +5,7 @@ import rag_modular.Common.RAG_Constants as constants
 import uuid
 import numpy as np
 from scipy.sparse import csr_matrix
+import time
 
 class PineConeVectorStore(BaseVectorStore):
     def __init__(self, api_key: str, index_name: str):

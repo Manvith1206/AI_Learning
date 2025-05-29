@@ -10,8 +10,9 @@ import rag_modular.Common.RAG_Constants as constants
 from ragas.dataset_schema import MultiTurnSample
 from ragas.llms import LangchainLLMWrapper
 from langchain_openai import ChatOpenAI
-
+from langchain_google_genai import ChatGoogleGenerativeAI
 os.environ["OPENAI_API_KEY"] = st.secrets[constants.OPENAI_API_KEY]
+from ragas.llms import LangchainLLMWrapper
 
 class RagasEvaluator(BaseEvaluator):
     """Evaluator that uses RAGAS metrics for RAG evaluation"""
@@ -51,8 +52,7 @@ class RagasEvaluator(BaseEvaluator):
             constants.QUESTION: questions,
             constants.ANSWER: answers,
             constants.CONTEXTS: contexts_list,
-            "ground_truth": ground_truths_list,
-            "reference": ground_truths_list
+            "ground_truth": ground_truths_list
         })
         print("Question: ", question)
         print("Answer: ", answer)
@@ -63,12 +63,19 @@ class RagasEvaluator(BaseEvaluator):
             model="gpt-4o",
             temperature=0.0,
         )
+        geminiLLM = ChatGoogleGenerativeAI(
+            model=constants.GeminiLLMModel.GEMINI_FLASH.value,
+            temperature=0.0,
+            google_api_key=st.secrets[constants.GEMINI_API_KEY]
+        )
+        print("Using LLM: ", geminiLLM)
+        print("Using OpenAI LLM: ", chatLLM)
         with st.spinner("Running RAG evaluation..."):
             result = evaluate(
                 data,
                 metrics=self.metrics,
                 raise_exceptions=True,
-                llm=chatLLM
+                llm = geminiLLM
             )
         print("Cost", result.cost_cb)
         print("TotalCost", result.total_cost)
