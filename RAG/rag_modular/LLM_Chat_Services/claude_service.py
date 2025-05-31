@@ -12,17 +12,20 @@ class ClaudeService(BaseLLMService):
         self.cost = 0
     def generate_response(self, prompt, **kwargs):
         start_time = time.time()
-        response = self.client.messages.create(
-            model=self.model_name,
+        with self.client.messages.stream(
             max_tokens=2048,
-            temperature=0.1,
-            messages=[{"role": "user", "content": prompt}]
-        )
+            messages=[{"role": "user", "content": prompt}],
+            model=self.model_name,
+        ) as stream:
+            for text in stream.text_stream:
+                print("Anthropic Response: ", text)
+                yield text
+        
         end_time = time.time()
         self.time_taken = end_time - start_time
 
         
-        return response.content[0].text
+        
     def get_cost_and_time_taken(self):
         """
         Get the cost and time taken for the Claude service call

@@ -205,7 +205,7 @@ class RAGPipeline:
         else:
             from rag_modular.Rerankers.cosine_reranker import CosineReranker
 
-            return CosineReranker(self.embedder, top_k=top_k)
+            return CosineReranker(self.embedder, top_k_for_reranking=top_k)
 
     def _build_evaluator(self):
         from rag_modular.Evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
@@ -313,8 +313,10 @@ class RAGPipeline:
     # process documents
     def process_document(self, file, texts=None):
         try:
+            print(self.chunker)
             chunks =  self.chunker.split_text(text=texts)
 
+            print("Texts: ", chunks)
             documents = []
             for chunk in chunks:
                 doc_id = str(uuid.uuid4())
@@ -412,23 +414,25 @@ class RAGPipeline:
     
     def query(self, query_text, top_k=None):
         try:
-            # if self.query_classifier.is_greeting(query_text):
-            #     return {
-            #     constants.ANSWER: self.query_classifier.get_greeting_response(),
-            #     constants.CONTEXTS: "",
-            #     constants.RERANK_EXPLANATION: ""
-            # }
+            if self.query_classifier.is_greeting(query_text):
+                st.markdown(self.query_classifier.get_greeting_response())
+                return {
+                constants.ANSWER: self.query_classifier.get_greeting_response(),
+                constants.CONTEXTS: "",
+                constants.RERANK_EXPLANATION: ""
+            }
             # query_text = self.rewrite_query(query_text)
             # Ensure documents are available
             
             context_docs, explanation, context_docs_list = self.get_context_docs(query_text)
             print("CcontextDocsLen: ", len(context_docs))
-            # if self.query_classifier.is_irrelevant(query_text, context_docs):
-            #     return {
-            #     constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
-            #     constants.CONTEXTS: context_docs,
-            #     constants.RERANK_EXPLANATION: ""
-            # }
+            if self.query_classifier.is_irrelevant(query_text, context_docs):
+                st.markdown(self.query_classifier.get_irrelevant_question_response())
+                return {
+                constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
+                constants.CONTEXTS: context_docs,
+                constants.RERANK_EXPLANATION: ""
+            }
             # Join contexts
             context = "\n\n".join(context_docs)
             history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in st.session_state.messages])
@@ -468,19 +472,23 @@ class RAGPipeline:
 
             Answer:
             """
-            answer = self.llm_service.generate_response(answer_prompt)
-            
+            answer_placeholder = st.empty()
+            full_response = ""
+            for delta in self.llm_service.generate_response(answer_prompt):
+                full_response += delta
+                answer_placeholder.markdown(full_response)
+
+            st.session_state.messages.append({"role": "assistant", "content": full_response})
             # Save the query data for potential evaluation
             self.last_query = {
                 constants.QUESTION: query_text,
-                constants.ANSWER: answer,
+                constants.ANSWER: full_response,
                 constants.CONTEXTS: context_docs_list
             }
             
-            
             return {
-                constants.ANSWER: answer,
-                constants.CONTEXTS: context_docs,
+                constants.ANSWER: full_response,
+                constants.CONTEXTS: context_docs_list,
                 constants.RERANK_EXPLANATION: explanation
             }
         except Exception as e:

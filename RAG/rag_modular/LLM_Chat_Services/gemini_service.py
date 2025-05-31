@@ -12,17 +12,18 @@ class GeminiService(BaseLLMService):
         self.time_taken = 0
     def generate_response(self, prompt, **kwargs):
         start_time = time.time()
-        response = self.client.models.generate_content(
+        for chunk in self.client.models.generate_content_stream(
             model=self.model_name,
             contents=prompt,
             config=types.GenerateContentConfig(
-            temperature=0.1
-        )
-        )
+                temperature=0.1
+            )
+        ):
+            if hasattr(chunk, 'text'):
+                yield chunk.text
 
         end_time = time.time()
         self.time_taken = end_time - start_time
-        return response.text
     
     def function_call(self, functions, prompt, **kwargs):
         tools = [types.Tool(function_declarations=[func]) for func in functions]

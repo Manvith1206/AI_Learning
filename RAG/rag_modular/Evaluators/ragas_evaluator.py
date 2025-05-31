@@ -75,7 +75,7 @@ class RagasEvaluator(BaseEvaluator):
                 data,
                 metrics=self.metrics,
                 raise_exceptions=True,
-                llm = geminiLLM
+                llm = chatLLM
             )
         print("Cost", result.cost_cb)
         print("TotalCost", result.total_cost)

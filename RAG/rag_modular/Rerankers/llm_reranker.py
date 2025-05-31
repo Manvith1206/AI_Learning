@@ -2,9 +2,9 @@ from .base_reranker import BaseReranker
 import re
 import time
 import rag_modular.Common.RAG_Constants as constants
-
+from rag_modular.LLM_Chat_Services.base_llm_service import BaseLLMService
 class LLMReranker(BaseReranker):
-    def __init__(self, llm_client, model="gemini-2.0-flash", top_k_for_reranking: int = 5):
+    def __init__(self, llm_client: BaseLLMService, model="gemini-2.0-flash", top_k_for_reranking: int = 5):
         self.llm_client = llm_client
         self.model_name = model
         self.time_taken = 0
@@ -35,13 +35,13 @@ class LLMReranker(BaseReranker):
             Explanation: [your reasoning for reranking the chunks]
             """
         start_time = time.time()
-        response = self.llm_client.generate_response(
-            prompt=rerank_prompt
-        )
+        full_response = ""
+        for delta in self.llm_client.generate_response(rerank_prompt):
+            full_response += delta
+
         print("topk", self.top_k_for_reranking)
-        response_text = response.strip()
-        best_chunks_match = re.search(r"Reranked Chunk\(s\):\s*\[([^\]]+)\]", response_text)
-        explanation_match = re.search(r"Explanation:\s*(.*)", response_text, re.DOTALL)
+        best_chunks_match = re.search(r"Reranked Chunk\(s\):\s*\[([^\]]+)\]", full_response)
+        explanation_match = re.search(r"Explanation:\s*(.*)", full_response, re.DOTALL)
         selected_indices = []
         if best_chunks_match:
             indices_str = best_chunks_match.group(1)
