@@ -18,7 +18,6 @@ class RecursiveChunker(BaseChunker):
 
     def split_text(self, text):
         start_time = time.time()
-        print("tetx", text)
         if not text:
             return []
         
@@ -28,7 +27,6 @@ class RecursiveChunker(BaseChunker):
             encoding_name="cl100k_base"  # Tokenizer for OpenAI models
         )
         
-        print("SplitText", text_splitter)
         chunks = text_splitter.split_text(text=text)
         
         end_time = time.time()

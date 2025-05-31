@@ -1,7 +1,6 @@
 import os
 import uuid
 
-
 from rag_modular.Evaluators.simple_evaluator import SimpleEvaluator
 from rag_modular.Evaluators.ragas_evaluator import RagasEvaluator
 from rag_modular.Evaluators.custom_evaluator import (
@@ -122,7 +121,6 @@ class RAGPipeline:
         params = cfg.get(constants.CONFIG_PARAM, {})
         type = cfg.get(constants.CONFIG_TYPE_PARAM)
         api_key = st.secrets[constants.PINECONE_API_KEY]
-        print("Vector Store Type: ", type)
         if type == constants.VectorStore.SCIKIT_LEARN.value:
             return SklearnVectorStore(**params)
         elif type == constants.VectorStore.PINE_CONE.value:
@@ -182,10 +180,8 @@ class RAGPipeline:
         cfg = self.config_manager.get_config(constants.CONFIG_RERANKER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         params = cfg.get(constants.CONFIG_PARAM)
-        print("params", params)
         model = params.get(constants.CONFIG_MODEL)
         top_k = params.get(constants.CONFIG_TOP_K_FOR_RERANKING_PARAM)
-        print("Build reranker: TopK", top_k)
         if t == RerankerType.LLM.value:
             from rag_modular.Rerankers.llm_reranker import LLMReranker
 
@@ -308,8 +304,7 @@ class RAGPipeline:
         except Exception as e:
             st.error(f"Error extracting text: {e}, Traceback: {traceback.print_exc()}")
             return None, None
-        
-        
+         
     # process documents
     def process_document(self, file, texts=None):
         try:
@@ -337,7 +332,6 @@ class RAGPipeline:
         except Exception as e:
             st.error(f"Error processing document: {e}, Traceback: {traceback.print_exc()}")
             return None, None
-
 
     def rewrite_query(self, query_text, max_assistant_chars=100):
         if not st.session_state.messages:

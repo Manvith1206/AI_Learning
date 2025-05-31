@@ -148,7 +148,6 @@ class MistralEmbedder(BaseEmbedder):
             all_embeddings.extend(batch_embeddings)
         end_time = time.time()
         self.time_taken = end_time - start_time
-        print("All Embedsdings:", (all_embeddings))
         return all_embeddings
     
     def get_cost_and_time_taken(self):

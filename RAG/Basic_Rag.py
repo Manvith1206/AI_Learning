@@ -20,7 +20,7 @@ class UIComponents:
     
     @staticmethod
     def create_tabs():
-        return st.tabs(["Chat with Documents", "Performance Metrics"])
+        return st.tabs(["Chat with Documents", "Performance Metrics", "FlashCards"])
 
 class DocumentProcessor:
     def __init__(self, pipeline: RAGPipeline):
@@ -200,11 +200,13 @@ class RAGApp:
     def render_text_processing_config(self):
         """Render text processing configuration options"""
         st.write(f"**{constants.TEXT_PROCESSING_DISPLAY_NAME}**")
+        options, index = self.get_ui_options(option_type=ChunkerType, config_name=constants.CONFIG_CHUNKER)
         chunker_type = st.selectbox(
             constants.CHUNKER_TYPE_DISPLAY_NAME,
-            options=[e.value for e in ChunkerType],
-            index=0
+            options=options,
+            index=index
         )
+        
         
         chunker_params = self.get_chunker_config(chunker_type)
         vector_store = self.get_vector_store_config()
@@ -229,10 +231,12 @@ class RAGApp:
         """Render evaluation configuration options"""
         st.write(f"**{constants.EVALUATION_DISPLAY_NAME}**")
         
+        options, index = self.get_ui_options(option_type=constants.EvaluatorType, config_name=constants.CONFIG_EVALUATOR)
+
         evaluator_type = st.selectbox(
             "Evaluator Type",
-            options=[e.value for e in EvaluatorType],
-            index=1
+            options=options,
+            index=index
         )
         
         evaluator_config = {constants.CONFIG_TYPE_PARAM: evaluator_type}
@@ -241,6 +245,12 @@ class RAGApp:
             if st.button("Apply Evaluation Params", key="apply_evaluation"):
                 self.get_pipeline().update_component(constants.CONFIG_EVALUATOR, evaluator_config)
                 st.success("Evaluation configuration updated.")
+
+    def get_ui_options(self, option_type, config_name: str):
+        options = [e.value for e in option_type]
+        config = st.session_state.pipeline_config.get_config(config_name)
+        index = options.index(config[constants.CONFIG_TYPE_PARAM])
+        return options,index
 
     def render_evaluation_section(self):
         # Evaluation section
@@ -301,10 +311,13 @@ class RAGApp:
                         st.warning("No valid content was extracted from the document")
 
     def get_retriever_config(self) -> dict[str, Any]:
+
+        options, index = self.get_ui_options(option_type=constants.RetrieverType, config_name=constants.CONFIG_RETRIEVER)
+
         retriever_type = st.selectbox(
             "Retriever Type",
-            options=[e.value for e in RetrieverType],
-            index=0
+            options=options,
+            index=index
         )
 
         top_k = st.slider("Top-K-Docs for Retrieval", 1, 20, 5)
@@ -324,10 +337,12 @@ class RAGApp:
         return retriever_config
     
     def get_reranker_config(self) -> dict[str, Any]:
+        options, index = self.get_ui_options(option_type=constants.RerankerType, config_name=constants.CONFIG_RERANKER)
+
         re_ranker_type = st.selectbox(
         "Re-ranker Type",
-        options=[e.value for e in RerankerType],
-        index=0
+        options=options,
+        index=index
         )
 
         top_k_for_reranking = st.slider("Top-K-Docs for Re-ranking", 1, 20, 5, key="top_k_rerank")
@@ -355,24 +370,32 @@ class RAGApp:
         """Render chat response configuration"""
         st.divider()
         st.write(f"**{constants.CHAT_RESPONSE_CONFIG_DISPLAY_NAME}**")
+        options, index = self.get_ui_options(option_type=constants.LLMServiceType, config_name=constants.CONFIG_LLM)
+
         llm_service = st.selectbox(
             constants.LLM_CHAT_SERVICE, 
-            options=[e.value for e in constants.LLMServiceType], 
-            index=0
+            options=options, 
+            index=index
         )
         st.session_state.LLM_Service = llm_service
         
         llm_model_options = self.get_llm_model_options(llm_service)
+
+        options = list(llm_model_options.keys())
+        default_option = st.session_state.pipeline_config.get_config(constants.CONFIG_LLM)[constants.CONFIG_PARAM][constants.CONFIG_MODEL]
+
+        # Get the index
+        index = options.index(default_option)
         user_selected_llm_model = st.selectbox(
             constants.LLM_CHAT_SERVICE, 
             options=llm_model_options.keys(), 
-            index=0
+            index=index
         )
         
         chat_response_config = {
             constants.CONFIG_TYPE_PARAM: llm_service,
             constants.CONFIG_PARAM: {
-                constants.CONFIG_MODEL: llm_model_options[user_selected_llm_model].value
+                constants.CONFIG_MODEL: llm_model_options[user_selected_llm_model]
             }
         }
         
@@ -428,10 +451,13 @@ class RAGApp:
     def get_vector_store_config(self):
         """Configure vector store settings"""
         st.divider()
+
+        options, index = self.get_ui_options(option_type=constants.VectorStore, config_name=constants.CONFIG_VECTOR_STORE)
+
         vector_store = st.selectbox(
             constants.VECTOR_STORE_DISPLAY_NAME,
-            options=[e.value for e in constants.VectorStore],
-            index=0
+            options=options,
+            index=index
         )
         
         if vector_store == constants.VectorStore.SCIKIT_LEARN.value:
@@ -451,10 +477,12 @@ class RAGApp:
     def get_embedder_config(self):
         """Configure embedder settings"""
         st.divider()
+        options, index = self.get_ui_options(option_type=constants.EmbedderType, config_name=constants.CONFIG_EMBEDDER)
+
         embedder_type = st.selectbox(
             constants.EMBEDDER_TYPE_DISPLAY_NAME,
-            options=[e.value for e in EmbedderType],
-            index=0
+            options=options,
+            index=index
         )
         
         if embedder_type != EmbedderType.TFIDF.value:
@@ -484,11 +512,11 @@ class RAGApp:
     def get_llm_model_options(self, llm_service: str) -> dict:
         """Get LLM model options based on the selected service"""
         if llm_service == constants.LLMServiceType.GEMINI.value:
-            return {model.display_name: model for model in constants.GeminiLLMModel}
+            return {model.display_name: model.value for model in constants.GeminiLLMModel}
         elif llm_service == constants.LLMServiceType.CLAUDE.value:
-            return {model.display_name: model for model in constants.CLAUDE_MODELS}
+            return {model.display_name: model.value for model in constants.CLAUDE_MODELS}
         else:
-            return {model.display_name: model for model in constants.GeminiLLMModel}
+            return {model.display_name: model.value for model in constants.GeminiLLMModel}
     
     def get_reranker_model_options(self, reranker_type: str) -> dict:
         """Get re-ranker model options based on the selected type"""
