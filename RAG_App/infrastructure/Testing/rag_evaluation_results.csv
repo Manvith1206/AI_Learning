@@ -1,0 +1,188 @@
+Query,Response,Ground Truth,Chunking Strategy,Embedding Model,Retrieval Strategy,Reranking Strategy,Vector Store,LLM Chat Service,Faithfulness,Context Relevancy,Context Recall,Answer Relevancy,Harmonic Mean Score
+What is Synchronous Transmission?,"Synchronous transmission is a data communication technique that allows for the transmission of large blocks of bits in a continuous and steady stream. Unlike asynchronous transmission, it does not rely on start and stop codes for each character. Instead, to prevent timing discrepancies between the sending and receiving devices, their internal clocks must be precisely synchronized. One method to achieve this synchronization is by using a separate clock line that connects the transmitter and the receiver. This synchronization ensures that the receiver can accurately sample the incoming bitstream at the correct intervals. This method is employed to achieve greater efficiency, especially when sending larger blocks of data, as it reduces the overhead associated with start and stop bits.",It sends large blocks of data continuously without start and stop bits. Requires clock synchronization between sender and receiver and is more efficient.,"recursive
+Params:
+ {'chunk_size': 150, 'chunk_overlap': 70}","tfidf
+Params:
+ {}","similarity
+Params:
+ {'similarity_threshold': 0.0, 'top_k': 20}","cohere
+Params:
+ {'model': 'rerank-v3.5'}","faiss
+Params:
+ {}","gemini
+Params:
+ {'model': 'gemini-2.5-pro-preview-05-06'}",1.0,1.0,1.0,0.93,0
+What is Synchronous Transmission?,"Synchronous transmission is a digital data communication technique used to achieve greater efficiency, especially when sending large blocks of data. In this method, large blocks of bits are transmitted in a steady stream without the need for start and stop codes for each character, which contrasts with asynchronous transmission. To ensure accurate data transfer and prevent timing discrepancies between the sender and receiver, their clocks must be synchronized. One way to achieve this synchronization is by providing a separate clock line between the transmitter and the receiver. The data, along with control information, a preamble (like an 8-bit flag), and a postamble (the same flag repeated), are grouped into a structure called a frame. This framing mechanism, with its minimal overhead (typically less than 100 bits for control, preamble, and postamble), makes synchronous transmission significantly more efficient than asynchronous transmission for sizable data blocks.",It sends large blocks of data continuously without start and stop bits. Requires clock synchronization between sender and receiver and is more efficient.,"recursive
+Params:
+ {'chunk_size': 150, 'chunk_overlap': 70}","tfidf
+Params:
+ {}","similarity
+Params:
+ {'similarity_threshold': 0.0, 'top_k': 20}","llm
+Params:
+ {'top_k_for_reranking': 7}","faiss
+Params:
+ {}","gemini
+Params:
+ {'model': 'gemini-2.5-pro-preview-05-06'}",1.0,1.0,1.0,0.93,0
+What is Synchronous Transmission?,"Synchronous transmission is a form of synchronization employed to achieve greater efficiency in data communication. By utilizing synchronous transmission, it is possible to transmit large blocks of bits in a continuous, steady stream. This method notably operates without the need for start and stop codes for each character or small data unit. The blocks of data transmitted can be of considerable length, encompassing many bits. A critical aspect of synchronous transmission is the requirement for the clocks of the transmitter and receiver to be synchronized. This synchronization is essential to prevent timing discrepancies or changes between the sending and receiving devices during the data transfer process.",It sends large blocks of data continuously without start and stop bits. Requires clock synchronization between sender and receiver and is more efficient.,"sentence
+Params:
+ {'max_sentences': 18}","Voyage
+Params:
+ {'model': 'voyage-3-large'}","similarity
+Params:
+ {'similarity_threshold': 0.0, 'top_k': 20}","llm
+Params:
+ {'top_k_for_reranking': 7}","faiss
+Params:
+ {}","gemini
+Params:
+ {'model': 'gemini-2.5-pro-preview-05-06'}",1.0,1.0,1.0,0.96,0
+What is Synchronous Transmission?,"# Synchronous Transmission in Digital Data Communications
+
+Synchronous transmission is a digital data communication technique where data is transmitted as a continuous stream of bits in a steady flow without start and stop codes. This method allows for the transmission of large blocks of data efficiently by maintaining precise timing synchronization between the transmitter and receiver.
+
+In synchronous transmission, the clocks of both the transmitter and receiver must be synchronized to ensure proper data reception. This synchronization can be achieved through various methods, such as providing a separate clock line between devices or embedding clocking information within the data signal itself (as in Manchester or differential Manchester encoding).
+
+A key characteristic of synchronous transmission is the use of special framing structures. Each data block begins with a preamble (often called a flag) and ends with a postamble, which help the receiver identify the beginning and end of frames. Additional control information is also included in these frames to support data link control procedures.
+
+For large data blocks, synchronous transmission is significantly more efficient than asynchronous transmission. While asynchronous transmission typically requires 20% or more overhead for start and stop bits, synchronous transmission's control information, preamble, and postamble generally constitute less than 100 bits, making it more suitable for high-volume data transfer.
+
+Synchronous transmission requires more complex equipment than asynchronous methods, as it needs precise timing mechanisms and additional circuitry to maintain synchronization throughout the entire data block transmission process.
+
+The frame format in synchronous transmission typically includes a flag field (8 bits) at both the beginning and end, with control fields, data fields, and additional control information in between, creating a structured approach to data transmission that supports reliable high-speed communication.",It sends large blocks of data continuously without start and stop bits. Requires clock synchronization between sender and receiver and is more efficient.,"sentence
+Params:
+ {'max_sentences': 18}","cohere
+Params:
+ {'model': 'embed-v4.0'}","hybrid
+Params:
+ {'keyword_weight': 0.6, 'top_k': 20}","jina
+Params:
+ {'top_k_for_reranking': 7, 'model': 'jina-reranker-v2-base-multilingual'}","faiss
+Params:
+ {}","claude
+Params:
+ {'model': 'claude-3-7-sonnet-20250219'}",0.96,1.0,1.0,0.95,0
+Explain different types of errors.,"In digital transmission systems, an error occurs when a bit is altered between the point of transmission and the point of reception. This alteration means that if a binary 1 was transmitted, a binary 0 is received, or conversely, if a binary 0 was transmitted, a binary 1 is received. The context identifies two general types of errors that can occur during this process. These types are single-bit errors and burst errors.
+
+A single-bit error is characterized as an isolated error condition. In this type of error, only one bit is altered, and this alteration does not have any impact on the bits that are nearby or adjacent to it.
+
+A burst error, on the other hand, affects a sequence of bits. Specifically, a burst error of length B is defined as a contiguous sequence of B bits where the first bit and the last bit in that sequence, along with any number of bits in between them, are received incorrectly.","In digital transmission systems, an error occurs when a bit is altered between transmission and reception. That means, a binary 1 is transmitted and a binary 0 is received, or a binary 0 is transmitted and a binary 1 is received. Two general types of errors can occur. They are, single-bit errors and burst errors. A single-bit error is an isolated error condition that alters one bit but does not affect nearby bits. A burst error of length B is a contiguous sequence of B bits in which the first and last bits and any number of intermediate bits are received in error. Based on IEEE Std 100 and ITU-T recommendation Q.9 an error burst is defined as a group of bits in which two successive erroneous bits are always separated by less than a given number x of correct bits. The last erroneous bit in the burst and the first erroneous bit in the following burst are accordingly separated by x correct bits or more.","recursive
+Params:
+ {'chunk_size': 150, 'chunk_overlap': 70}","tfidf
+Params:
+ {}","similarity
+Params:
+ {'similarity_threshold': 0.0, 'top_k': 20}","cohere
+Params:
+ {'model': 'rerank-v3.5'}","faiss
+Params:
+ {}","gemini
+Params:
+ {'model': 'gemini-2.5-pro-preview-05-06'}",1.0,1.0,0.75,0.86,0
+Explain different types of errors.,"In digital transmission systems, an error occurs when a bit is altered during its transit between the transmitter and the receiver. This alteration implies that a binary 1 that was transmitted might be interpreted as a binary 0 upon reception, or conversely, a transmitted binary 0 might be received as a binary 1. The provided context specifies that two general types of errors can occur in such digital data communications. These two distinct categories are single-bit errors and burst errors.
+
+A single-bit error is characterized as an isolated error condition. In this type of error, only one bit within the data unit is altered, and importantly, this alteration does not affect any of the adjacent or nearby bits in the sequence.
+
+A burst error, on the other hand, affects multiple bits. Specifically, a burst error of length B is defined as a contiguous sequence of B bits where the first bit and the last bit of this sequence are received in error. Furthermore, within this B-bit sequence, any number of the intermediate bits situated between the first and last erroneous bits can also be received incorrectly.","In digital transmission systems, an error occurs when a bit is altered between transmission and reception. That means, a binary 1 is transmitted and a binary 0 is received, or a binary 0 is transmitted and a binary 1 is received. Two general types of errors can occur. They are, single-bit errors and burst errors. A single-bit error is an isolated error condition that alters one bit but does not affect nearby bits. A burst error of length B is a contiguous sequence of B bits in which the first and last bits and any number of intermediate bits are received in error. Based on IEEE Std 100 and ITU-T recommendation Q.9 an error burst is defined as a group of bits in which two successive erroneous bits are always separated by less than a given number x of correct bits. The last erroneous bit in the burst and the first erroneous bit in the following burst are accordingly separated by x correct bits or more.","recursive
+Params:
+ {'chunk_size': 150, 'chunk_overlap': 70}","tfidf
+Params:
+ {}","similarity
+Params:
+ {'similarity_threshold': 0.0, 'top_k': 20}","llm
+Params:
+ {'top_k_for_reranking': 7}","faiss
+Params:
+ {}","gemini
+Params:
+ {'model': 'gemini-2.5-pro-preview-05-06'}",1.0,1.0,0.75,0.86,0
+Explain different types of errors.,"In digital transmission systems, an error occurs when a bit is altered between transmission and reception, meaning a binary 1 is transmitted and a binary 0 is received, or vice versa. The context describes two general types of errors that can occur: single-bit errors and burst errors.
+
+A single-bit error is an isolated error condition that alters only one bit and does not affect the bits nearby. This type of error can occur in the presence of white noise, where a slight random deterioration of the signal-to-noise ratio is enough to cause the receiver to misinterpret a single bit.
+
+A burst error of length B is defined as a contiguous sequence of B bits where the first and last bits, along with any number of intermediate bits, are received incorrectly. According to IEEE Std 100 and ITU-T recommendation Q.9, an error burst is a group of bits in which two successive erroneous bits are always separated by fewer than a specified number (x) of correct bits; the last erroneous bit in one burst and the first in the next are separated by x or more correct bits. This means that within a burst error, there's a cluster of bits where multiple errors occur, though not necessarily all bits within that cluster are erroneous. Burst errors are more common and more challenging to handle than single-bit errors. They can be caused by impulse noise, such as electromagnetic interference or scratches on recording disks, or by fading in a mobile wireless environment. The impact of burst errors is more significant at higher data rates.","In digital transmission systems, an error occurs when a bit is altered between transmission and reception. That means, a binary 1 is transmitted and a binary 0 is received, or a binary 0 is transmitted and a binary 1 is received. Two general types of errors can occur. They are, single-bit errors and burst errors. A single-bit error is an isolated error condition that alters one bit but does not affect nearby bits. A burst error of length B is a contiguous sequence of B bits in which the first and last bits and any number of intermediate bits are received in error. Based on IEEE Std 100 and ITU-T recommendation Q.9 an error burst is defined as a group of bits in which two successive erroneous bits are always separated by less than a given number x of correct bits. The last erroneous bit in the burst and the first erroneous bit in the following burst are accordingly separated by x correct bits or more.","sentence
+Params:
+ {'max_sentences': 18}","Voyage
+Params:
+ {'model': 'voyage-3-large'}","similarity
+Params:
+ {'similarity_threshold': 0.0, 'top_k': 20}","llm
+Params:
+ {'top_k_for_reranking': 7}","faiss
+Params:
+ {}","gemini
+Params:
+ {'model': 'gemini-2.5-pro-preview-05-06'}",1.0,1.0,1.0,0.87,0
+Explain different types of errors.,"# Different Types of Errors in Digital Data Communication
+
+In digital data communication systems, errors occur when bits are altered between transmission and reception. Based on the provided context, there are two general types of errors that can occur during digital transmission:
+
+## Single-Bit Errors
+Single-bit errors are isolated error conditions that alter one bit without affecting nearby bits. These errors occur when a binary 1 is transmitted and a binary 0 is received, or vice versa. Single-bit errors typically happen in the presence of white noise, where a slight random deterioration of the signal-to-noise ratio is sufficient to confuse the receiver's decision for a single bit. These errors are relatively simpler to detect and correct compared to burst errors.
+
+## Burst Errors
+Burst errors are more common and more challenging to deal with. A burst error of length B is defined as a contiguous sequence of B bits in which the first and last bits, and any number of intermediate bits, are received in error. According to IEEE Std 100 and ITU-T recommendation Q.9, an error burst is defined as a group of bits where two successive erroneous bits are always separated by less than a given number x of correct bits. The last erroneous bit in one burst and the first erroneous bit in the following burst are separated by x or more correct bits.
+
+Burst errors can be caused by:
+- Impulse noise (unwanted noise generally created by electromagnetic interference)
+- Scratches on recording disks
+- Fading in a mobile wireless environment (deviation or weakening effect affecting a signal over a transmission media)
+
+The effects of burst errors become more significant at higher data rates. For example, an impulse noise event or a fading event of 1μs duration would result in an error burst of 10 bits at a data rate of 10 Mbps, but would cause an error burst of 100 bits at a data rate of 100 Mbps.
+
+These different types of errors require different detection and correction mechanisms to ensure reliable data transmission in digital communication systems.","In digital transmission systems, an error occurs when a bit is altered between transmission and reception. That means, a binary 1 is transmitted and a binary 0 is received, or a binary 0 is transmitted and a binary 1 is received. Two general types of errors can occur. They are, single-bit errors and burst errors. A single-bit error is an isolated error condition that alters one bit but does not affect nearby bits. A burst error of length B is a contiguous sequence of B bits in which the first and last bits and any number of intermediate bits are received in error. Based on IEEE Std 100 and ITU-T recommendation Q.9 an error burst is defined as a group of bits in which two successive erroneous bits are always separated by less than a given number x of correct bits. The last erroneous bit in the burst and the first erroneous bit in the following burst are accordingly separated by x correct bits or more.","sentence
+Params:
+ {'max_sentences': 18}","cohere
+Params:
+ {'model': 'embed-v4.0'}","hybrid
+Params:
+ {'keyword_weight': 0.6, 'top_k': 20}","jina
+Params:
+ {'top_k_for_reranking': 7, 'model': 'jina-reranker-v2-base-multilingual'}","faiss
+Params:
+ {}","claude
+Params:
+ {'model': 'claude-3-7-sonnet-20250219'}",0.95,1.0,0.75,0.9,0
+What is the concept of error-correction? what is single bit error correction?,"The concept of error correction involves the receiver using an error-correcting code that automatically corrects certain errors, a process known as forward error correction. These error-correcting codes are more advanced than error-detecting codes and necessitate the use of more redundant bits. To correct an error, it is essential to know the exact position of the error, meaning precisely which bit is erroneous, to locate the invalid bits.
+
+Single-bit error correction is the simplest case to understand the broader concept of error correction. While a single-bit error can be detected by adding a parity bit (VRC) to the data, this single additional bit is insufficient to also correct the error. For correcting a single-bit error, such as in an ASCII character, the error correction mechanism must determine which specific bit among the data bits is incorrect, and this requires the addition of more redundant bits beyond what is needed for mere detection.","Single-bit error correction
+Concept of error-correction can be easily understood by examining the simplest case of single-bit errors. As we have already seen that a single-bit error can be detected by addition of a parity bit (VRC) with the data, which needed to be send. A single additional bit can detect error, but it's not sufficient to correct that error too. For correcting an error one has to know the exact position of error, i.e. exactly which bit is in error (to locate the invalid bits). For example, to correct a single-bit error in an ASCII character, the error correction must determine which one of the seven bits is in error. To this, we have to add some additional redundant bits. If a frame consist of d data bits and r redundant bits, then the resulting n=d+r bit unit is called a codeword. The number of bits by which two codewords differ is called hamming distance. So we have (d+r) as the total number of bits, which are to be transmitted; then r must be able to indicate at least d+r+1 different values. Of these, one value means no error, and remaining d+r values indicate error location of error in each of d+r locations. So, d+r+1 states must be distinguishable by r bits, and r bits can indicates 2r states. Hence, 2r must be greater than d+r+1. 2r >= d+r+1
+The value of r must be determined by putting in the value of d in the relation. For example, if d is 7, then the smallest value of r that satisfies the above relation is 4. So the total bits,which are to be transmitted is 11 bits (d+r = 7+4 =11). Now let us examine how we can manipulate these bits to discover which bit is in error. A technique developed by R.W.Hamming provides a practical solution. The solution or coding scheme he developed is commonly known as Hamming Code. Hamming code can be applied to data units of any length and uses the relationship between the data bits and redundant bits as discussed. Figure 8.8 shows positions of redundancy bits in hamming code.Basic approach for error detection by using hamming code is as follows.
+â€¢ To each group of m information bits, K parity bits are added to form (m+k) bit code as shown in figure 8.8.
+â€¢ Location of each of the (m+k) digits is assigned a decimal value
+â€¢ The K parity bits are replaced in positions 1, 2, â€¦., 2k-1 positions. K parity checks are performed on selected digits of each codeword.
+â€¢ At the receiving end, the parity bits are recalculated. The decimal value of the k parity bits provides the bit position in error, if any. For example, data 1010, first r1 (0) is calculated considering the parity of the bit positions, 1, 3, 5 and 7. Then the parity bits r2 is calculated considering bit positions 2, 3, 6 and 7. Finally, the parity bits r4 is calculated considering bit positions 4, 5, 6 and 7 as shown. If any corruption occurs in any of the transmitted code 1010010, the bit position in error can be found out by calculating r3r2r1 at the receiving end. For example, if the received code word is 1110010, the recalculated value of r3r2r1 is 110, which indicates that bit position in error is 6, the decimal value of 110.","recursive
+Params:
+ {'chunk_size': 150, 'chunk_overlap': 70}","tfidf
+Params:
+ {}","similarity
+Params:
+ {'similarity_threshold': 0.0, 'top_k': 20}","cohere
+Params:
+ {'model': 'rerank-v3.5'}","faiss
+Params:
+ {}","gemini
+Params:
+ {'model': 'gemini-2.5-pro-preview-05-06'}",1.0,1.0,0.24,0.91,0
+What is the concept of error-correction? what is single bit error correction?,"The concept of error correction involves techniques that not only detect errors in data transmission but also rectify them. Error correction can be handled in two primary ways. The first method is backward error correction, where upon discovering an error, the receiver requests the sender to retransmit the entire data unit. The second method is forward error correction, where the receiver utilizes an error-correcting code to automatically correct certain errors without needing retransmission. Error-correcting codes are generally more advanced than error-detecting codes and necessitate a greater number of redundant bits. However, correcting multiple-bit or burst errors requires a very high number of bits, making it inefficient, which is why most error correction is limited to one, two, or at most three-bit errors.
+
+Single-bit error correction is a specific application of error correction focused on rectifying errors that affect only one bit within a data unit. The concept is best understood by examining this simplest case. While a single parity bit (like in VRC) can detect a single-bit error, it is not sufficient to correct that error. To correct an error, it is crucial to know the exact position of the erroneous bit, meaning which specific bit needs to be altered. For instance, to correct a single-bit error in an ASCII character (which typically has 7 bits), the error correction mechanism must identify which of those seven bits is incorrect. This identification and correction process requires the addition of more redundant bits beyond what is needed for mere detection.","Single-bit error correction
+Concept of error-correction can be easily understood by examining the simplest case of single-bit errors. As we have already seen that a single-bit error can be detected by addition of a parity bit (VRC) with the data, which needed to be send. A single additional bit can detect error, but it's not sufficient to correct that error too. For correcting an error one has to know the exact position of error, i.e. exactly which bit is in error (to locate the invalid bits). For example, to correct a single-bit error in an ASCII character, the error correction must determine which one of the seven bits is in error. To this, we have to add some additional redundant bits. If a frame consist of d data bits and r redundant bits, then the resulting n=d+r bit unit is called a codeword. The number of bits by which two codewords differ is called hamming distance. So we have (d+r) as the total number of bits, which are to be transmitted; then r must be able to indicate at least d+r+1 different values. Of these, one value means no error, and remaining d+r values indicate error location of error in each of d+r locations. So, d+r+1 states must be distinguishable by r bits, and r bits can indicates 2r states. Hence, 2r must be greater than d+r+1. 2r >= d+r+1
+The value of r must be determined by putting in the value of d in the relation. For example, if d is 7, then the smallest value of r that satisfies the above relation is 4. So the total bits,which are to be transmitted is 11 bits (d+r = 7+4 =11). Now let us examine how we can manipulate these bits to discover which bit is in error. A technique developed by R.W.Hamming provides a practical solution. The solution or coding scheme he developed is commonly known as Hamming Code. Hamming code can be applied to data units of any length and uses the relationship between the data bits and redundant bits as discussed. Figure 8.8 shows positions of redundancy bits in hamming code.Basic approach for error detection by using hamming code is as follows.
+â€¢ To each group of m information bits, K parity bits are added to form (m+k) bit code as shown in figure 8.8.
+â€¢ Location of each of the (m+k) digits is assigned a decimal value
+â€¢ The K parity bits are replaced in positions 1, 2, â€¦., 2k-1 positions. K parity checks are performed on selected digits of each codeword.
+â€¢ At the receiving end, the parity bits are recalculated. The decimal value of the k parity bits provides the bit position in error, if any. For example, data 1010, first r1 (0) is calculated considering the parity of the bit positions, 1, 3, 5 and 7. Then the parity bits r2 is calculated considering bit positions 2, 3, 6 and 7. Finally, the parity bits r4 is calculated considering bit positions 4, 5, 6 and 7 as shown. If any corruption occurs in any of the transmitted code 1010010, the bit position in error can be found out by calculating r3r2r1 at the receiving end. For example, if the received code word is 1110010, the recalculated value of r3r2r1 is 110, which indicates that bit position in error is 6, the decimal value of 110.","recursive
+Params:
+ {'chunk_size': 150, 'chunk_overlap': 70}","tfidf
+Params:
+ {}","similarity
+Params:
+ {'similarity_threshold': 0.0, 'top_k': 20}","llm
+Params:
+ {'top_k_for_reranking': 7}","faiss
+Params:
+ {}","gemini
+Params:
+ {'model': 'gemini-2.5-pro-preview-05-06'}",0.95,1.0,1.0,0.89,0

@@ -1,120 +1,74 @@
-import streamlit as st
-import os
-import sys
+from typing import Dict, List, Any, Callable, Tuple
+from RAG_App.UI.UI_Components import UIComponents
+from RAG_App.infrastructure.Common.rag_pipeline import RAGPipeline
+from RAG_App.Utils.RAG_Constants import ChunkerType, EmbedderType, RetrieverType, RerankerType
+from RAG_App.infrastructure.Common import RAG_Constants as constants
 import pandas as pd
-from typing import Dict, List, Any, Optional
-from rag_modular.Common.rag_pipeline import RAGPipeline
-from rag_modular.Common.config_manager import ConfigManager
-import rag_modular.Common.RAG_Constants as constants
-from rag_modular.Common.RAG_Constants import (
-    ChunkerType, EmbedderType,GeminiLLMModel, EvaluatorType, RetrieverType, RerankerType)
 
-class UIComponents:
+from RAG_App.services.services import DocumentProcessor
+from RAG_App.UI.flashcard_display import FlashcardDisplay
+from RAG_App.config import ConfigManager
+class Sidebar:
+    """Sidebar component for the RAG application"""
+    def __init__(self):
+        """Initialize the sidebar with all required use cases"""
+        UIComponents.initialize_session_state(
+            {
+            "messages": [],
+            "documents": None,
+            "chunks": None,
+            "LLM_Model_Options": [e.value for e in constants.GeminiLLMModel],
+            "LLM_Service": constants.LLMServiceType.GEMINI.value,
+        }
+        )
+        UIComponents.initialize_pipeline(ConfigManager())
+    
+        
+    def get_pipeline(self) -> RAGPipeline:
+        """Get or initialize the pipeline"""
+        
+        if not UIComponents.get_session_state_variable("pipeline_created", False):
+            with UIComponents.display_spinner("Initializing RAG pipeline..."):
+                UIComponents.set_session_state_variable(var_name='pipeline', value=RAGPipeline(UIComponents.get_session_state_variable('pipeline_config')))
+                UIComponents.set_session_state_variable(var_name="pipeline_created",value=True)
+        return UIComponents.get_session_state_variable("pipeline", None)
+    
     @staticmethod
     def initialize_page():
-        st.set_page_config(
-            page_title="RAG Modular",
-            page_icon=":notebook:",
-            layout="wide"
-        )
+        UIComponents.initialize_page()
     
     @staticmethod
     def create_tabs():
-        return st.tabs(["Chat with Documents", "Performance Metrics", "FlashCards"])
-
-class DocumentProcessor:
-    def __init__(self, pipeline: RAGPipeline):
-        self.pipeline = pipeline
-        
-    def process_uploaded_file(self, uploaded_file) -> tuple:
-        """Process an uploaded document and return documents and chunks"""
-        texts = self.pipeline.extractText(uploaded_file)
-        return self.pipeline.process_document(uploaded_file, texts)
-
-class MetricsDisplay:
-    @staticmethod
-    def display_metrics(metrics: Dict[str, float]):
-        """Display evaluation metrics in a formatted way"""
-        st.write("**Evaluation Metrics:**")
-        metrics_df = pd.DataFrame({
-            "Metric": list(metrics.keys()),
-            "Score": list(metrics.values())
-        })
-        st.dataframe(metrics_df)
-        overall_score = sum(metrics.values()) / len(metrics)
-        st.write(f"Overall Score: {overall_score}")
-        st.bar_chart(metrics_df.set_index("Metric"))
-        return metrics_df
-
-class RAGApp:
-    def __init__(self):
-        self.ui = UIComponents()
-        self.initialize_session_state()
-        
-    def initialize_session_state(self):
-        """Initialize all session state variables"""
-        if "pipeline" not in st.session_state:
-            config_manager = ConfigManager()
-            st.session_state.pipeline_config = config_manager
-            st.session_state.pipeline_created = False
-        
-        if "documents" not in st.session_state:
-            st.session_state.documents = None
-        if "chunks" not in st.session_state:
-            st.session_state.chunks = None
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-        if "LLM_Model_Options" not in st.session_state:
-            st.session_state.LLM_Model_Options = [e.value for e in GeminiLLMModel]
-        if "LLM_Service" not in st.session_state:
-            st.session_state.LLM_Service = constants.LLMServiceType.GEMINI.value
-
+        return UIComponents.create_tabs(["Chat with Documents", "Performance Metrics", "FlashCards"])
+    
     def run(self):
         """Main application entry point"""
-        self.ui.initialize_page()
-        tab1, tab2 = self.ui.create_tabs()
+        self.initialize_page()
+        tab1, tab2, tab3 = self.create_tabs()
         
         with tab1:
             self.render_chat_interface()
         with tab2:
             self.render_metrics_interface()
-
-    def get_pipeline(self):
-        """Get or initialize the pipeline"""
-        if not st.session_state.get("pipeline_created", False):
-            with st.spinner("Initializing RAG pipeline..."):
-                st.session_state.pipeline = RAGPipeline(st.session_state.pipeline_config)
-                st.session_state.pipeline_created = True
-        return st.session_state.pipeline
+        with tab3:
+            pass
 
     def render_chat_interface(self):
         """Render the chat interface tab"""
-        with st.spinner("Loading application..."):
-            self.load_dependencies()
-        
-        self.render_sidebar()
-        self.render_chat_area()
+        with UIComponents.display_spinner("Loading application..."):
+            self.render_sidebar()
+            self.render_chat_area()
 
     def render_metrics_interface(self):
         """Render the metrics interface tab"""
         RagPipelineStepToGetCostAndTimeDict = self.get_pipeline_metrics()
         
-        st.write("This section provides the performance and cost metrics for each step in the RAG pipeline.")
-        st.write("The metrics include time taken for processing and estimated cost for each step.")
-        st.write("Note: The cost is an estimate based on the current configuration and may vary based on actual usage.")
+        UIComponents.write("This section provides the performance and cost metrics for each step in the RAG pipeline.")
+        UIComponents.write("The metrics include time taken for processing and estimated cost for each step.")
+        UIComponents.write("Note: The cost is an estimate based on the current configuration and may vary based on actual usage.")
         
         for key in RagPipelineStepToGetCostAndTimeDict.keys():
             self.display_pipeline_step_metrics(key, RagPipelineStepToGetCostAndTimeDict[key])
-
-    def load_dependencies(self):
-        """Load required dependencies"""
-        from rag_modular.Common.RAG_Constants import (
-            ChunkerType, EmbedderType,
-            RetrieverType, RerankerType,
-            EvaluatorType, GeminiLLMModel
-        )
-        import rag_modular.Common.RAG_Constants as constants
-        sys.path.append(os.path.join(os.path.dirname(__file__), 'rag_modular'))
 
     def get_pipeline_metrics(self):
         """Get metrics for all pipeline steps"""
@@ -128,12 +82,12 @@ class RAGApp:
             constants.CONFIG_VECTOR_STORE: pipeline.get_vector_store_cost_and_time(),
             constants.CONFIG_LLM: pipeline.get_llm_service_cost_and_time()
         }
-
+    
     def display_pipeline_step_metrics(self, key: str, metrics: tuple):
         """Display metrics for a single pipeline step"""
         cost, time_taken = metrics
-        with st.expander(f"📊 {key} - Performance & Cost", expanded=False):
-            col1, col2, col3 = st.columns(3)
+        with UIComponents.create_expander(f"📊 {key} - Performance & Cost", expanded=False):
+            col1, col2, col3 = UIComponents.create_columns(3)
             col1.metric("🕒 Time Taken", time_taken)
             col2.metric("💲 Estimated Cost", cost)
             cfg = self.get_pipeline().config_manager.get_config(key)
@@ -142,40 +96,34 @@ class RAGApp:
 
     def render_chat_area(self):
         """Render the main chat area"""
-        st.subheader("Chat with your Documents")
+        UIComponents.create_subheader("Chat with your Documents")
         
         # Display chat history
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+        for message in UIComponents.get_session_state_messages():
+            UIComponents.display_message_with_role(role=message["role"], message=message['content'])
 
         # Chat input
-        if prompt := st.chat_input("Ask a question about your documents"):
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
-            with st.chat_message("assistant"):
-                self.process_chat_input(prompt)
+        if prompt := UIComponents.chat_input("Ask a question about your documents"):
+            UIComponents.add_message_to_chat(role='user', content=prompt)
+            UIComponents.display_message_with_role(role='user', message=prompt)
+            UIComponents.process_chat_input(role='assistant', content=prompt, pipeline=self.get_pipeline(), prompt=prompt)
 
     def process_chat_input(self, prompt: str):
         """Process user chat input and generate response"""
-        if st.session_state.documents:
-            with st.spinner("🤔 Thinking...", show_time=True):
+        if UIComponents.get_session_state_variable("documents"):
+            with UIComponents.display_spinner("🤔 Thinking..."):
                 pipeline = self.get_pipeline()
                 response = pipeline.query(prompt)
-                st.markdown(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
-                # st.markdown(response["answer"])
-                # st.session_state.messages.append({
-                #     "role": "assistant",
-                #     "content": response["answer"]
-                # })
+                UIComponents.write(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
+                UIComponents.write(response["answer"])
+                UIComponents.add_message_to_chat(role="assistant", content=response["answer"])
         else:
-            st.error("Please upload and process documents first.")
+            UIComponents.display_error("Please upload and process documents first.")
 
     def render_sidebar(self):
         """Render the sidebar with all configuration options"""
-        with st.sidebar:
-            st.subheader("Configuration")
+        with UIComponents.create_sidebar():
+            UIComponents.create_subheader("Configuration")
             self.render_config_tabs()
             self.render_chat_response_config()
             self.render_upload_file_section()
@@ -183,7 +131,7 @@ class RAGApp:
 
     def render_config_tabs(self):
         """Render configuration tabs in sidebar"""
-        config_tabs = st.tabs([
+        config_tabs = UIComponents.create_tabs([
             constants.TEXT_PROCESSING_DISPLAY_NAME, 
             constants.RETRIEVAL_DISPLAY_NAME, 
             constants.EVALUATION_DISPLAY_NAME
@@ -199,41 +147,40 @@ class RAGApp:
 
     def render_text_processing_config(self):
         """Render text processing configuration options"""
-        st.write(f"**{constants.TEXT_PROCESSING_DISPLAY_NAME}**")
+        UIComponents.write(f"**{constants.TEXT_PROCESSING_DISPLAY_NAME}**")
         options, index = self.get_ui_options(option_type=ChunkerType, config_name=constants.CONFIG_CHUNKER)
-        chunker_type = st.selectbox(
+        chunker_type = UIComponents.selectbox(
             constants.CHUNKER_TYPE_DISPLAY_NAME,
             options=options,
             index=index
         )
-        
-        
-        chunker_params = self.get_chunker_config(chunker_type)
-        vector_store = self.get_vector_store_config()
-        embedder_params = self.get_embedder_config()
-        
-        with st.spinner("Applying Text Processing Params"):
-            if st.button("Apply Text Processing Params", key="apply_text_proc"):
-                self.apply_text_processing_config(chunker_params, vector_store, embedder_params)
+
+        chunk_size = UIComponents.display_slider(constants.CHUNK_SIZE_DISPLAY_NAME, 10, 10000, 150)
+        chunk_overlap = UIComponents.display_slider(constants.CHUNK_OVERLAP_DISPLAY_NAME, 0, 3000, 70)
+
+        with UIComponents.display_spinner("Applying Text Processing Config"):
+            if UIComponents.create_button("Apply Text Processing Config"):
+                self.apply_text_processing_config(chunker_type, chunk_size, chunk_overlap)
+                UIComponents.display_success("Text processing configuration updated.")
 
     def render_retrieval_config(self):
         """Render retrieval configuration options"""
-        st.write(f"**{constants.RETRIEVAL_DISPLAY_NAME}**")
+        UIComponents.write(f"**{constants.RETRIEVAL_DISPLAY_NAME}**")
         
         retriever_config = self.get_retriever_config()
         reranker_config = self.get_reranker_config()
 
-        with st.spinner("Applying Retrieval and Reranker Params"):
-            if st.button("Applying Retrieval and Reranker Params", key="apply_retrieval"):
+        with UIComponents.display_spinner("Applying Retrieval and Reranker Params"):
+            if UIComponents.create_button("Applying Retrieval and Reranker Params", key="apply_retrieval"):
                 self.apply_Retrieval_and_Reranker_config(retriever_config, reranker_config)
 
     def render_evaluation_config(self):
         """Render evaluation configuration options"""
-        st.write(f"**{constants.EVALUATION_DISPLAY_NAME}**")
+        UIComponents.write(f"**{constants.EVALUATION_DISPLAY_NAME}**")
         
         options, index = self.get_ui_options(option_type=constants.EvaluatorType, config_name=constants.CONFIG_EVALUATOR)
 
-        evaluator_type = st.selectbox(
+        evaluator_type = UIComponents.selectbox(
             "Evaluator Type",
             options=options,
             index=index
@@ -241,22 +188,25 @@ class RAGApp:
         
         evaluator_config = {constants.CONFIG_TYPE_PARAM: evaluator_type}
         
-        with st.spinner("Applying Evaluation Params"):
-            if st.button("Apply Evaluation Params", key="apply_evaluation"):
+        with UIComponents.display_spinner("Applying Evaluation Params"):
+            if UIComponents.create_button("Apply Evaluation Params", key="apply_evaluation"):
                 self.get_pipeline().update_component(constants.CONFIG_EVALUATOR, evaluator_config)
-                st.success("Evaluation configuration updated.")
+                UIComponents.display_success("Evaluation configuration updated.")
 
     def get_ui_options(self, option_type, config_name: str):
         options = [e.value for e in option_type]
-        config = st.session_state.pipeline_config.get_config(config_name)
+        import streamlit as st
+        st_config = st.session_state.pipeline_config.get_config(config_name)
+        print("STCONFIG:", st_config)
+        config = UIComponents.get_session_state_variable("pipeline_config").get_config(config_name)
         index = options.index(config[constants.CONFIG_TYPE_PARAM])
-        return options,index
+        return options, index
 
     def render_evaluation_section(self):
         # Evaluation section
-        st.subheader("Evaluation")
-        ground_truth = st.text_area(constants.GROUND_TRUTH_DISPLAY_NAME, value=constants.GROUND_TRUTH_DEFAULT_VALUE)
-        if st.button("Evaluate Last Query"):
+        UIComponents.create_subheader("Evaluation")
+        ground_truth = UIComponents.create_text_area(constants.GROUND_TRUTH_DISPLAY_NAME, value=constants.GROUND_TRUTH_DEFAULT_VALUE, key="ground_truth_input")
+        if UIComponents.create_button("Evaluate Last Query", key="evaluate_last_query"):
             # Initialize pipeline when needed
             pipeline = self.get_pipeline()
             if hasattr(pipeline, constants.LAST_QUERY):
@@ -264,69 +214,69 @@ class RAGApp:
                     metrics = pipeline.evaluate(ground_truths=ground_truth)
                     
                     # Display metrics in a nice format
-                    st.write("**Evaluation Metrics:**")
+                    UIComponents.write("**Evaluation Metrics:**")
                     
                     metrics_df = pd.DataFrame({
                         "Metric": list(metrics.keys()),
                         "Score": list(metrics.values())
                     })
-                    st.dataframe(metrics_df)
+                    UIComponents.display_dataframe(metrics_df)
                     overallScore = 0
                     for score in list(metrics.values()):
                         overallScore += score
                     
                     overallScore = overallScore / metrics_df.count()
-                    st.write("Overall Score: " + str(overallScore))
+                    UIComponents.write("Overall Score: " + str(overallScore))
                     # Show a bar chart of metrics
-                    st.bar_chart(metrics_df.set_index("Metric"))
+                    UIComponents.display_bar_chart(metrics_df.set_index("Metric"))
 
                     # Store metrics in session state
-                    st.session_state.last_evaluation = metrics
+                    UIComponents.set_session_state_variable("last_evaluation", metrics)
                 except Exception as e:
-                    st.error(f"Error during evaluation: {str(e)}")
+                    UIComponents.display_error(f"Error during evaluation: {str(e)}")
             else:
-                st.warning("No query to evaluate. Ask a question first.")
+                UIComponents.display_warning("No query to evaluate. Ask a question first.")
 
     def render_upload_file_section(self):
         """Render file upload section in sidebar"""
-        st.subheader("Upload and Process Documents")
-        uploaded_file = st.file_uploader(
+        UIComponents.create_subheader("Upload and Process Documents")
+        uploaded_file = UIComponents.create_file_uploader(
             "Upload Document",
-            type=["pdf", "csv", "txt", "docx"],
+            file_types=["pdf", "csv", "txt", "docx"],
             accept_multiple_files=False
         )
         doc_processor = DocumentProcessor(self.get_pipeline())
         if uploaded_file:
-            if st.button("Process Document"):
-                with st.spinner("Processing document..."):
+            if UIComponents.create_button("Process Document", key="process_document"):
+                with UIComponents.display_spinner("Processing document..."):
                     # Only initialize pipeline when needed
                     pipeline = self.get_pipeline()
                     documents, chunks = doc_processor.process_uploaded_file(uploaded_file)
                     
                     if documents and chunks:
-                        st.session_state.documents = documents
-                        st.session_state.chunks = chunks
-                        st.success(f"Processed {len(documents)} chunks from document")
+                        UIComponents.set_session_state_variable("documents", documents)
+                        UIComponents.set_session_state_variable("chunks", chunks)
+                        UIComponents.display_success(f"Processed {len(documents)} chunks from document")
                     else:
-                        st.warning("No valid content was extracted from the document")
+                        UIComponents.display_warning("No valid content was extracted from the document")
 
     def get_retriever_config(self) -> dict[str, Any]:
 
         options, index = self.get_ui_options(option_type=constants.RetrieverType, config_name=constants.CONFIG_RETRIEVER)
 
-        retriever_type = st.selectbox(
+        retriever_type = UIComponents.selectbox(
             "Retriever Type",
             options=options,
             index=index
         )
 
-        top_k = st.slider("Top-K-Docs for Retrieval", 1, 20, 5)
+        top_k = UIComponents.display_slider("Top-K-Docs for Retrieval", 1, 20, 5)
         retriever_params = {}
         if retriever_type == RetrieverType.SIMILARITY.value:
-            similarity_threshold = st.slider(constants.SIMILARITY_THRESHOLD_DISPLAY_NAME, 0.0, 1.0, 0.0, 0.01)
+            similarity_threshold = UIComponents.display_slider(constants.SIMILARITY_THRESHOLD_DISPLAY_NAME, 0.0, 1.0, 0.0, 0.01)
             retriever_params = {constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: similarity_threshold, constants.CONFIG_TOP_K_PARAM: top_k}
         elif retriever_type == RetrieverType.HYBRID.value:
-            keyword_weight = st.slider(constants.KEYWORD_WEIGHT_DISPLAY_NAME, 0.0, 1.0, 0.3, 0.05)
+            keyword_weight = UIComponents.display_slider(constants.KEYWORD_WEIGHT_DISPLAY_NAME, 0.0, 1.0, 0.3, 0.05)
             retriever_params = {constants.CONFIG_KEYWORD_WEIGHT: keyword_weight, constants.CONFIG_TOP_K_PARAM: top_k}
         
         retriever_config = {
@@ -339,19 +289,19 @@ class RAGApp:
     def get_reranker_config(self) -> dict[str, Any]:
         options, index = self.get_ui_options(option_type=constants.RerankerType, config_name=constants.CONFIG_RERANKER)
 
-        re_ranker_type = st.selectbox(
+        re_ranker_type = UIComponents.selectbox(
         "Re-ranker Type",
         options=options,
         index=index
         )
 
-        top_k_for_reranking = st.slider("Top-K-Docs for Re-ranking", 1, 20, 5, key="top_k_rerank")
+        top_k_for_reranking = UIComponents.display_slider("Top-K-Docs for Re-ranking", 1, 20, 5, step=1)
         re_ranker_params = {
             constants.CONFIG_TOP_K_FOR_RERANKING_PARAM: top_k_for_reranking
         }
         
         if re_ranker_type in [RerankerType.LLM.value, RerankerType.COHERE.value, RerankerType.JINA.value]:
-            model = st.selectbox(
+            model = UIComponents.selectbox(
                 constants.MODEL_NAME_DISPLAY_NAME,
                 options=self.get_reranker_model_options(
                 reranker_type=re_ranker_type),
@@ -368,25 +318,25 @@ class RAGApp:
 
     def render_chat_response_config(self):
         """Render chat response configuration"""
-        st.divider()
-        st.write(f"**{constants.CHAT_RESPONSE_CONFIG_DISPLAY_NAME}**")
+        UIComponents.display_divider()
+        UIComponents.write(f"**{constants.CHAT_RESPONSE_CONFIG_DISPLAY_NAME}**")
         options, index = self.get_ui_options(option_type=constants.LLMServiceType, config_name=constants.CONFIG_LLM)
 
-        llm_service = st.selectbox(
+        llm_service = UIComponents.selectbox(
             constants.LLM_CHAT_SERVICE, 
             options=options, 
             index=index
         )
-        st.session_state.LLM_Service = llm_service
+        UIComponents.set_session_state_variable("LLM_Service", llm_service)
         
         llm_model_options = self.get_llm_model_options(llm_service)
 
         options = list(llm_model_options.keys())
-        default_option = st.session_state.pipeline_config.get_config(constants.CONFIG_LLM)[constants.CONFIG_PARAM][constants.CONFIG_MODEL]
+        default_option = UIComponents.get_session_state_variable("pipeline_config").get_config(constants.CONFIG_LLM)[constants.CONFIG_PARAM][constants.CONFIG_MODEL]
 
         # Get the index
         index = options.index(default_option)
-        user_selected_llm_model = st.selectbox(
+        user_selected_llm_model = UIComponents.selectbox(
             constants.LLM_CHAT_SERVICE, 
             options=llm_model_options.keys(), 
             index=index
@@ -399,34 +349,32 @@ class RAGApp:
             }
         }
         
-        if st.button("Apply Chat Response Config", key="apply_chat_response"):
+        if UIComponents.create_button("Apply Chat Response Config", key="apply_chat_response"):
             self.get_pipeline().update_component(constants.CONFIG_LLM, chat_response_config)
-            st.success("Chat response configuration updated.")
+            UIComponents.display_success("Chat response configuration updated.")
 
     def render_test_all_configs_section(self):
-        st.divider()
-        st.subheader("Test All Configurations")
-        st.write("Click the button below to test all configurations with different combinations of chunkers, embedder, vector store, and reranker.")
-        # import rag_modular.Testing.rag_evaluation_v2 as test_rag_combinations
-        # if st.button("Test All Configurations", key="test_all_combinations"):
-        #     # Only import and run when button is clicked
-        #     test_rag_combinations.test_rag_combinations()
+        UIComponents.create_subheader("Test All Configurations")
+        UIComponents.write("Click the button below to test all configurations with different combinations of chunkers, embedder, vector store, and reranker.")
+
+        if UIComponents.create_button("Test All Configurations", key="test_all_combinations"):
+            UIComponents.display_error("Testing functionality is currently unavailable.")
 
     def get_chunker_config(self, chunker_type: str) -> dict:
         """Get parameters for the selected chunker type"""
         chunker_params = {}
         if chunker_type == ChunkerType.RECURSIVE.value:
-            chunk_size = st.slider(constants.CHUNK_SIZE_DISPLAY_NAME, 10, 10000, 150)
-            chunk_overlap = st.slider(constants.CHUNK_OVERLAP_DISPLAY_NAME, 0, 3000, 70)
+            chunk_size = UIComponents.display_slider(constants.CHUNK_SIZE_DISPLAY_NAME, 10, 10000, 150)
+            chunk_overlap = UIComponents.display_slider(constants.CHUNK_OVERLAP_DISPLAY_NAME, 0, 3000, 70)
             chunker_params = {
                 constants.CONFIG_CHUNK_SIZE_PARAM: chunk_size,
                 constants.CONFIG_CHUNK_OVERLAP_PARAM: chunk_overlap
             }
         elif chunker_type == ChunkerType.SEMANTIC.value:
-            min_chunk_size = st.number_input(constants.MIN_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 600)
-            max_chunk_size = st.number_input(constants.MAX_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 110)
-            similarity_threshold = st.text_area(constants.SIMILARITY_THRESHOLD_DISPLAY_NAME, 0.65)
-            model_name = st.selectbox(
+            min_chunk_size = UIComponents.create_number_input(constants.MIN_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 600)
+            max_chunk_size = UIComponents.create_number_input(constants.MAX_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 110)
+            similarity_threshold = UIComponents.create_text_area(constants.SIMILARITY_THRESHOLD_DISPLAY_NAME, 0.65)
+            model_name = UIComponents.selectbox(
                 constants.MODEL_NAME_DISPLAY_NAME,
                 options=[
                     constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI,
@@ -440,7 +388,7 @@ class RAGApp:
                 constants.CONFIG_MODEL_NAME: model_name
             }
         elif chunker_type == ChunkerType.SENTENCE.value:
-            max_sentences = st.slider(constants.MAX_SENTENCES_DISPLAY_NAME, 1, 20, 5)
+            max_sentences = UIComponents.display_slider(constants.MAX_SENTENCES_DISPLAY_NAME, 1, 20, 5)
             chunker_params = {constants.CONFIG_MAX_SENTENCES: max_sentences}
         chunker_config = {
             constants.CONFIG_TYPE_PARAM: chunker_type,
@@ -450,11 +398,11 @@ class RAGApp:
 
     def get_vector_store_config(self):
         """Configure vector store settings"""
-        st.divider()
+        UIComponents.display_divider()
 
         options, index = self.get_ui_options(option_type=constants.VectorStore, config_name=constants.CONFIG_VECTOR_STORE)
 
-        vector_store = st.selectbox(
+        vector_store = UIComponents.selectbox(
             constants.VECTOR_STORE_DISPLAY_NAME,
             options=options,
             index=index
@@ -476,10 +424,10 @@ class RAGApp:
 
     def get_embedder_config(self):
         """Configure embedder settings"""
-        st.divider()
+        UIComponents.display_divider()
         options, index = self.get_ui_options(option_type=constants.EmbedderType, config_name=constants.CONFIG_EMBEDDER)
 
-        embedder_type = st.selectbox(
+        embedder_type = UIComponents.selectbox(
             constants.EMBEDDER_TYPE_DISPLAY_NAME,
             options=options,
             index=index
@@ -487,7 +435,7 @@ class RAGApp:
         
         if embedder_type != EmbedderType.TFIDF.value:
             emb_options = self.get_embedder_options(embedder_type)
-            emb_model = st.selectbox(
+            emb_model = UIComponents.selectbox(
                 constants.EMBED_MODEL_DISPLAY_NAME,
                 options=[e.value for e in emb_options]
             )
@@ -521,7 +469,7 @@ class RAGApp:
     def get_reranker_model_options(self, reranker_type: str) -> dict:
         """Get re-ranker model options based on the selected type"""
         if reranker_type == RerankerType.LLM.value:
-            return self.get_llm_model_options(st.session_state.LLM_Service)
+            return self.get_llm_model_options(UIComponents.get_session_state_variable("LLM_Service"))
         elif reranker_type == RerankerType.COHERE.value:
             return {model.value: model for model in constants.CohereLLMModel}
         elif reranker_type == RerankerType.JINA.value:
@@ -534,18 +482,11 @@ class RAGApp:
         self.get_pipeline().update_component(constants.CONFIG_EMBEDDER, embedder_params)
         self.get_pipeline().update_component(constants.CONFIG_VECTOR_STORE, vector_store)
         
-        st.success("Text processing configuration updated.")
+        UIComponents.display_success("Text processing configuration updated.")
     
     def apply_Retrieval_and_Reranker_config(self, retriever_config, re_ranker_config):
         """Apply text processing configuration to the pipeline"""
         self.get_pipeline().update_component(constants.CONFIG_RETRIEVER, retriever_config)
         self.get_pipeline().update_component(constants.CONFIG_RERANKER, re_ranker_config)
         
-        st.success("Retrieval and Reranking configuration updated.")
-
-def main():
-    app = RAGApp()
-    app.run()
-
-if __name__ == "__main__":
-    main()
+        UIComponents.display_success("Retrieval and Reranking configuration updated.")
