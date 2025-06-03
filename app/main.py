@@ -1,83 +1,36 @@
-"""
-Main Streamlit Application Entry Point
-"""
 import streamlit as st
-from PIL import Image
-from io import BytesIO
 
-# Import services
-from services.gemini_service import GeminiService
-from services.document_service import DocumentService
-from services.rag_service import RagService
+def main():
+    st.title("AI Chatbot")
 
-# Import UI components
-from ui.chat_interface import ChatInterface
-from ui.image_editor import ImageEditor
-from ui.image_generator import ImageGenerator
+    # Sidebar for settings or navigation
+    st.sidebar.title("Settings")
+    # Add any settings or navigation options here
 
-# Import utilities
-from utils.constants import (
-    APP_TITLE, TAB_CHAT, TAB_EDIT_IMAGE, TAB_GENERATE_IMAGE, 
-    MODEL_CHAT, MODEL_IMAGE_GENERATION, MODEL_IMAGE_EDITING,
-    CONTEXT_CHAT, CONTEXT_MAIN, CONTEXT_IMAGE_GENERATION,
-    CSS_CHAT_INPUT
-)
-from utils.session_manager import SessionManager
+    # Main chat interface
+    st.header("Chat with your documents")
 
-# Set page title
-st.set_page_config(page_title=APP_TITLE, layout="wide")
-st.title(APP_TITLE)
+    # Placeholder for chat messages
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-# Apply custom CSS
-st.markdown(CSS_CHAT_INPUT, unsafe_allow_html=True)
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-# Initialize services
-@st.cache_resource
-def initialize_services():
-    """Initialize and cache services"""
-    gemini_service = GeminiService(api_key=st.secrets["GEMINI_API_KEY"])
-    document_service = DocumentService()
-    
-    return gemini_service, document_service, rag_service
+    # Input for user query
+    if prompt := st.chat_input("Ask a question:"):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-# Initialize session manager
-session_manager = SessionManager()
+        # Placeholder for AI response
+        # In a real app, you would process the prompt and generate an AI response here
+        ai_response = f"Echo: {prompt}"  # Replace with actual AI logic
 
-# Initialize services
-gemini_service, document_service, rag_service = initialize_services()
+        st.session_state.messages.append({"role": "assistant", "content": ai_response})
+        with st.chat_message("assistant"):
+            st.markdown(ai_response)
 
-# Create tabs
-chat_tab, edit_image_tab, generate_image_tab = st.tabs([
-    TAB_CHAT, 
-    TAB_EDIT_IMAGE, 
-    TAB_GENERATE_IMAGE
-])
-
-# Set up chat context
-chat_context = CONTEXT_CHAT.format(CONTEXT_MAIN)
-
-# Render UI components in their respective tabs
-with chat_tab:
-    chat_interface = ChatInterface(
-        gemini_service=gemini_service,
-        session_manager=session_manager,
-        model_name=MODEL_CHAT,
-        context=chat_context
-    )
-    chat_interface.render()
-
-with edit_image_tab:
-    image_editor = ImageEditor(
-        gemini_service=gemini_service,
-        model_name=MODEL_IMAGE_EDITING
-    )
-    image_editor.render()
-
-with generate_image_tab:
-    image_generator = ImageGenerator(
-        gemini_service=gemini_service,
-        session_manager=session_manager,
-        model_name=MODEL_IMAGE_GENERATION,
-        context=CONTEXT_IMAGE_GENERATION
-    )
-    image_generator.render()
+if __name__ == "__main__":
+    main()
