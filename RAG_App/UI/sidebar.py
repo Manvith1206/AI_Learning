@@ -8,6 +8,8 @@ import pandas as pd
 from services.services import DocumentProcessor
 from UI.flashcard_display import FlashcardDisplay
 from config import ConfigManager
+import Utils.Utils
+
 class Sidebar:
     """Sidebar component for the RAG application"""
     def __init__(self):
@@ -22,16 +24,6 @@ class Sidebar:
         }
         )
         UIComponents.initialize_pipeline(ConfigManager())
-    
-        
-    def get_pipeline(self) -> RAGPipeline:
-        """Get or initialize the pipeline"""
-        
-        if not UIComponents.get_session_state_variable("pipeline_created", False):
-            with UIComponents.display_spinner("Initializing RAG pipeline..."):
-                UIComponents.set_session_state_variable(var_name='pipeline', value=RAGPipeline(UIComponents.get_session_state_variable('pipeline_config')))
-                UIComponents.set_session_state_variable(var_name="pipeline_created",value=True)
-        return UIComponents.get_session_state_variable("pipeline", None)
     
     @staticmethod
     def initialize_page():
@@ -51,7 +43,12 @@ class Sidebar:
         with tab2:
             self.render_metrics_interface()
         with tab3:
-            pass
+            self.render_flashcards()
+    
+    def render_flashcards(self):
+        """Render the flashcard display interface"""
+        flashcardDisplay = FlashcardDisplay(on_generate_flashcards=[])
+        flashcardDisplay.render()
 
     def render_chat_interface(self):
         """Render the chat interface tab"""
@@ -72,7 +69,7 @@ class Sidebar:
 
     def get_pipeline_metrics(self):
         """Get metrics for all pipeline steps"""
-        pipeline = self.get_pipeline()
+        pipeline = Utils.Utils.get_pipeline()
         return {
             constants.CONFIG_CHUNKER: pipeline.get_chunker_cost_and_time(),
             constants.CONFIG_EMBEDDER: pipeline.get_embedder_cost_and_time(),
@@ -90,7 +87,7 @@ class Sidebar:
             col1, col2, col3 = UIComponents.create_columns(3)
             col1.metric("🕒 Time Taken", time_taken)
             col2.metric("💲 Estimated Cost", cost)
-            cfg = self.get_pipeline().config_manager.get_config(key)
+            cfg = Utils.Utils.get_pipeline().config_manager.get_config(key)
             name = cfg.get(constants.CONFIG_TYPE_PARAM)
             col3.markdown(f"RAG Pipeline Step Name: \n{name}")
 
@@ -104,17 +101,17 @@ class Sidebar:
 
         print("Chat Messages:", UIComponents.get_session_state_messages())
         # Chat input
-        if prompt := UIComponents.chat_input("Ask a question about your documents"):
+        if prompt := UIComponents.chat_input("Ask a question about your documents", key="chat_input"):
             UIComponents.add_message_to_chat(role='user', content=prompt)
             UIComponents.display_message_with_role(role='user', message=prompt)
-            UIComponents.process_chat_input(role='assistant', content=prompt, pipeline=self.get_pipeline(), prompt=prompt)
+            UIComponents.process_chat_input(role='assistant', content=prompt, pipeline=Utils.Utils.get_pipeline(), prompt=prompt)
 
     def process_chat_input(self, prompt: str):
         """Process user chat input and generate response"""
         print("Processing chat input:", prompt)
         if UIComponents.get_session_state_variable("documents"):
             with UIComponents.display_spinner("🤔 Thinking..."):
-                pipeline = self.get_pipeline()
+                pipeline = Utils.Utils.get_pipeline()
                 response = pipeline.query(prompt)
                 UIComponents.write(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
                 UIComponents.write(response["answer"])
@@ -192,7 +189,7 @@ class Sidebar:
         
         with UIComponents.display_spinner("Applying Evaluation Params"):
             if UIComponents.create_button("Apply Evaluation Params", key="apply_evaluation"):
-                self.get_pipeline().update_component(constants.CONFIG_EVALUATOR, evaluator_config)
+                Utils.Utils.get_pipeline().update_component(constants.CONFIG_EVALUATOR, evaluator_config)
                 UIComponents.display_success("Evaluation configuration updated.")
 
     def get_ui_options(self, option_type, config_name: str):
@@ -209,7 +206,7 @@ class Sidebar:
         ground_truth = UIComponents.create_text_area(constants.GROUND_TRUTH_DISPLAY_NAME, value=constants.GROUND_TRUTH_DEFAULT_VALUE, key="ground_truth_input")
         if UIComponents.create_button("Evaluate Last Query", key="evaluate_last_query"):
             # Initialize pipeline when needed
-            pipeline = self.get_pipeline()
+            pipeline = Utils.Utils.get_pipeline()
             if hasattr(pipeline, constants.LAST_QUERY):
                 try:
                     metrics = pipeline.evaluate(ground_truths=ground_truth)
@@ -246,12 +243,12 @@ class Sidebar:
             file_types=["pdf", "csv", "txt", "docx"],
             accept_multiple_files=False
         )
-        doc_processor = DocumentProcessor(self.get_pipeline())
+        doc_processor = DocumentProcessor(Utils.Utils.get_pipeline())
         if uploaded_file:
             if UIComponents.create_button("Process Document", key="process_document"):
                 with UIComponents.display_spinner("Processing document..."):
                     # Only initialize pipeline when needed
-                    pipeline = self.get_pipeline()
+                    pipeline = Utils.Utils.get_pipeline()
                     documents, chunks = doc_processor.process_uploaded_file(uploaded_file)
                     
                     if documents and chunks:
@@ -358,7 +355,7 @@ class Sidebar:
         }
         
         if UIComponents.create_button("Apply Chat Response Config", key="apply_chat_response"):
-            self.get_pipeline().update_component(constants.CONFIG_LLM, chat_response_config)
+            Utils.Utils.get_pipeline().update_component(constants.CONFIG_LLM, chat_response_config)
             UIComponents.display_success("Chat response configuration updated.")
 
     def render_test_all_configs_section(self):
@@ -506,15 +503,15 @@ class Sidebar:
     
     def apply_text_processing_config(self, chunker_params, vector_store, embedder_params):
         """Apply text processing configuration to the pipeline"""
-        self.get_pipeline().update_component(constants.CONFIG_CHUNKER, chunker_params)
-        self.get_pipeline().update_component(constants.CONFIG_EMBEDDER, embedder_params)
-        self.get_pipeline().update_component(constants.CONFIG_VECTOR_STORE, vector_store)
+        Utils.Utils.get_pipeline().update_component(constants.CONFIG_CHUNKER, chunker_params)
+        Utils.Utils.get_pipeline().update_component(constants.CONFIG_EMBEDDER, embedder_params)
+        Utils.Utils.get_pipeline().update_component(constants.CONFIG_VECTOR_STORE, vector_store)
         
         UIComponents.display_success("Text processing configuration updated.")
     
     def apply_Retrieval_and_Reranker_config(self, retriever_config, re_ranker_config):
         """Apply text processing configuration to the pipeline"""
-        self.get_pipeline().update_component(constants.CONFIG_RETRIEVER, retriever_config)
-        self.get_pipeline().update_component(constants.CONFIG_RERANKER, re_ranker_config)
+        Utils.Utils.get_pipeline().update_component(constants.CONFIG_RETRIEVER, retriever_config)
+        Utils.Utils.get_pipeline().update_component(constants.CONFIG_RERANKER, re_ranker_config)
         
         UIComponents.display_success("Retrieval and Reranking configuration updated.")

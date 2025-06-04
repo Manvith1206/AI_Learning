@@ -1,4 +1,5 @@
-from UI.UI_Components import UIComponents
+import streamlit as st
+
 # Sample questions and answers
 flashcards = [
     {"question": "What is the capital of France?", "answer": "Paris"},
@@ -14,47 +15,53 @@ class Flashcard:
         self.card = None
                 
         # Streamlit App
-        UIComponents.create_title("📚 Flashcards")
+        st.title("📚 Flashcards")
 
     def initialze_session_state(self):
-        UIComponents.get_session_state_variable("card_index", 0)
-        UIComponents.get_session_state_variable("show_answer", False)
-        # if "card_index" not in st.session_state:
-        #     st.session_state.card_index = 0
-        # if "show_answer" not in st.session_state:
-        #     st.session_state.show_answer = False
+        if "card_index" not in st.session_state:
+            st.session_state.card_index = 0
+        if "show_answer" not in st.session_state:
+            st.session_state.show_answer = False
 
     def create_columns(self):        
         # Navigation buttons
-        col1, col2, col3 = UIComponents.create_columns([1, 1, 2])
+        col1, col2, col3 = st.columns([1, 1, 2])
 
         with col1:
-            if UIComponents.create_button("⬅️ Previous"):
-                if UIComponents.get_session_state_variable("card_index", 0) > 0:
-                    card_index = UIComponents.get_session_state_variable("card_index", 0)
-                    card_index -= 1
-                    UIComponents.set_session_state_variable("card_index", card_index)
-                    UIComponents.set_session_state_variable("show_answer", False)
+            if st.button("⬅️ Previous"):
+                if st.session_state.card_index > 0:
+                    st.session_state.card_index -= 1
+                    st.session_state.show_answer = False
 
         with col2:
-            if UIComponents.create_button("➡️ Next"):
-                if UIComponents.get_session_state_variable("card_index", 0) < len(flashcards) - 1:
-                    card_index = UIComponents.get_session_state_variable("card_index", 0)
-                    card_index += 1
-                    UIComponents.set_session_state_variable("card_index", card_index)
-                    UIComponents.set_session_state_variable("show_answer", False)
+            if st.button("➡️ Next"):
+                if st.session_state.card_index < len(flashcards) - 1:
+                    st.session_state.card_index += 1
+                    st.session_state.show_answer = False
 
     def display_card(self):        
         # Current flashcard
-        card = flashcards[UIComponents.set_session_state_variable("card_index", 0)]
-        UIComponents.create_subheader_UI(f"Question {UIComponents.set_session_state_variable("card_index", 0) + 1} of {len(flashcards)}")
-        UIComponents.markdown(f"**Q:** {card['question']}")
+        card = flashcards[st.session_state.card_index]
+        st.subheader(f"Question {st.session_state.card_index + 1} of {len(flashcards)}")
+        st.markdown(f"**Q:** {card['question']}")
         self.card = card
 
     def show_or_hide_answer(self):        
         # Show/Hide answer
-        if UIComponents.create_button("Show Answer" if not UIComponents.get_session_state_messages("show_answer", False) else "Hide Answer"):
-            UIComponents.set_session_state_variable("show_answer", False) = not UIComponents.set_session_state_variable("show_answer", False)
+        if st.button("Show Answer" if not st.session_state.show_answer else "Hide Answer"):
+            st.session_state.show_answer = not st.session_state.show_answer
 
-        if UIComponents.set_session_state_variable("show_answer", False):
-            UIComponents.markdown(f"**A:** {self.card['answer']}")
+        if st.session_state.show_answer:
+            st.markdown(f"**A:** {self.card['answer']}")
+if __name__ == "__main__":
+    flashcard = Flashcard(flashcards)
+    flashcard.initialze_session_state()
+    
+    # Create columns for navigation
+    flashcard.create_columns()
+    
+    # Display current flashcard
+    flashcard.display_card()
+    
+    # Show or hide answer
+    flashcard.show_or_hide_answer()

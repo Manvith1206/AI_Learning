@@ -5,9 +5,10 @@ sys.path.insert(0, project_root)
 # Add parent directory to sys.path for module resolution
 import pandas as pd
 from typing import Dict, List, Any, Optional
-from UI.sidebar import Sidebar
+from UI.pages.main_page import MainPage
 def main():
-    Sidebar().run()
+    main_page = MainPage()
+    main_page.render()
 
 if __name__ == "__main__":
     main()

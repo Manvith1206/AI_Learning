@@ -11,8 +11,13 @@ class UIComponents:
         st.set_page_config(
             page_title="RAG Modular",
             page_icon=":notebook:",
-            layout="wide"
+            layout="centered"
         )
+
+    @staticmethod
+    def get_session_state():
+        """Get the current session state"""
+        return st.session_state
     
     @staticmethod
     def create_tabs(tab_names: List[str]):
@@ -24,12 +29,14 @@ class UIComponents:
         """Create tabs in the sidebar"""
         with st.sidebar:
             return st.tabs(tab_names)
+    
     @staticmethod
     def create_sidebar():
         """Create tabs in the sidebar"""
         with st.sidebar:
             pass  # Empty sidebar
         return st.sidebar
+    
     @staticmethod
     def display_chat_message_with_role(role: str, message: str):
         """Display a message with a specific role in the chat"""
@@ -142,10 +149,11 @@ class UIComponents:
         return st.session_state.messages
     
     @staticmethod
-    def display_message_with_role(self, role: str, message: str):
+    def display_message_with_role(role: str, message: str):
         """Display a message with a specific role in the chat"""
         with st.chat_message(role):
             st.markdown(message)
+    
     @staticmethod
     def create_button(label: str, key: str = None):
         """Create a button with an optional key"""
@@ -155,31 +163,34 @@ class UIComponents:
     def create_file_uploader(label: str, file_types: List[str], accept_multiple_files: bool = False):
         """Create a file uploader with specified file types"""
         return st.file_uploader(label, type=file_types, accept_multiple_files=accept_multiple_files)
+    
     @staticmethod
     def create_text_area(label: str, key: str = None, value: str = ""):
         """Create a text input field"""
         return st.text_area(label, value=value, key=key)
+    
     @staticmethod
-    def add_message_to_chat(self, role: str, content: str):
+    def add_message_to_chat(role: str, content: str):
         """Add a message to the chat history"""
         if "messages" not in st.session_state:
             st.session_state.messages = []
         st.session_state.messages.append({"role": role, "content": content})
 
     @staticmethod
-    def chat_input(label: str):
+    def chat_input(label: str, key: str = None):
         """Create a chat input field"""
-        st.chat_input(label)
         print("Chat Input:", label)
+        return st.chat_input(label, key=key)
+    
     @staticmethod 
     def process_chat_input(role: str, content: str, pipeline, prompt: str):
         """Display a chat message with a specific role"""
         with st.chat_message(role):
             with st.spinner("🤔 Thinking..."):
                 response = pipeline.query(prompt)
-                UIComponents.create_subheader_UI(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
-                UIComponents.create_subheader_UI(response["answer"])
-                UIComponents.get_session_state_messages.append({"role": role, "content": response["answer"]})
+                # UIComponents.create_subheader_UI(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
+                # UIComponents.create_subheader_UI(response["answer"])
+                # UIComponents.add_message_to_chat(role, response["answer"])
 
     @staticmethod
     def markdown(text: str):
@@ -187,25 +198,35 @@ class UIComponents:
         st.markdown(text)
 
     @staticmethod
+    def create_empty_placeholder():
+        """Create an empty placeholder"""
+        return st.empty()
+    
+    @staticmethod
     def selectbox(label: str, options: List[str], index: int = 0):
         """Create a selectbox"""
         return st.selectbox(label, options=options, index=index)
+    
     @staticmethod
     def display_dataframe(df: pd.DataFrame):
         """Display a DataFrame"""
         st.dataframe(df)
+    
     @staticmethod
     def display_bar_chart(values):
         """Display a bar chart from a DataFrame"""
         st.bar_chart(values)
+   
     @staticmethod
     def display_slider(label: str, min_value: int, max_value: int, value: int = None, step: int = 1):
         """Create a slider"""
         return st.slider(label, min_value=min_value, max_value=max_value, value=value, step=step)
+    
     @staticmethod
     def create_number_input(label: str, min_value: int, max_value: int, value: int = None):
         """Create a number input field"""
         return st.number_input(label, min_value=min_value, max_value=max_value, value=value)
+    
     @staticmethod
     def get_secrets(value: str):
         """Create a secrets input field"""

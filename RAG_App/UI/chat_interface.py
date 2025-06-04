@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Callable
 from UI.UI_Components import UIComponents
-
+import Utils.Utils
 
 class ChatInterface:
     """Chat interface component for the RAG application"""
@@ -25,7 +25,6 @@ class ChatInterface:
     
     def render(self):
         """Render the chat interface"""
-        UIComponents.create_subheader_UI("Chat with your Documents")
         
         # Display chat history
         self._render_chat_history()
@@ -35,25 +34,23 @@ class ChatInterface:
     
     def _render_chat_history(self):
         """Render the chat history"""
-        for message in UIComponents.get_session_state_messages:
+        for message in UIComponents.get_session_state_messages():
             UIComponents.display_message_with_role(message["role"], message["content"])
     
     def _render_chat_input(self):
         """Render the chat input"""
-        if prompt := UIComponents.chat_input("Ask a question about your documents"):
-            # Add user message to UI
-            UIComponents.get_session_state_messages.append({"role": "user", "content": prompt})
-            UIComponents.display_message_with_role("user", prompt)
+        UIComponents.create_subheader_UI("Chat with your Documents")
+        
+        # Display chat history
+        for message in UIComponents.get_session_state_messages():
+            UIComponents.display_message_with_role(role=message["role"], message=message['content'])
 
-            
-            # Process message if documents are loaded
-            if UIComponents.get_session_state_variable("documents", None):
-                with UIComponents.display_chat_message_with_role("assistant"):
-                    with UIComponents.display_spinner("🤔 Thinking..."):
-                        # Get response from callback
-                        self.display_message(None)
-            else:
-                UIComponents.display_error("Please upload and process documents first.")
+        print("Chat Messages:", UIComponents.get_session_state_messages())
+        # Chat input
+        if prompt := UIComponents.chat_input("Ask a question about your documents", key="chat_input"):
+            UIComponents.add_message_to_chat(role='user', content=prompt)
+            UIComponents.display_message_with_role(role='user', message=prompt)
+            UIComponents.process_chat_input(role='assistant', content=prompt, pipeline=Utils.Utils.get_pipeline(), prompt=prompt)
     
     def display_message(self, response):
         """Display the response message in the chat interface"""        

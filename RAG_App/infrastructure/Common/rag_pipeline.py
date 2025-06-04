@@ -428,7 +428,7 @@ class RAGPipeline:
             }
             # Join contexts
             context = "\n\n".join(context_docs)
-            history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in UIComponents.get_session_state_messages])
+            history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in UIComponents.get_session_state_messages()])
             with open("Contexts.txt", "w", encoding="utf-8") as file:
                 file.write(context)
 
@@ -465,13 +465,14 @@ class RAGPipeline:
 
             Answer:
             """
+            placeHolder = UIComponents.create_empty_placeholder()
             full_response = ""
             for delta in self.llm_service.generate_response(answer_prompt):
                 full_response += delta
                 print("Full Response: ", full_response)
-                UIComponents.markdown(full_response)
+                placeHolder.markdown(full_response)
 
-            UIComponents.get_session_state_messages.append({"role": "assistant", "content": full_response})
+            UIComponents.add_message_to_chat("assistant",  full_response)
             # Save the query data for potential evaluation
             self.last_query = {
                 constants.QUESTION: query_text,

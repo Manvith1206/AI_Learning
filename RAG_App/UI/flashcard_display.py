@@ -1,77 +1,60 @@
+import os
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 from typing import List, Dict, Any, Callable
-from models import Flashcard
 from UI.UI_Components import UIComponents
-
+import time
 
 class FlashcardDisplay:
-    """Component for displaying and generating flashcards"""
-    
-    def __init__(self, on_generate_flashcards: Callable[[], List[Flashcard]]):
-        """
-        Initialize the flashcard display component
-        
-        Args:
-            on_generate_flashcards: Callback function to generate flashcards
-        """
-        self.on_generate_flashcards = on_generate_flashcards
-        self._initialize_session_state()
-    
-    def _initialize_session_state(self):
-        """Initialize session state variables for flashcards"""
-        UIComponents.initialize_session_state({
-            "flashcards": [],
-            "flashcards_generation_attempted": False
-        })
-    
-    def render(self):
-        """Render the flashcard interface"""
-        UIComponents.create_subheader_UI.subheader("Flashcards")
-        
-        # Display info about flashcards
-        UIComponents.write("""
-        Flashcards are automatically generated from your documents to help you learn and review key concepts.
-        Click the button below to generate flashcards from your uploaded documents.
-        """)
-        
-        # Generate flashcards button
-        self._render_generation_button()
-        
-        # Display flashcards
-        self._render_flashcards()
-    
-    def _render_generation_button(self):
-        """Render the flashcard generation button"""
-        col1, col2 = UIComponents.create_columns([1, 3])
-        
+    def __init__(self, flashcards):
+        self.flashcards = flashcards
+        self.current_index = 0
+        self.show_answer = False
+        self.card = None
+                
+
+    def initialze_session_state(self):
+        UIComponents.get_session_state_variable("card_index", 0)
+        UIComponents.get_session_state_variable("show_answer", False)
+
+    def create_columns(self):        
+        # Navigation buttons
+        col1, col2, col3 = UIComponents.create_columns([1, 1, 2])
+
         with col1:
-            if UIComponents.create_button("Generate Flashcards", key="generate_flashcards"):
-                self._trigger_flashcard_generation()
-    
-    def _trigger_flashcard_generation(self):
-        """Handle flashcard generation"""
-        UIComponents.set_session_state_variable("flashcards_generation_attempted", False)
+            if UIComponents.create_button("⬅️ Previous"):
+                print("Previous button clicked")
+                if UIComponents.get_session_state_variable("card_index", 0) > 0:
+                    card_index = UIComponents.get_session_state_variable("card_index", 0)
+                    card_index -= 1
+                    UIComponents.set_session_state_variable("card_index", card_index)
+                    UIComponents.set_session_state_variable("show_answer", False)
+
+        with col2:
+            if UIComponents.create_button("➡️ Next"):
+                if UIComponents.get_session_state_variable("card_index", 0) < len(self.flashcards) - 1:
+                    card_index = UIComponents.get_session_state_variable("card_index", 0)
+                    card_index += 1
+                    UIComponents.set_session_state_variable("card_index", card_index)
+                    UIComponents.set_session_state_variable("show_answer", False)
+                    
+
+    def display_card(self):        
+        # Current flashcard
+        card = self.flashcards[UIComponents.get_session_state_variable("card_index", 0)]
+        UIComponents.create_subheader_UI(f"Question {UIComponents.get_session_state_variable("card_index", 0) + 1} of {len(self.flashcards)}")
+        UIComponents.markdown(f"**Q:** {card['question']}")
+        self.card = card
+
+    def show_or_hide_answer(self):        
+        # Show/Hide answer
+        if UIComponents.create_button("Show Answer" if not UIComponents.get_session_state_variable("show_answer", False) else "Hide Answer"):
+            UIComponents.set_session_state_variable("show_answer",  not UIComponents.get_session_state_variable("show_answer", False))
+
+        if UIComponents.get_session_state_variable("show_answer", False):
+            UIComponents.markdown(f"**A:** {self.card['answer']}")
         
-        if not UIComponents.get_session_state_variable("documents", None):
-            UIComponents.display_error("Please upload and process documents first.")
-            return
-        
-        with UIComponents.display_spinner("Generating flashcards..."):
-            try:
-                flashcards = self.on_generate_flashcards()
-                UIComponents.set_session_state_variable("flashcards", flashcards)
-                UIComponents.display_success(f"Generated {len(flashcards)} flashcards!")
-            except Exception as e:
-                UIComponents.display_error(f"Error generating flashcards: {str(e)}")
-    
-    def _render_flashcards(self):
-        """Render the generated flashcards"""
-        if not UIComponents.get_session_state_variable("flashcards", None) and UIComponents.get_session_state_variable("flashcards_generation_attempted", None):
-            UIComponents.display_info("No flashcards have been generated yet.")
-            return
-        
-        for i, flashcard in enumerate(UIComponents.get_session_state_variable("flashcards", [])):
-            with UIComponents.create_expander(f"Flashcard {i+1}: {flashcard.question[:50]}...", expanded=False):
-                UIComponents.create_subheader_UI("**Question:**")
-                UIComponents.create_subheader_UI(flashcard.question)
-                UIComponents.create_subheader_UI("**Answer:**")
-                UIComponents.create_subheader_UI(flashcard.answer)
+flashcards = [
+    {"question": "What is the capital of France?", "answer": "Paris"},
+    {"question": "Who wrote Hamlet?", "answer": "William Shakespeare"},
+    {"question": "What is the boiling point of water?", "answer": "100°C or 212°F"},
+]
