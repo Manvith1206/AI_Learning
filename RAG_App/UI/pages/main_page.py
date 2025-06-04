@@ -32,67 +32,64 @@ class MainPage:
         self.sidebar = Sidebar(
         )
         self.flashcard_display = FlashcardDisplay(
-            flashcards=self.get_flashcards()
+            flashcards=[] # Initially empty, will be populated from session state
         )
        
-    def get_flashcards(self) -> List[FlashcardDisplay]:
-        """Get the list of generated flashcards"""
-        return [
-    {"question": "What is the capital of France?", "answer": "Paris"},
-    {"question": "Who wrote Hamlet?", "answer": "William Shakespeare"},
-    {"question": "What is the boiling point of water?", "answer": "100°C or 212°F"},
-]
-    #     return [
-    #     FlashcardDisplay(
-    #         id="fc001",
-    #         question="What is the primary difference between asynchronous and synchronous transmission?",
-    #         answer="Asynchronous transmission sends data one character at a time with start and stop bits, while synchronous transmission sends large blocks of data in a continuous stream without start and stop codes.",
-    #         document_id="DCA2104 Unit-08_V1.1.pdf",
-    #         document_chunk_id="sec2_async_vs_sync",
-    #         metadata={"topic": "Transmission Methods", "page": 4}
-    #     ),
-    #     FlashcardDisplay(
-    #         id="fc002",
-    #         question="What are the two types of errors in digital transmission?",
-    #         answer="Single-bit errors and burst errors.",
-    #         document_id="DCA2104 Unit-08_V1.1.pdf",
-    #         document_chunk_id="sec3_types_of_errors",
-    #         metadata={"topic": "Error Types", "page": 8}
-    #     ),
-    #     FlashcardDisplay(
-    #         id="fc003",
-    #         question="Which technique is more efficient for large data blocks: asynchronous or synchronous transmission?",
-    #         answer="Synchronous transmission is more efficient for large data blocks.",
-    #         document_id="DCA2104 Unit-08_V1.1.pdf",
-    #         document_chunk_id="sec2_async_vs_sync",
-    #         metadata={"topic": "Efficiency Comparison", "page": 7}
-    #     ),
-    #     FlashcardDisplay(
-    #         id="fc004",
-    #         question="What are the three representations used to describe Cyclic Redundancy Check (CRC)?",
-    #         answer="Modulo 2 arithmetic, polynomials, and digital logic.",
-    #         document_id="DCA2104 Unit-08_V1.1.pdf",
-    #         document_chunk_id="sec4_crc",
-    #         metadata={"topic": "Error Detection", "page": 11}
-    #     ),
-    #     FlashcardDisplay(
-    #         id="fc005",
-    #         question="What is Hamming Code used for in data communication?",
-    #         answer="It is used for single-bit error correction by identifying the bit position in error using parity bits.",
-    #         document_id="DCA2104 Unit-08_V1.1.pdf",
-    #         document_chunk_id="sec5_hamming_code",
-    #         metadata={"topic": "Error Correction", "page": 16}
-    #     ),
-    #     FlashcardDisplay(
-    #         id="fc006",
-    #         question="What are the two modes of data transmission in line configuration?",
-    #         answer="Full duplex and half duplex.",
-    #         document_id="DCA2104 Unit-08_V1.1.pdf",
-    #         document_chunk_id="sec6_line_config",
-    #         metadata={"topic": "Line Configuration", "page": 20}
-    #     ),
-    # ]
-    
+    def _trigger_flashcard_generation(self):
+        """Handles the flashcard generation process using RAGPipeline."""
+        pipeline = Utils.Utils.get_pipeline() # Get the RAGPipeline instance
+        if not pipeline or not hasattr(pipeline, 'generate_flashcards_from_text'):
+            UIComponents.display_error("RAG Pipeline not available or misconfigured for flashcard generation.")
+            UIComponents.set_session_state_variable("flashcards", [])
+            UIComponents.set_session_state_variable("flashcards_generation_attempted", True)
+            return
+
+        # Attempt to get processed document content. 
+        # This assumes 'processed_document_texts' is a list of strings (chunks/documents)
+        # stored in session state after document processing via the sidebar/upload logic.
+        # You might need to adjust this based on how your application stores processed text.
+        docs_for_flashcards_content = UIComponents.get_session_state_variable("processed_document_texts", []) 
+
+        if not docs_for_flashcards_content:
+            # Fallback: try to get context from the last query if available, as a last resort.
+            # This is not ideal for comprehensive flashcard generation over all docs.
+            last_query_data = UIComponents.get_session_state_variable(constants.LAST_QUERY, None)
+            if last_query_data and last_query_data.get(constants.CONTEXTS):
+                docs_for_flashcards_content = last_query_data.get(constants.CONTEXTS)
+                UIComponents.display_info("No specific documents found for flashcards, attempting to use context from last query.")
+            else:
+                UIComponents.display_warning("Please process documents first to generate flashcards. No content available.")
+                UIComponents.set_session_state_variable("flashcards", [])
+                UIComponents.set_session_state_variable("flashcards_generation_attempted", True)
+                return
+        
+        # Concatenate all document/chunk texts into a single string
+        # Ensure docs_for_flashcards_content is a list of strings
+        if isinstance(docs_for_flashcards_content, list) and all(isinstance(item, str) for item in docs_for_flashcards_content):
+            full_text_content = "\n\n---\n\n".join(docs_for_flashcards_content)
+        elif isinstance(docs_for_flashcards_content, str): # If it's already a single string
+            full_text_content = docs_for_flashcards_content
+        else:
+            UIComponents.display_error("Document content for flashcards is in an unexpected format.")
+            return
+
+        if not full_text_content.strip():
+            UIComponents.display_warning("No text content available to generate flashcards from.")
+            UIComponents.set_session_state_variable("flashcards", [])
+            UIComponents.set_session_state_variable("flashcards_generation_attempted", True)
+            return
+
+        UIComponents.display_info("Generating flashcards... This may take a moment.")
+        generated_flashcards = pipeline.generate_flashcards_from_text(full_text_content, num_flashcards=5)
+        
+        UIComponents.set_session_state_variable("flashcards", generated_flashcards)
+        UIComponents.set_session_state_variable("flashcards_generation_attempted", True)
+        
+        if generated_flashcards:
+            UIComponents.display_success(f"{len(generated_flashcards)} flashcards generated successfully!")
+        else:
+            UIComponents.display_warning("No flashcards were generated by the LLM. The content might have been unsuitable or an error occurred.")
+
     def render(self):
         """Render the main page"""
         # UIComponents.initialize_page()
@@ -119,16 +116,34 @@ class MainPage:
         
         # Flashcards tab
         with tabs[2]:
-            self.flashcard_display.initialze_session_state()
-            
-            # Display current flashcard
-            self.flashcard_display.display_card()
-            
-            # Create columns for navigation
-            self.flashcard_display.create_columns()
-            
-            # Show or hide answer
-            self.flashcard_display.show_or_hide_answer()
+            UIComponents.create_subheader_UI("Flashcard Generation & Review")
+
+            if UIComponents.create_button("✨ Generate Flashcards"): 
+                self._trigger_flashcard_generation()
+
+            # Ensure session state keys exist before first use
+            if "flashcards" not in UIComponents.get_session_state():
+                 UIComponents.set_session_state_variable("flashcards", [])
+            if "flashcards_generation_attempted" not in UIComponents.get_session_state():
+                 UIComponents.set_session_state_variable("flashcards_generation_attempted", False)
+
+            flashcards = UIComponents.get_session_state_variable("flashcards", [])
+            flashcards_generation_attempted = UIComponents.get_session_state_variable("flashcards_generation_attempted", False)
+
+            if not flashcards:
+                if flashcards_generation_attempted:
+                    UIComponents.display_info("No flashcards were generated. Try again or check your document source if applicable.")
+                else:
+                    UIComponents.display_info("Click 'Generate Flashcards' to create new flashcards.")
+            else:
+                # Update the existing flashcard_display instance with new/retrieved flashcards
+                self.flashcard_display.flashcards = flashcards 
+                # Initialize session state for card navigation (e.g., reset index if flashcards change)
+                self.flashcard_display.initialze_session_state() 
+                
+                self.flashcard_display.display_card()
+                self.flashcard_display.create_columns()
+                self.flashcard_display.show_or_hide_answer()
         
         # Debug tab
         with tabs[3]:

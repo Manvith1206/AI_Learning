@@ -23,6 +23,7 @@ from infrastructure.LLM_Chat_Services.cohere_service import CohereChat
 from infrastructure.Common.query_classifier_llm import QueryClassifier
 
 import traceback
+import json # Added for parsing LLM response for flashcards
 from infrastructure.Evaluators.deep_eval_evaluator import DeepEval
 from infrastructure.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store # Added for caching
 from UI.UI_Components import UIComponents
@@ -292,7 +293,7 @@ class RAGPipeline:
 
             # # Remove extra whitespaces and newlines
             # text = re.sub(r"\s+", " ", text).strip()
-            
+            UIComponents.set_session_state_variable("processed_document_texts", text)
             with open("ExtractedTextFromPdf.txt", "w", encoding="utf-8") as file:
                 file.write(text)
 
@@ -517,3 +518,73 @@ class RAGPipeline:
         except Exception as e:
             UIComponents.display_error(f"Error during evaluation: {e}, Traceback: {traceback.print_exc()}")
             return None
+
+    def generate_flashcards_from_text(self, text_content: str, num_flashcards: int = 5) -> List[Dict[str, str]]:
+        """Generates flashcards from the given text content using the LLM service."""
+        if not text_content.strip():
+            UIComponents.display_warning("Cannot generate flashcards from empty content.")
+            return []
+
+        prompt = f"""
+        <system>
+        You are an expert flashcard creator. Your task is to generate {num_flashcards} distinct and high-quality flashcards (question and answer pairs) based on the provided text content.
+        Each flashcard should focus on a key concept or piece of information from the text.
+        Questions should be clear and concise.
+        Answers should be accurate and directly derivable from the text.
+
+        Respond ONLY with a valid JSON array of objects. Each object must have two keys: "question" and "answer".
+        Do NOT include any other text, explanations, or apologies before or after the JSON array.
+        Example format:
+        [        
+          {{"question": "What is the main topic of the text?", "answer": "The main topic is..."}},
+          {{"question": "Define the term 'XYZ'.", "answer": "XYZ is defined as..."}}
+        ]
+        </system>
+
+        <user>
+        # TEXT CONTENT
+        {text_content}
+
+        # TASK
+        Generate {num_flashcards} flashcards in the specified JSON format based on the text content above.
+        </user>
+
+        JSON Output:
+        """
+        
+        try:
+            full_response = ""
+            # Assuming llm_service.generate_response is a generator yielding response chunks
+            for delta in self.llm_service.generate_response(prompt):
+                full_response += delta
+            
+            # Attempt to parse the LLM's response as JSON
+            # The response might be wrapped in markdown code blocks, try to strip them
+            if full_response.strip().startswith("```json"):
+                full_response = full_response.strip()[7:-3].strip()
+            elif full_response.strip().startswith("```"):
+                 full_response = full_response.strip()[3:-3].strip()
+
+            flashcards = json.loads(full_response)
+            
+            # Validate structure
+            if not isinstance(flashcards, list):
+                raise ValueError("LLM response is not a list.")
+            for card in flashcards:
+                if not (isinstance(card, dict) and "question" in card and "answer" in card):
+                    raise ValueError("Invalid flashcard structure in LLM response.")
+            
+            return flashcards[:num_flashcards] # Return up to the requested number
+
+        except json.JSONDecodeError as e:
+            UIComponents.display_error(f"Error decoding JSON from LLM for flashcards: {e}\nRaw response: {full_response}")
+            print(f"JSONDecodeError: {e}. Raw LLM response for flashcards:\n{full_response}")
+            return []
+        except ValueError as e:
+            UIComponents.display_error(f"Error in flashcard data structure from LLM: {e}\nRaw response: {full_response}")
+            print(f"ValueError: {e}. Raw LLM response for flashcards:\n{full_response}")
+            return []
+        except Exception as e:
+            UIComponents.display_error(f"An unexpected error occurred during flashcard generation: {e}")
+            print(f"Unexpected error in generate_flashcards_from_text: {e}, Traceback: {traceback.format_exc()}")
+            return []

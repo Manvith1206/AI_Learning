@@ -17,6 +17,9 @@ class FlashcardDisplay:
         UIComponents.get_session_state_variable("show_answer", False)
 
     def create_columns(self):        
+        if not self.flashcards or not self.flashcards:
+            return
+        
         # Navigation buttons
         col1, col2, col3 = UIComponents.create_columns([1, 1, 2])
 
@@ -39,8 +42,19 @@ class FlashcardDisplay:
                     
 
     def display_card(self):        
+        if not self.flashcards:
+            return
+
+        card_index = UIComponents.get_session_state_variable("card_index", 0)
+        # Ensure card_index is valid, especially if flashcards list changed or is empty
+        if not (0 <= card_index < len(self.flashcards)):
+            card_index = 0
+            UIComponents.set_session_state_variable("card_index", 0) # Reset index in session state
+            if not self.flashcards: # Double check if list became empty
+                return
+        
         # Current flashcard
-        card = self.flashcards[UIComponents.get_session_state_variable("card_index", 0)]
+        card = self.flashcards[card_index]
         UIComponents.create_subheader_UI(f"Question {UIComponents.get_session_state_variable("card_index", 0) + 1} of {len(self.flashcards)}")
         UIComponents.markdown(f"**Q:** {card['question']}")
         self.card = card
@@ -52,9 +66,4 @@ class FlashcardDisplay:
 
         if UIComponents.get_session_state_variable("show_answer", False):
             UIComponents.markdown(f"**A:** {self.card['answer']}")
-        
-flashcards = [
-    {"question": "What is the capital of France?", "answer": "Paris"},
-    {"question": "Who wrote Hamlet?", "answer": "William Shakespeare"},
-    {"question": "What is the boiling point of water?", "answer": "100°C or 212°F"},
-]
+   
