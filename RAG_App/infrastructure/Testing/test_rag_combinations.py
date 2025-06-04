@@ -3,28 +3,28 @@ import sys
 import csv
 import time
 # import pandas as pd # Not used
-import streamlit as st
 
 # Add project root to sys.path
 ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, ROOT)
 
-from RAG_App.infrastructure.Common.rag_pipeline import RAGPipeline
-from RAG_App.config import ConfigManager
-import RAG_App.infrastructure.Common.RAG_Constants as constants
-from RAG_App.infrastructure.Common.RAG_Constants import (
+from infrastructure.Common.rag_pipeline import RAGPipeline
+from config import ConfigManager
+import infrastructure.Common.RAG_Constants as constants
+from infrastructure.Common.RAG_Constants import (
     ChunkerType, EmbedderType, RetrieverType,
     RerankerType, VectorStore, GeminiLLMModel,
     CohereLLMModel, JINA_RERANKER_MODELS
 )
-from RAG_App.infrastructure.Evaluators.ragas_evaluator import RagasEvaluator
-
+from infrastructure.Evaluators.ragas_evaluator import RagasEvaluator
+from UI.UI_Components import UIComponents
 # Path to the test document and output file
-TEST_FILE_PATH = "E:/Manvith/Coding/AI/RAG/RAG_App.infrastructure/Testing/TestFile/DCA2104 Unit-08_V1.1.pdf"
+TEST_FILE_PATH = "E:/Manvith/Coding/AI/RAG/infrastructure/Testing/TestFile/DCA2104 Unit-08_V1.1.pdf"
 RESULTS_CSV_PATH = os.path.join(ROOT, "rag_evaluation_results_iterative.csv") # Changed output file name
 
-if "Extractedtexts" not in st.session_state:
-    st.session_state.Extractedtexts = None
+UIComponents.get_session_state_variable("Extractedtexts", None)
+# if "Extractedtexts" not in st.session_state:
+#     st.session_state.Extractedtexts = None
 
 # Test query to use for all combinations
 TEST_QUERY = "What is Synchronous Transmission?"

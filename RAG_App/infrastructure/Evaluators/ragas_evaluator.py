@@ -4,14 +4,14 @@ from ragas.metrics import answer_relevancy, faithfulness, answer_correctness, co
 from ragas import evaluate
 from datasets import Dataset
 import os
-import streamlit as st
 import openai
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 from ragas.dataset_schema import MultiTurnSample
 from ragas.llms import LangchainLLMWrapper
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-os.environ["OPENAI_API_KEY"] = st.secrets[constants.OPENAI_API_KEY]
+from UI.UI_Components import UIComponents
+os.environ["OPENAI_API_KEY"] = UIComponents.get_secrets(constants.OPENAI_API_KEY)
 from ragas.llms import LangchainLLMWrapper
 
 class RagasEvaluator(BaseEvaluator):
@@ -66,11 +66,11 @@ class RagasEvaluator(BaseEvaluator):
         geminiLLM = ChatGoogleGenerativeAI(
             model=constants.GeminiLLMModel.GEMINI_FLASH.value,
             temperature=0.0,
-            google_api_key=st.secrets[constants.GEMINI_API_KEY]
+            google_api_key=UIComponents.get_secrets(constants.GEMINI_API_KEY)
         )
         print("Using LLM: ", geminiLLM)
         print("Using OpenAI LLM: ", chatLLM)
-        with st.spinner("Running RAG evaluation..."):
+        with UIComponents.display_spinner("Running RAG evaluation..."):
             result = evaluate(
                 data,
                 metrics=self.metrics,

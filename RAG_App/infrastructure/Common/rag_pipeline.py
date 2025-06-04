@@ -1,32 +1,31 @@
 import os
 import uuid
 
-from RAG_App.infrastructure.Evaluators.simple_evaluator import SimpleEvaluator
-from RAG_App.infrastructure.Evaluators.ragas_evaluator import RagasEvaluator
-from RAG_App.infrastructure.Evaluators.custom_evaluator import (
+from infrastructure.Evaluators.simple_evaluator  import SimpleEvaluator
+from infrastructure.Evaluators.ragas_evaluator import RagasEvaluator
+from infrastructure.Evaluators.custom_evaluator import (
     CustomEvaluator,
     FaithfulnessMetric,
     ContextPrecisionMetric,
     ContextRecallMetric,
     AnswerRelevancyMetric
 )
-from RAG_App.config import ConfigManager
-import streamlit as st
+from config import ConfigManager
 import re
 
-from RAG_App.infrastructure.Common.RAG_Constants import (
+from infrastructure.Common.RAG_Constants import (
     ChunkerType, EmbedderType,
     RetrieverType, RerankerType,
     EvaluatorType, LLMServiceType, GeminiLLMModel
 )
-import RAG_App.infrastructure.Common.RAG_Constants as constants
-from RAG_App.infrastructure.LLM_Chat_Services.cohere_service import CohereChat
-from RAG_App.infrastructure.Common.query_classifier_llm import QueryClassifier
+import infrastructure.Common.RAG_Constants as constants
+from infrastructure.LLM_Chat_Services.cohere_service import CohereChat
+from infrastructure.Common.query_classifier_llm import QueryClassifier
 
 import traceback
-from RAG_App.infrastructure.Evaluators.deep_eval_evaluator import DeepEval
-from RAG_App.infrastructure.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store # Added for caching
-
+from infrastructure.Evaluators.deep_eval_evaluator import DeepEval
+from infrastructure.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store # Added for caching
+from UI.UI_Components import UIComponents
 class RAGPipeline:
     def __init__(self, config_manager=None):
         self.config_manager = config_manager or ConfigManager()
@@ -62,11 +61,11 @@ class RAGPipeline:
     
     # build invidual components
     def _build_chunker(self):
-        from RAG_App.infrastructure.Chunkers.recursive_chunker import RecursiveChunker
-        from RAG_App.infrastructure.Chunkers.sentence_chunker import SentenceChunker
-        from RAG_App.infrastructure.Chunkers.semantic_chunker import SemanticChunker
-        from RAG_App.infrastructure.Chunkers.page_chunker import PageChunker
-        from RAG_App.infrastructure.Chunkers.semantic_chunker_with_langchain import SemanticChunkerWithLangChain
+        from infrastructure.Chunkers.recursive_chunker import RecursiveChunker
+        from infrastructure.Chunkers.sentence_chunker import SentenceChunker
+        from infrastructure.Chunkers.semantic_chunker import SemanticChunker
+        from infrastructure.Chunkers.page_chunker import PageChunker
+        from infrastructure.Chunkers.semantic_chunker_with_langchain import SemanticChunkerWithLangChain
 
         cfg = self.config_manager.get_config(constants.CONFIG_CHUNKER)
         type = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -85,9 +84,9 @@ class RAGPipeline:
             return RecursiveChunker()
 
     def _build_embedder(self):
-        from RAG_App.infrastructure.Embedders.tfidf_embedder import TFIDFEmbedder
-        from RAG_App.infrastructure.Embedders.gemini_embedder import GeminiEmbedder
-        from RAG_App.infrastructure.Embedders.mistral_embedder import MistralEmbedder
+        from infrastructure.Embedders.tfidf_embedder import TFIDFEmbedder
+        from infrastructure.Embedders.gemini_embedder import GeminiEmbedder
+        from infrastructure.Embedders.mistral_embedder import MistralEmbedder
 
         cfg = self.config_manager.get_config(constants.CONFIG_EMBEDDER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -96,37 +95,37 @@ class RAGPipeline:
         if t == EmbedderType.TFIDF.value:
             return TFIDFEmbedder()
         elif t == EmbedderType.GEMINI.value:
-            return GeminiEmbedder(api_key=st.secrets[constants.GEMINI_API_KEY], model_name=model_name)
+            return GeminiEmbedder(api_key=UIComponents.get_secrets(constants.GEMINI_API_KEY), model_name=model_name)
         elif t == EmbedderType.COHERE.value:
-            from RAG_App.infrastructure.Embedders.cohere_embedder import CohereEmbedder
-            return CohereEmbedder(api_key=st.secrets[constants.COHERE_API_KEY],
+            from infrastructure.Embedders.cohere_embedder import CohereEmbedder
+            return CohereEmbedder(api_key=UIComponents.get_secrets(constants.COHERE_API_KEY),
                                   model=model_name)
         elif t == EmbedderType.VOYAGE.value:
-            from RAG_App.infrastructure.Embedders.voyage_embedder import VoyageEmbedder
-            return VoyageEmbedder(api_key=st.secrets[constants.VOYAGE_API_KEY],
+            from infrastructure.Embedders.voyage_embedder import VoyageEmbedder
+            return VoyageEmbedder(api_key=UIComponents.get_secrets(constants.VOYAGE_API_KEY),
                                   model=model_name)
         elif t == EmbedderType.MISTRAL.value:
-            return MistralEmbedder(api_key=st.secrets[constants.MISTRAL_API_KEY],
+            return MistralEmbedder(api_key=UIComponents.get_secrets(constants.MISTRAL_API_KEY),
                                   model=model_name,
                                   )
         else:
             return TFIDFEmbedder()
 
     def _build_vector_store(self):
-        from RAG_App.infrastructure.Vector_Stores.pinecone_vector_store import PineConeVectorStore
-        from RAG_App.infrastructure.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store
-        from RAG_App.infrastructure.Vector_Stores.sklearn_vector_store import SklearnVectorStore
+        from infrastructure.Vector_Stores.pinecone_vector_store import PineConeVectorStore
+        from infrastructure.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store
+        from infrastructure.Vector_Stores.sklearn_vector_store import SklearnVectorStore
 
         cfg = self.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
         params = cfg.get(constants.CONFIG_PARAM, {})
         type = cfg.get(constants.CONFIG_TYPE_PARAM)
-        api_key = st.secrets[constants.PINECONE_API_KEY]
+        api_key = UIComponents.get_secrets(constants.PINECONE_API_KEY)
         if type == constants.VectorStore.SCIKIT_LEARN.value:
             return SklearnVectorStore(**params)
         elif type == constants.VectorStore.PINE_CONE.value:
             return PineConeVectorStore(api_key=api_key, index_name=constants.PINE_CONE_INDEX_NAME)
         elif type == constants.VectorStore.CHROMA.value:
-            from RAG_App.infrastructure.Vector_Stores.chroma_vector_store import ChromaVectorStore
+            from infrastructure.Vector_Stores.chroma_vector_store import ChromaVectorStore
             return ChromaVectorStore(**params, collectionName=constants.CHROMA_COLLECTION_NAME)
         elif type == constants.VectorStore.FAISS.value:
             return FAISS_Vector_Store()
@@ -134,9 +133,9 @@ class RAGPipeline:
             return SklearnVectorStore(metric=constants.CONFIG_METRIC_COSINE)
 
     def _build_retriever(self):
-        from RAG_App.infrastructure.Retrieval_Methods.similarity_retriever import SimilarityRetriever
-        from RAG_App.infrastructure.Retrieval_Methods.sentence_window_retreiver import SentenceWindowRetriever
-        from RAG_App.infrastructure.Retrieval_Methods.similarity_retriever import SimilarityRetriever
+        from infrastructure.Retrieval_Methods.similarity_retriever import SimilarityRetriever
+        from infrastructure.Retrieval_Methods.sentence_window_retreiver import SentenceWindowRetriever
+        from infrastructure.Retrieval_Methods.similarity_retriever import SimilarityRetriever
 
         cfg = self.config_manager.get_config(constants.CONFIG_RETRIEVER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -145,7 +144,7 @@ class RAGPipeline:
         if t == RetrieverType.SIMILARITY.value:
             return SimilarityRetriever(**params)
         elif t == RetrieverType.HYBRID.value:
-            from RAG_App.infrastructure.Retrieval_Methods.hybrid_retriever import HybridRetriever
+            from infrastructure.Retrieval_Methods.hybrid_retriever import HybridRetriever
 
             return HybridRetriever(**params)
         # elif t == RetrieverType.SENTENCE_WINDOW.value:
@@ -155,23 +154,23 @@ class RAGPipeline:
 
     def _build_llm_service(self):
         
-        from RAG_App.infrastructure.LLM_Chat_Services.gemini_service import GeminiService
+        from infrastructure.LLM_Chat_Services.gemini_service import GeminiService
 
         cfg = self.config_manager.get_config(constants.CONFIG_LLM)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         from google import genai
-        client = genai.Client(api_key=st.secrets[constants.GEMINI_API_KEY])
+        client = genai.Client(api_key=UIComponents.get_secrets(constants.GEMINI_API_KEY))
         params = cfg.get(constants.CONFIG_PARAM)
         model_name = params.get(constants.CONFIG_MODEL)
 
         if t == LLMServiceType.GEMINI.value:
             return GeminiService(client, model_name=model_name)
-        elif t == LLMServiceType.COHERE.value:
-            return CohereChat(st.secrets[constants.COHERE_API_KEY], model_name=model_name)
+        # elif t == LLMServiceType.COHERE.value:
+        #     return CohereChat(st.secrets[constants.COHERE_API_KEY], model_name=model_name)
         elif t == LLMServiceType.CLAUDE.value:
-            from RAG_App.infrastructure.LLM_Chat_Services.claude_service import ClaudeService
+            from infrastructure.LLM_Chat_Services.claude_service import ClaudeService
             import anthropic
-            client = anthropic.Anthropic(api_key=st.secrets[constants.CLAUDE_API_KEY])
+            client = anthropic.Anthropic(api_key=UIComponents.get_secrets(constants.CLAUDE_API_KEY))
             return ClaudeService(client, model_name=model_name)
         else:
             return GeminiService(client, model_name=model_name)
@@ -183,28 +182,28 @@ class RAGPipeline:
         model = params.get(constants.CONFIG_MODEL)
         top_k = params.get(constants.CONFIG_TOP_K_FOR_RERANKING_PARAM)
         if t == RerankerType.LLM.value:
-            from RAG_App.infrastructure.Rerankers.llm_reranker import LLMReranker
+            from infrastructure.Rerankers.llm_reranker import LLMReranker
 
             return LLMReranker(self.llm_service,**params)
         elif t == RerankerType.COHERE.value:
-            from RAG_App.infrastructure.Rerankers.cohere_re_ranker import CohereReranker
+            from infrastructure.Rerankers.cohere_re_ranker import CohereReranker
 
-            return CohereReranker(st.secrets[constants.COHERE_API_KEY], **params)
+            return CohereReranker(UIComponents.get_secrets(constants.COHERE_API_KEY), **params)
         elif t == RerankerType.JINA.value:
-            from RAG_App.infrastructure.Rerankers.jina_reranker import JinaReranker
+            from infrastructure.Rerankers.jina_reranker import JinaReranker
 
             return JinaReranker(**params)
         elif t == RerankerType.COSINE.value:
-            from RAG_App.infrastructure.Rerankers.cosine_reranker import CosineReranker
+            from infrastructure.Rerankers.cosine_reranker import CosineReranker
 
             return CosineReranker(self.embedder, top_k)
         else:
-            from RAG_App.infrastructure.Rerankers.cosine_reranker import CosineReranker
+            from infrastructure.Rerankers.cosine_reranker import CosineReranker
 
             return CosineReranker(self.embedder, top_k_for_reranking=top_k)
 
     def _build_evaluator(self):
-        from RAG_App.infrastructure.Evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
+        from infrastructure.Evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
         cfg = self.config_manager.get_config(constants.CONFIG_EVALUATOR)
         evaluator_type = cfg.get(constants.CONFIG_TYPE_PARAM)
 
@@ -212,10 +211,10 @@ class RAGPipeline:
             return RagasEvaluator(**cfg.get(constants.CONFIG_PARAM, {}))
         elif evaluator_type == EvaluatorType.CUSTOM.value:
             try:
-                gemini_api_key = st.secrets.get(constants.GEMINI_API_KEY)
+                gemini_api_key = UIComponents.get_secrets(constants.GEMINI_API_KEY)
                 if not gemini_api_key:
-                    st.error(f"Gemini API key ({constants.GEMINI_API_KEY}) not found in st.secrets for Custom Evaluator.")
-                    st.warning("Falling back to SimpleEvaluator.")
+                    UIComponents.display_error(f"Gemini API key ({constants.GEMINI_API_KEY}) not found in st.secrets for Custom Evaluator.")
+                    UIComponents.display_warning("Falling back to SimpleEvaluator.")
                     return SimpleEvaluator()
                 
                 llm_service_for_custom_eval = LLM_Evaluation_Service(client=self.llm_service, 
@@ -230,15 +229,15 @@ class RAGPipeline:
                 ]
                 return CustomEvaluator(metrics=metrics_for_custom_eval)
             except Exception as e:
-                st.error(f"Failed to initialize Custom Evaluator: {e}")
-                st.warning("Falling back to SimpleEvaluator due to an error in Custom Evaluator setup.")
+                UIComponents.display_error(f"Failed to initialize Custom Evaluator: {e}")
+                UIComponents.display_warning("Falling back to SimpleEvaluator due to an error in Custom Evaluator setup.")
                 return SimpleEvaluator()
         elif evaluator_type == EvaluatorType.SIMPLE.value:
             return SimpleEvaluator()
         elif evaluator_type == EvaluatorType.DEEP_EVAL.value:
             return DeepEval(**cfg.get(constants.CONFIG_PARAM, {}))
         else:
-            st.warning(f"Unknown or unset evaluator type: {evaluator_type}. Defaulting to SimpleEvaluator.")
+            UIComponents.display_warning(f"Unknown or unset evaluator type: {evaluator_type}. Defaulting to SimpleEvaluator.")
             return SimpleEvaluator()
 
     # update components
@@ -263,10 +262,10 @@ class RAGPipeline:
 
     def extractText(self, file, temp_dir=constants.TEMP_DOCS_DIR):
         try:
-            from RAG_App.infrastructure.document_loaders.pdf_loader import PDFLoader
-            from RAG_App.infrastructure.document_loaders.docx_loader import DOCXLoader
-            from RAG_App.infrastructure.document_loaders.txt_loader import TXTLoader
-            from RAG_App.infrastructure.document_loaders.csv_loader import CSVLoader
+            from infrastructure.document_loaders.pdf_loader import PDFLoader
+            from infrastructure.document_loaders.docx_loader import DOCXLoader
+            from infrastructure.document_loaders.txt_loader import TXTLoader
+            from infrastructure.document_loaders.csv_loader import CSVLoader
             loaders = {
                 constants.PDF_EXTENSION: PDFLoader(),
                 constants.DOCX_EXTENSION: DOCXLoader(),
@@ -302,7 +301,7 @@ class RAGPipeline:
             else:
                 return text
         except Exception as e:
-            st.error(f"Error extracting text: {e}, Traceback: {traceback.print_exc()}")
+            UIComponents.display_error(f"Error extracting text: {e}, Traceback: {traceback.print_exc()}")
             return None, None
          
     # process documents
@@ -330,14 +329,14 @@ class RAGPipeline:
 
             return documents, chunks
         except Exception as e:
-            st.error(f"Error processing document: {e}, Traceback: {traceback.print_exc()}")
+            UIComponents.display_error(f"Error processing document: {e}, Traceback: {traceback.print_exc()}")
             return None, None
 
     def rewrite_query(self, query_text, max_assistant_chars=100):
-        if not st.session_state.messages:
+        if not UIComponents.get_session_state_messages():
             return f"The user is asking: {query_text}"
 
-        prev_user, prev_assistant = st.session_state.messages[-1]
+        prev_user, prev_assistant = UIComponents.get_session_state_messages[-1]
         assistant_trimmed = prev_assistant.strip().replace('\n', ' ')[:max_assistant_chars] + "..."
         
         summary = (
@@ -409,7 +408,7 @@ class RAGPipeline:
     def query(self, query_text, top_k=None):
         try:
             if self.query_classifier.is_greeting(query_text):
-                st.markdown(self.query_classifier.get_greeting_response())
+                UIComponents.create_subheader_UI(self.query_classifier.get_greeting_response())
                 return {
                 constants.ANSWER: self.query_classifier.get_greeting_response(),
                 constants.CONTEXTS: "",
@@ -421,7 +420,7 @@ class RAGPipeline:
             context_docs, explanation, context_docs_list = self.get_context_docs(query_text)
             print("CcontextDocsLen: ", len(context_docs))
             if self.query_classifier.is_irrelevant(query_text, context_docs):
-                st.markdown(self.query_classifier.get_irrelevant_question_response())
+                UIComponents.create_subheader_UI(self.query_classifier.get_irrelevant_question_response())
                 return {
                 constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
                 constants.CONTEXTS: context_docs,
@@ -429,7 +428,7 @@ class RAGPipeline:
             }
             # Join contexts
             context = "\n\n".join(context_docs)
-            history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in st.session_state.messages])
+            history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in UIComponents.get_session_state_messages])
             with open("Contexts.txt", "w", encoding="utf-8") as file:
                 file.write(context)
 
@@ -466,13 +465,13 @@ class RAGPipeline:
 
             Answer:
             """
-            answer_placeholder = st.empty()
             full_response = ""
             for delta in self.llm_service.generate_response(answer_prompt):
                 full_response += delta
-                answer_placeholder.markdown(full_response)
+                print("Full Response: ", full_response)
+                UIComponents.markdown(full_response)
 
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
+            UIComponents.get_session_state_messages.append({"role": "assistant", "content": full_response})
             # Save the query data for potential evaluation
             self.last_query = {
                 constants.QUESTION: query_text,
@@ -486,7 +485,7 @@ class RAGPipeline:
                 constants.RERANK_EXPLANATION: explanation
             }
         except Exception as e:
-            st.error(f"Error during query: {e}, Traceback: {traceback.print_exc()}")
+            UIComponents.display_error(f"Error during query: {e}, Traceback: {traceback.print_exc()}")
             return None
         
     def evaluate(self, question=None, answer=None, contexts=None, ground_truths=None):
@@ -515,5 +514,5 @@ class RAGPipeline:
             metrics = self.evaluator.evaluate(question, answer, contexts, ground_truths)
             return metrics
         except Exception as e:
-            st.error(f"Error during evaluation: {e}, Traceback: {traceback.print_exc()}")
+            UIComponents.display_error(f"Error during evaluation: {e}, Traceback: {traceback.print_exc()}")
             return None

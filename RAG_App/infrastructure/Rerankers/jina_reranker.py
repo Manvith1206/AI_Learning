@@ -4,9 +4,8 @@ from typing import List, Dict, Union, Tuple
 from .base_reranker import BaseReranker
 import requests
 import time
-import streamlit as st
-import RAG_App.infrastructure.Common.RAG_Constants as constants
-
+import infrastructure.Common.RAG_Constants as constants
+from UI.UI_Components import UIComponents
 class JinaReranker(BaseReranker):
     """
     A reranker using JINA AI's reranker models from Hugging Face.
@@ -30,7 +29,7 @@ class JinaReranker(BaseReranker):
         url = 'https://api.jina.ai/v1/rerank'
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': st.secrets[constants.JINA_RERANKER_API_KEY]
+            'Authorization': UIComponents.get_secrets(constants.JINA_RERANKER_API_KEY)  # Ensure you have set this in your secrets
         }
         start_time = time.time()
         data = {

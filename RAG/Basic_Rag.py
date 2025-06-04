@@ -20,7 +20,7 @@ class UIComponents:
     
     @staticmethod
     def create_tabs():
-        return st.tabs(["Chat with Documents", "Performance Metrics", "FlashCards"])
+        return st.tabs(["Chat with Documents", "Performance Metrics"])
 
 class DocumentProcessor:
     def __init__(self, pipeline: RAGPipeline):

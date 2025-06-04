@@ -1,11 +1,10 @@
-import streamlit as st
 from typing import Dict, List, Any, Optional
 
-from RAG_App.UI.UI_Components import UIComponents
-from RAG_App.UI.chat_interface import ChatInterface
-from RAG_App.UI.sidebar import Sidebar
-from RAG_App.UI.metrics_display import MetricsDisplay
-from RAG_App.UI.flashcard_display import FlashcardDisplay
+from UI.UI_Components import UIComponents
+from UI.chat_interface import ChatInterface
+from UI.sidebar import Sidebar
+from UI.metrics_display import MetricsDisplay
+from UI.flashcard_display import FlashcardDisplay
 
 class MainPage:
     """Main application page integrating all components"""
@@ -35,7 +34,7 @@ class MainPage:
         UIComponents.initialize_page()
         
         # Render page title
-        st.title("RAG Modular Application")
+        UIComponents.create_title("RAG Modular Application")
         
         # Render sidebar
         self.sidebar.render()
@@ -63,17 +62,17 @@ class MainPage:
     
     def _render_debug_tab(self):
         """Render the debug tab with system information"""
-        st.subheader("Debug Information")
+        UIComponents.create_subheader_UI("Debug Information")
         
-        with st.expander("Session State", expanded=False):
-            st.write(st.session_state)
+        # with UIComponents.create_expander("Session State", expanded=False):
+        #     UIComponents.write(st.session_state)
         
-        with st.expander("Component Metrics", expanded=False):
-            if hasattr(st.session_state, "documents") and st.session_state.documents:
-                metrics = self._get_component_metrics()
-                MetricsDisplay.display_pipeline_metrics(metrics)
-            else:
-                st.info("Process documents to view component metrics")
+        # with UIComponents.create_expander("Component Metrics", expanded=False):
+        #     if hasattr(st.session_state, "documents") and st.session_state.documents:
+        #         metrics = self._get_component_metrics()
+        #         MetricsDisplay.display_pipeline_metrics(metrics)
+        #     else:
+        #         st.info("Process documents to view component metrics")
     
     # --- Component type getters ---
     def _get_component_config(self, component_name: str) -> Dict[str, Any]:

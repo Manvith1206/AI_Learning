@@ -151,21 +151,21 @@ class RetrieverType(Enum):
     # SENTENCE_WINDOW = "sentence_window"
 
 class RerankerType(Enum):
-    COSINE = "cosine"
-    LLM = "llm"
-    COHERE = "cohere"
-    JINA = 'jina'
+    COSINE = "Cosine"
+    LLM = "LLM"
+    COHERE = "Cohere"
+    JINA = 'Jina'
 
 class EvaluatorType(Enum):
-    SIMPLE = "simple"
-    RAGAS = "ragas"
-    CUSTOM = "custom"
-    DEEP_EVAL = "deep_eval"
+    SIMPLE = "Simple"
+    RAGAS = "Ragas"
+    CUSTOM = "Custom"
+    DEEP_EVAL = "DeepEval"
 
 class LLMServiceType(Enum):
-    GEMINI = "gemini"
-    COHERE = "cohere"
-    CLAUDE = "claude"
+    GEMINI = "Gemini"
+    # COHERE = "cohere"
+    CLAUDE = "Claude"
 
 # Common LLM model names
 class GeminiLLMModel(Enum):

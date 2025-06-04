@@ -1,6 +1,5 @@
-import streamlit as st
 from typing import List, Dict, Any, Callable
-from RAG_App.UI.UI_Components import UIComponents
+from UI.UI_Components import UIComponents
 
 
 class ChatInterface:
@@ -26,7 +25,7 @@ class ChatInterface:
     
     def render(self):
         """Render the chat interface"""
-        st.subheader("Chat with your Documents")
+        UIComponents.create_subheader_UI("Chat with your Documents")
         
         # Display chat history
         self._render_chat_history()
@@ -36,21 +35,20 @@ class ChatInterface:
     
     def _render_chat_history(self):
         """Render the chat history"""
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+        for message in UIComponents.get_session_state_messages:
+            UIComponents.display_message_with_role(message["role"], message["content"])
     
     def _render_chat_input(self):
         """Render the chat input"""
-        if prompt := st.chat_input("Ask a question about your documents"):
+        if prompt := UIComponents.chat_input("Ask a question about your documents"):
             # Add user message to UI
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
+            UIComponents.get_session_state_messages.append({"role": "user", "content": prompt})
+            UIComponents.display_message_with_role("user", prompt)
+
             
             # Process message if documents are loaded
-            if st.session_state.documents:
-                with st.chat_message("assistant"):
+            if UIComponents.get_session_state_variable("documents", None):
+                with UIComponents.display_chat_message_with_role("assistant"):
                     with UIComponents.display_spinner("🤔 Thinking..."):
                         # Get response from callback
                         self.display_message(None)
@@ -62,17 +60,17 @@ class ChatInterface:
         if response is not None:
             # Display rerank explanation if available
             if "rerank_explanation" in response:
-                st.markdown(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
+                UIComponents.create_subheader_UI(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
             
             # Display answer
-            st.markdown(response["answer"])
+            UIComponents.create_subheader_UI(response["answer"])
             
             # Add to message history
-            st.session_state.messages.append({
+            UIComponents.get_session_state_messages.append({
                 "role": "assistant",
                 "content": response["answer"]
             })
 
     def clear_history(self):
         """Clear the chat history"""
-        st.session_state.messages = []
+        UIComponents.get_session_state_messages = []

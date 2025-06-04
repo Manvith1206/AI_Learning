@@ -2,7 +2,6 @@
 Query classifier module using LLM function calling to detect greetings and irrelevant questions in a RAG system.
 """
 import json
-import streamlit as st
 from typing import List, Dict, Any, Optional, Literal
 
 class QueryClassifier:

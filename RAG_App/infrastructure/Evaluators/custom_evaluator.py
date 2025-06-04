@@ -4,12 +4,11 @@ from typing import List, Dict, Any, Protocol
 import re
 
 from .base_evaluator import BaseEvaluator
-import streamlit as st
 import google.generativeai as genai
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-import RAG_App.infrastructure.Common.RAG_Constants as constants
-from RAG_App.infrastructure.Evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
+import infrastructure.Common.RAG_Constants as constants
+from infrastructure.Evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
 
 # --- Evaluation Metric Base Class ---
 class EvaluationMetric(ABC):

@@ -1,7 +1,6 @@
-import streamlit as st
 from typing import List, Dict, Any, Callable
-from RAG_App.models import Flashcard
-from RAG_App.UI.UI_Components import UIComponents
+from models import Flashcard
+from UI.UI_Components import UIComponents
 
 
 class FlashcardDisplay:
@@ -26,10 +25,10 @@ class FlashcardDisplay:
     
     def render(self):
         """Render the flashcard interface"""
-        st.subheader("Flashcards")
+        UIComponents.create_subheader_UI.subheader("Flashcards")
         
         # Display info about flashcards
-        st.write("""
+        UIComponents.write("""
         Flashcards are automatically generated from your documents to help you learn and review key concepts.
         Click the button below to generate flashcards from your uploaded documents.
         """)
@@ -42,37 +41,37 @@ class FlashcardDisplay:
     
     def _render_generation_button(self):
         """Render the flashcard generation button"""
-        col1, col2 = st.columns([1, 3])
+        col1, col2 = UIComponents.create_columns([1, 3])
         
         with col1:
-            if st.button("Generate Flashcards", key="generate_flashcards"):
+            if UIComponents.create_button("Generate Flashcards", key="generate_flashcards"):
                 self._trigger_flashcard_generation()
     
     def _trigger_flashcard_generation(self):
         """Handle flashcard generation"""
-        st.session_state.flashcards_generation_attempted = True
+        UIComponents.set_session_state_variable("flashcards_generation_attempted", False)
         
-        if not st.session_state.documents:
+        if not UIComponents.get_session_state_variable("documents", None):
             UIComponents.display_error("Please upload and process documents first.")
             return
         
         with UIComponents.display_spinner("Generating flashcards..."):
             try:
                 flashcards = self.on_generate_flashcards()
-                st.session_state.flashcards = flashcards
+                UIComponents.set_session_state_variable("flashcards", flashcards)
                 UIComponents.display_success(f"Generated {len(flashcards)} flashcards!")
             except Exception as e:
                 UIComponents.display_error(f"Error generating flashcards: {str(e)}")
     
     def _render_flashcards(self):
         """Render the generated flashcards"""
-        if not st.session_state.flashcards and st.session_state.flashcards_generation_attempted:
+        if not UIComponents.get_session_state_variable("flashcards", None) and UIComponents.get_session_state_variable("flashcards_generation_attempted", None):
             UIComponents.display_info("No flashcards have been generated yet.")
             return
         
-        for i, flashcard in enumerate(st.session_state.flashcards):
-            with st.expander(f"Flashcard {i+1}: {flashcard.question[:50]}...", expanded=False):
-                st.markdown("**Question:**")
-                st.markdown(flashcard.question)
-                st.markdown("**Answer:**")
-                st.markdown(flashcard.answer)
+        for i, flashcard in enumerate(UIComponents.get_session_state_variable("flashcards", [])):
+            with UIComponents.create_expander(f"Flashcard {i+1}: {flashcard.question[:50]}...", expanded=False):
+                UIComponents.create_subheader_UI("**Question:**")
+                UIComponents.create_subheader_UI(flashcard.question)
+                UIComponents.create_subheader_UI("**Answer:**")
+                UIComponents.create_subheader_UI(flashcard.answer)

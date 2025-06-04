@@ -2,12 +2,11 @@ import time
 from .base_embedder import BaseEmbedder
 from google import genai
 import os
-import streamlit as st
-import RAG_App.infrastructure.Common.RAG_Constants as constants
-
+import infrastructure.Common.RAG_Constants as constants
+from UI.UI_Components import UIComponents
 class GeminiEmbedder(BaseEmbedder):
     def __init__(self, api_key=None, model_name = constants.GeminiEmbedModels.GEMINI_EMBED_001_MODEL.value):
-        api_key = api_key or st.secrets[constants.GEMINI_API_KEY]
+        api_key = api_key or UIComponents.get_secrets(constants.GEMINI_API_KEY)
         self.client = genai.Client(api_key=api_key)
         self.model = model_name
         self.texts = None

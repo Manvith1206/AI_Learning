@@ -1,15 +1,14 @@
 import time
-from RAG_App.infrastructure.Evaluators.base_evaluator import BaseEvaluator
+from infrastructure.Evaluators.base_evaluator import BaseEvaluator
 from deepeval.metrics import FaithfulnessMetric, AnswerRelevancyMetric, ContextualPrecisionMetric, ContextualRecallMetric
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 from deepeval.models.llms import gemini_model
-import streamlit as st
-
+from UI.UI_Components import UIComponents
 class DeepEval(BaseEvaluator):
     def __init__(self, metrics=None):
-        model = gemini_model.GeminiModel(model_name=constants.GeminiLLMModel.GEMINI_FLASH.value, api_key=st.secrets[constants.GEMINI_API_KEY])
+        model = gemini_model.GeminiModel(model_name=constants.GeminiLLMModel.GEMINI_FLASH.value, api_key=UIComponents.get_secrets(constants.GEMINI_API_KEY))
         self.metrics = metrics or [
             FaithfulnessMetric(threshold=0.7, model=model, include_reason=True),
             AnswerRelevancyMetric(threshold=0.7, model=model, include_reason=True),

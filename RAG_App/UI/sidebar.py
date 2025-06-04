@@ -1,13 +1,13 @@
 from typing import Dict, List, Any, Callable, Tuple
-from RAG_App.UI.UI_Components import UIComponents
-from RAG_App.infrastructure.Common.rag_pipeline import RAGPipeline
-from RAG_App.Utils.RAG_Constants import ChunkerType, EmbedderType, RetrieverType, RerankerType
-from RAG_App.infrastructure.Common import RAG_Constants as constants
+from UI.UI_Components import UIComponents
+from infrastructure.Common.rag_pipeline import RAGPipeline
+from infrastructure.Common.RAG_Constants import ChunkerType, EmbedderType, RetrieverType, RerankerType
+from infrastructure.Common import RAG_Constants as constants
 import pandas as pd
 
-from RAG_App.services.services import DocumentProcessor
-from RAG_App.UI.flashcard_display import FlashcardDisplay
-from RAG_App.config import ConfigManager
+from services.services import DocumentProcessor
+from UI.flashcard_display import FlashcardDisplay
+from config import ConfigManager
 class Sidebar:
     """Sidebar component for the RAG application"""
     def __init__(self):
@@ -96,12 +96,13 @@ class Sidebar:
 
     def render_chat_area(self):
         """Render the main chat area"""
-        UIComponents.create_subheader("Chat with your Documents")
+        UIComponents.create_subheader_UI("Chat with your Documents")
         
         # Display chat history
         for message in UIComponents.get_session_state_messages():
             UIComponents.display_message_with_role(role=message["role"], message=message['content'])
 
+        print("Chat Messages:", UIComponents.get_session_state_messages())
         # Chat input
         if prompt := UIComponents.chat_input("Ask a question about your documents"):
             UIComponents.add_message_to_chat(role='user', content=prompt)
@@ -110,6 +111,7 @@ class Sidebar:
 
     def process_chat_input(self, prompt: str):
         """Process user chat input and generate response"""
+        print("Processing chat input:", prompt)
         if UIComponents.get_session_state_variable("documents"):
             with UIComponents.display_spinner("🤔 Thinking..."):
                 pipeline = self.get_pipeline()
@@ -123,7 +125,7 @@ class Sidebar:
     def render_sidebar(self):
         """Render the sidebar with all configuration options"""
         with UIComponents.create_sidebar():
-            UIComponents.create_subheader("Configuration")
+            UIComponents.create_subheader_UI("Configuration")
             self.render_config_tabs()
             self.render_chat_response_config()
             self.render_upload_file_section()
@@ -155,13 +157,13 @@ class Sidebar:
             index=index
         )
 
-        chunk_size = UIComponents.display_slider(constants.CHUNK_SIZE_DISPLAY_NAME, 10, 10000, 150)
-        chunk_overlap = UIComponents.display_slider(constants.CHUNK_OVERLAP_DISPLAY_NAME, 0, 3000, 70)
+        chunker_params = self.get_chunker_config(chunker_type)
+        vector_store = self.get_vector_store_config()
+        embedder_params = self.get_embedder_config()
 
         with UIComponents.display_spinner("Applying Text Processing Config"):
             if UIComponents.create_button("Apply Text Processing Config"):
-                self.apply_text_processing_config(chunker_type, chunk_size, chunk_overlap)
-                UIComponents.display_success("Text processing configuration updated.")
+                self.apply_text_processing_config(chunker_params, vector_store, embedder_params)
 
     def render_retrieval_config(self):
         """Render retrieval configuration options"""
@@ -195,8 +197,7 @@ class Sidebar:
 
     def get_ui_options(self, option_type, config_name: str):
         options = [e.value for e in option_type]
-        import streamlit as st
-        st_config = st.session_state.pipeline_config.get_config(config_name)
+        st_config = UIComponents.get_session_state_variable("pipeline_config").get_config(config_name)
         print("STCONFIG:", st_config)
         config = UIComponents.get_session_state_variable("pipeline_config").get_config(config_name)
         index = options.index(config[constants.CONFIG_TYPE_PARAM])
@@ -204,7 +205,7 @@ class Sidebar:
 
     def render_evaluation_section(self):
         # Evaluation section
-        UIComponents.create_subheader("Evaluation")
+        UIComponents.create_subheader_UI("Evaluation")
         ground_truth = UIComponents.create_text_area(constants.GROUND_TRUTH_DISPLAY_NAME, value=constants.GROUND_TRUTH_DEFAULT_VALUE, key="ground_truth_input")
         if UIComponents.create_button("Evaluate Last Query", key="evaluate_last_query"):
             # Initialize pipeline when needed
@@ -239,7 +240,7 @@ class Sidebar:
 
     def render_upload_file_section(self):
         """Render file upload section in sidebar"""
-        UIComponents.create_subheader("Upload and Process Documents")
+        UIComponents.create_subheader_UI("Upload and Process Documents")
         uploaded_file = UIComponents.create_file_uploader(
             "Upload Document",
             file_types=["pdf", "csv", "txt", "docx"],
@@ -332,12 +333,19 @@ class Sidebar:
         llm_model_options = self.get_llm_model_options(llm_service)
 
         options = list(llm_model_options.keys())
-        default_option = UIComponents.get_session_state_variable("pipeline_config").get_config(constants.CONFIG_LLM)[constants.CONFIG_PARAM][constants.CONFIG_MODEL]
-
+        if UIComponents.get_session_state_variable("pipeline_config").get_config(constants.CONFIG_LLM)[constants.CONFIG_TYPE_PARAM] == llm_service:
+            default_option = UIComponents.get_session_state_variable("pipeline_config").get_config(constants.CONFIG_LLM)[constants.CONFIG_PARAM][constants.CONFIG_MODEL]
+            default_option = self.get_name_of_llm_model_to_display(llm_service, default_option)
+        else:
+            default_option = options[0]
+        print("Config:", UIComponents.get_session_state_variable("pipeline_config").get_config(constants.CONFIG_LLM))
+        print("LLM Service:", llm_service)
+        print("LLM Model Options:", llm_model_options)
+        print("Default Option:", default_option)
         # Get the index
         index = options.index(default_option)
         user_selected_llm_model = UIComponents.selectbox(
-            constants.LLM_CHAT_SERVICE, 
+            constants.LLM_CHAT_SERVICE + " Model", 
             options=llm_model_options.keys(), 
             index=index
         )
@@ -354,7 +362,7 @@ class Sidebar:
             UIComponents.display_success("Chat response configuration updated.")
 
     def render_test_all_configs_section(self):
-        UIComponents.create_subheader("Test All Configurations")
+        UIComponents.create_subheader_UI("Test All Configurations")
         UIComponents.write("Click the button below to test all configurations with different combinations of chunkers, embedder, vector store, and reranker.")
 
         if UIComponents.create_button("Test All Configurations", key="test_all_combinations"):
@@ -373,7 +381,8 @@ class Sidebar:
         elif chunker_type == ChunkerType.SEMANTIC.value:
             min_chunk_size = UIComponents.create_number_input(constants.MIN_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 600)
             max_chunk_size = UIComponents.create_number_input(constants.MAX_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 110)
-            similarity_threshold = UIComponents.create_text_area(constants.SIMILARITY_THRESHOLD_DISPLAY_NAME, 0.65)
+            similarity_threshold = UIComponents.create_text_area(constants.SIMILARITY_THRESHOLD_DISPLAY_NAME, value=0.65, key="similarity_threshold_input")
+            print("Similarity Threshold:", similarity_threshold)
             model_name = UIComponents.selectbox(
                 constants.MODEL_NAME_DISPLAY_NAME,
                 options=[
@@ -462,9 +471,28 @@ class Sidebar:
         if llm_service == constants.LLMServiceType.GEMINI.value:
             return {model.display_name: model.value for model in constants.GeminiLLMModel}
         elif llm_service == constants.LLMServiceType.CLAUDE.value:
+            print("Claude Models:", [model.value for model in constants.CLAUDE_MODELS])
             return {model.display_name: model.value for model in constants.CLAUDE_MODELS}
         else:
             return {model.display_name: model.value for model in constants.GeminiLLMModel}
+        
+    def get_name_of_llm_model_to_display(self, llm_service: str, currModel: str) -> str:
+        """Get the display name of the LLM model based on the service and model"""
+        if llm_service == constants.LLMServiceType.GEMINI.value:
+            for model in constants.GeminiLLMModel:
+                print("Model:", currModel, "Value:", model.value)
+                if model.value == currModel:
+                    return model.display_name
+        elif llm_service == constants.LLMServiceType.CLAUDE.value:
+            for model in constants.CLAUDE_MODELS:
+                print("Model:", currModel, "Value:", model.value)
+
+                if model.display_name == currModel:
+                    return model.display_name
+        else:
+            for model in constants.GeminiLLMModel:
+                if model.value == model:
+                    return model.display_name
     
     def get_reranker_model_options(self, reranker_type: str) -> dict:
         """Get re-ranker model options based on the selected type"""

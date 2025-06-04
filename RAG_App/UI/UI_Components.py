@@ -1,7 +1,6 @@
 import streamlit as st
 from typing import List, Tuple, Dict, Any, Callable
 import pandas as pd
-from RAG_App.infrastructure.Common.rag_pipeline import RAGPipeline
 
 class UIComponents:
     """Base UI components for the RAG application"""
@@ -31,7 +30,13 @@ class UIComponents:
         with st.sidebar:
             pass  # Empty sidebar
         return st.sidebar
-    
+    @staticmethod
+    def display_chat_message_with_role(role: str, message: str):
+        """Display a message with a specific role in the chat"""
+        with st.chat_message(role):
+            pass
+        return st.chat_message(role)
+
     @staticmethod
     def display_success(message: str):
         """Display a success message"""
@@ -85,12 +90,17 @@ class UIComponents:
         elif level == 2:
             st.header(text)
         elif level == 3:
-            st.subheader(text)
+            UIComponents.create_subheader_UI(text)
         else:
-            st.write(f"**{text}**")
+            UIComponents.write(f"**{text}**")
     
     @staticmethod
-    def create_subheader(text: str):
+    def create_title(text: str):
+        """Create a header"""
+        st.title(text)
+
+    @staticmethod
+    def create_subheader_UI(text: str):
         """Create a subheader"""
         st.subheader(text)          
 
@@ -106,7 +116,7 @@ class UIComponents:
             if var_name not in st.session_state:
                 st.session_state[var_name] = default_value
 
-    import RAG_App.config as ConfigManager
+    import config as ConfigManager
     @staticmethod
     def initialize_pipeline(config_manager: ConfigManager):
         """Initialize the RAG pipeline in session state"""
@@ -160,15 +170,16 @@ class UIComponents:
     def chat_input(label: str):
         """Create a chat input field"""
         st.chat_input(label)
+        print("Chat Input:", label)
     @staticmethod 
-    def process_chat_input(role: str, content: str, pipeline: RAGPipeline, prompt: str):
+    def process_chat_input(role: str, content: str, pipeline, prompt: str):
         """Display a chat message with a specific role"""
         with st.chat_message(role):
             with st.spinner("🤔 Thinking..."):
                 response = pipeline.query(prompt)
-                st.markdown(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
-                st.markdown(response["answer"])
-                st.session_state.messages.append({"role": role, "content": response["answer"]})
+                UIComponents.create_subheader_UI(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
+                UIComponents.create_subheader_UI(response["answer"])
+                UIComponents.get_session_state_messages.append({"role": role, "content": response["answer"]})
 
     @staticmethod
     def markdown(text: str):
@@ -195,3 +206,7 @@ class UIComponents:
     def create_number_input(label: str, min_value: int, max_value: int, value: int = None):
         """Create a number input field"""
         return st.number_input(label, min_value=min_value, max_value=max_value, value=value)
+    @staticmethod
+    def get_secrets(value: str):
+        """Create a secrets input field"""
+        return st.secrets[value]
