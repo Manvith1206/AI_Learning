@@ -1,4 +1,5 @@
 import os
+from typing import Dict, List
 import uuid
 
 from infrastructure.Evaluators.simple_evaluator  import SimpleEvaluator
@@ -410,6 +411,7 @@ class RAGPipeline:
         try:
             if self.query_classifier.is_greeting(query_text):
                 UIComponents.create_subheader_UI(self.query_classifier.get_greeting_response())
+                UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_greeting_response())
                 return {
                 constants.ANSWER: self.query_classifier.get_greeting_response(),
                 constants.CONTEXTS: "",
@@ -422,6 +424,7 @@ class RAGPipeline:
             print("CcontextDocsLen: ", len(context_docs))
             if self.query_classifier.is_irrelevant(query_text, context_docs):
                 UIComponents.create_subheader_UI(self.query_classifier.get_irrelevant_question_response())
+                UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_irrelevant_question_response())
                 return {
                 constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
                 constants.CONTEXTS: context_docs,
@@ -466,6 +469,7 @@ class RAGPipeline:
 
             Answer:
             """
+            print("Answer Prompt: ", answer_prompt)
             placeHolder = UIComponents.create_empty_placeholder()
             full_response = ""
             for delta in self.llm_service.generate_response(answer_prompt):

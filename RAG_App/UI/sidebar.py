@@ -132,17 +132,16 @@ class Sidebar:
         """Render configuration tabs in sidebar"""
         config_tabs = UIComponents.create_tabs([
             constants.TEXT_PROCESSING_DISPLAY_NAME, 
-            constants.RETRIEVAL_DISPLAY_NAME, 
-            constants.EVALUATION_DISPLAY_NAME
+            constants.RETRIEVAL_DISPLAY_NAME
         ])
         
         with config_tabs[0]:
             self.render_text_processing_config()
         with config_tabs[1]:
             self.render_retrieval_config()
-        with config_tabs[2]:
-            self.render_evaluation_config()
-            self.render_evaluation_section()
+        # with config_tabs[2]:
+        #     self.render_evaluation_config()
+        #     self.render_evaluation_section()
 
     def render_text_processing_config(self):
         """Render text processing configuration options"""
@@ -335,10 +334,7 @@ class Sidebar:
             default_option = self.get_name_of_llm_model_to_display(llm_service, default_option)
         else:
             default_option = options[0]
-        print("Config:", UIComponents.get_session_state_variable("pipeline_config").get_config(constants.CONFIG_LLM))
-        print("LLM Service:", llm_service)
-        print("LLM Model Options:", llm_model_options)
-        print("Default Option:", default_option)
+        
         # Get the index
         index = options.index(default_option)
         user_selected_llm_model = UIComponents.selectbox(

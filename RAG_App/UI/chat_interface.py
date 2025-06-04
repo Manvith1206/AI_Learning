@@ -42,15 +42,17 @@ class ChatInterface:
         UIComponents.create_subheader_UI("Chat with your Documents")
         
         # Display chat history
-        for message in UIComponents.get_session_state_messages():
-            UIComponents.display_message_with_role(role=message["role"], message=message['content'])
+        # for message in UIComponents.get_session_state_messages():
+        #     UIComponents.display_message_with_role(role=message["role"], message=message['content'])
 
         print("Chat Messages:", UIComponents.get_session_state_messages())
         # Chat input
-        if prompt := UIComponents.chat_input("Ask a question about your documents", key="chat_input"):
-            UIComponents.add_message_to_chat(role='user', content=prompt)
-            UIComponents.display_message_with_role(role='user', message=prompt)
-            UIComponents.process_chat_input(role='assistant', content=prompt, pipeline=Utils.Utils.get_pipeline(), prompt=prompt)
+        import streamlit as st
+        with st.container():
+            if prompt := UIComponents.chat_input("Ask a question about your documents", key="chat_input"):
+                UIComponents.add_message_to_chat(role='user', content=prompt)
+                UIComponents.display_message_with_role(role='user', message=prompt)
+                UIComponents.process_chat_input(role='assistant', content=prompt, pipeline=Utils.Utils.get_pipeline(), prompt=prompt)
     
     def display_message(self, response):
         """Display the response message in the chat interface"""        

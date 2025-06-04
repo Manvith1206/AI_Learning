@@ -6,6 +6,7 @@ sys.path.insert(0, project_root)
 import pandas as pd
 from typing import Dict, List, Any, Optional
 from UI.pages.main_page import MainPage
+
 def main():
     main_page = MainPage()
     main_page.render()

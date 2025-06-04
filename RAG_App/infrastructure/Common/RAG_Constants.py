@@ -171,6 +171,7 @@ class LLMServiceType(Enum):
 class GeminiLLMModel(Enum):
     GEMINI_FLASH = "gemini-2.0-flash"
     GEMINI_PRO = "gemini-2.5-pro-preview-05-06"
+    GEMINI_TWO_5_FLASH = "models/gemini-2.5-flash-preview-05-20"
     
     @property
     def display_name(self):
@@ -217,6 +218,8 @@ class CLAUDE_MODELS(Enum):
     CLAUDE_SONNET_THREE_5 = "claude-3-5-sonnet-20241022"
     CLAUDE_HAIKU_THREE_5 = "claude-3-5-haiku-20241022"
     CLAUDE_OPUS_THREE = "claude-3-opus-20240229"
+    CLAUDE_OPUS_FOUR = "claude-opus-4-20250514"
+    CLAUDE_SONNET_FOUR = "claude-sonnet-4-20250514"
     
     @property
     def display_name(self):
