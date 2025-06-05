@@ -5,13 +5,13 @@ from .base_reranker import BaseReranker
 import requests
 import time
 import infrastructure.Common.RAG_Constants as constants
-from UI.UI_Components import UIComponents
+
 
 class JinaReranker(BaseReranker):
     """
     A reranker using JINA AI's reranker models from Hugging Face.
     """
-    def __init__(self, model: str = "jinaai/jina-reranker-v1-base-en", top_k_for_reranking: int = 5):
+    def __init__(self, api_key: str = None, model: str = "jinaai/jina-reranker-v1-base-en", top_k_for_reranking: int = 5):
         """
         Initialize the JINA reranker with a specified model.
         
@@ -19,6 +19,9 @@ class JinaReranker(BaseReranker):
             model_name: The name of the JINA reranker model
             device: Device to run the model on ('cpu', 'cuda', etc.). If None, uses CUDA if available.
         """
+        if not api_key:
+            raise ValueError("Jina API key must be provided for JinaReranker.")
+        self.api_key = api_key
         self.model = model
         self.time_taken = 0
         self.cost = 0
@@ -30,7 +33,7 @@ class JinaReranker(BaseReranker):
         url = 'https://api.jina.ai/v1/rerank'
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': UIComponents.get_secrets(constants.JINA_RERANKER_API_KEY)  # Ensure you have set this in your secrets
+            'Authorization': f'Bearer {self.api_key}'
         }
         start_time = time.time()
         data = {

@@ -11,7 +11,7 @@ class CohereEmbedder(BaseEmbedder):
         api_key: your COHERE_API_KEY (or set via env var COHERE_API_KEY)
         model:   the Cohere embed model to use
         """
-        key = api_key or os.getenv("COHERE_API_KEY")
+        key = api_key
         if not key:
             raise ValueError("Cohere API key not provided. Set COHERE_API_KEY or pass api_key.")
         self.client = cohere.Client(key)

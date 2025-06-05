@@ -5,6 +5,8 @@ from infrastructure.Common.RAG_Constants import (
 )
 
 import infrastructure.Common.RAG_Constants as constants
+import os
+import Utils.Utils
 
 class ConfigManager:
     """Manages configuration for RAG components"""
@@ -18,6 +20,8 @@ class ConfigManager:
             constants.CONFIG_LLM: {constants.CONFIG_TYPE_PARAM: LLMServiceType.CLAUDE.value, constants.CONFIG_PARAM: {constants.CONFIG_MODEL: constants.CLAUDE_MODELS.CLAUDE_OPUS_THREE.value}},
             constants.CONFIG_EVALUATOR: {constants.CONFIG_TYPE_PARAM: EvaluatorType.RAGAS.value}
         }
+        # Merge loaded secrets into the main config or keep them separate
+        # For now, keeping them separate in self._secrets for clarity
 
     def get_config(self, component=None):
         if component:
@@ -26,3 +30,7 @@ class ConfigManager:
     
     def update_config(self, component, config):
         self.config[component] = config
+
+    def get_secret(self, secret_name: str):
+        """Get a loaded secret by its name."""
+        return Utils.Utils.get_env_var(secret_name)

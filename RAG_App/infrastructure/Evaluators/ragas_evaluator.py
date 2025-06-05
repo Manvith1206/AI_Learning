@@ -1,30 +1,34 @@
 import time
+
+
 from .base_evaluator import BaseEvaluator
 from ragas.metrics import answer_relevancy, faithfulness, answer_correctness, context_precision, context_recall
 from ragas import evaluate
 from datasets import Dataset
-import os
-import openai
 import infrastructure.Common.RAG_Constants as constants
 from ragas.dataset_schema import MultiTurnSample
 from ragas.llms import LangchainLLMWrapper
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from UI.UI_Components import UIComponents
-from ragas.llms import LangchainLLMWrapper
 
-os.environ["OPENAI_API_KEY"] = UIComponents.get_secrets(constants.OPENAI_API_KEY)
+from ragas.llms import LangchainLLMWrapper
 
 class RagasEvaluator(BaseEvaluator):
     """Evaluator that uses RAGAS metrics for RAG evaluation"""
     
-    def __init__(self, metrics=None):
+    def __init__(self, metrics=None, gemini_api_key: str = None, openai_api_key: str = None):
         """
         Initialize with specific metrics or use default
         
         Args:
             metrics: List of RAGAS metrics to use (default: faithfulness)
         """
+        if not gemini_api_key:
+            raise ValueError("Gemini API key must be provided for RagasEvaluator if Gemini models are used.")
+        if not openai_api_key:
+            raise ValueError("OpenAI API key must be provided for RagasEvaluator if OpenAI models are used.")
+        self.gemini_api_key = gemini_api_key
+        self.openai_api_key = openai_api_key
         self.metrics = metrics or [faithfulness, context_precision, answer_correctness, context_recall, answer_relevancy]
         self.time_taken = 0
         self.cost = 0
@@ -63,21 +67,22 @@ class RagasEvaluator(BaseEvaluator):
         chatLLM = ChatOpenAI(
             model="gpt-4o",
             temperature=0.0,
+            api_key=self.openai_api_key
         )
         geminiLLM = ChatGoogleGenerativeAI(
             model=constants.GeminiLLMModel.GEMINI_FLASH.value,
             temperature=0.0,
-            google_api_key=UIComponents.get_secrets(constants.GEMINI_API_KEY)
+            google_api_key=self.gemini_api_key
         )
         print("Using LLM: ", geminiLLM)
         print("Using OpenAI LLM: ", chatLLM)
-        with UIComponents.display_spinner("Running RAG evaluation..."):
-            result = evaluate(
+        result = evaluate(
                 data,
                 metrics=self.metrics,
                 raise_exceptions=True,
                 llm = chatLLM
             )
+            
         print("Cost", result.cost_cb)
         print("TotalCost", result.total_cost)
 
