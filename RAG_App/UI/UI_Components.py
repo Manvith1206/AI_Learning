@@ -231,3 +231,8 @@ class UIComponents:
     def get_secrets(value: str):
         """Create a secrets input field"""
         return st.secrets[value]
+
+    @staticmethod
+    def rerun():
+        """Rerun the Streamlit app"""
+        st.rerun()

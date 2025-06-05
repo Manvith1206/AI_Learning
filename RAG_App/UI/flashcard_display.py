@@ -32,7 +32,7 @@ class FlashcardDisplay:
                     UIComponents.set_session_state_variable("card_index", card_index)
                     UIComponents.set_session_state_variable("show_answer", False)
                     print(f"Previous Button / Card index updated to: {card_index}")
-                    # Removed self.display_card() to avoid duplicate UI
+                    UIComponents.rerun()
 
         with col2:
             if UIComponents.create_button("➡️ Next"):
@@ -42,7 +42,7 @@ class FlashcardDisplay:
                     UIComponents.set_session_state_variable("card_index", card_index)
                     UIComponents.set_session_state_variable("show_answer", False)
                     print(f"Next Button / Card index updated to: {card_index}")
-                    # Removed self.display_card() to avoid duplicate UI
+                    UIComponents.rerun()
 
     def display_card(self):        
         if not self.flashcards:
@@ -63,7 +63,6 @@ class FlashcardDisplay:
         if UIComponents.create_button(button_label):
             show_answer = not show_answer
             UIComponents.set_session_state_variable("show_answer", show_answer)
-            # Optionally, re-render the card to update the button label immediately
-            # self.display_card()  # Uncomment if needed for your UI framework
+            UIComponents.rerun()
         if show_answer and self.card:
             UIComponents.markdown(f"**A:** {self.card['answer']}")
