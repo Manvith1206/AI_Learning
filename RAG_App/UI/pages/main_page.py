@@ -52,17 +52,7 @@ class MainPage:
         docs_for_flashcards_content = UIComponents.get_session_state_variable("processed_document_texts", []) 
 
         if not docs_for_flashcards_content:
-            # Fallback: try to get context from the last query if available, as a last resort.
-            # This is not ideal for comprehensive flashcard generation over all docs.
-            last_query_data = UIComponents.get_session_state_variable(constants.LAST_QUERY, None)
-            if last_query_data and last_query_data.get(constants.CONTEXTS):
-                docs_for_flashcards_content = last_query_data.get(constants.CONTEXTS)
-                UIComponents.display_info("No specific documents found for flashcards, attempting to use context from last query.")
-            else:
-                UIComponents.display_warning("Please process documents first to generate flashcards. No content available.")
-                UIComponents.set_session_state_variable("flashcards", [])
-                UIComponents.set_session_state_variable("flashcards_generation_attempted", True)
-                return
+            UIComponents.display_warning("No processed document content available for flashcard generation. Please ensure documents are uploaded and processed first.")
         
         # Concatenate all document/chunk texts into a single string
         # Ensure docs_for_flashcards_content is a list of strings
@@ -80,12 +70,16 @@ class MainPage:
             UIComponents.set_session_state_variable("flashcards_generation_attempted", True)
             return
 
-        UIComponents.display_info("Generating flashcards... This may take a moment.")
-        generated_flashcards = pipeline.generate_flashcards_from_text(full_text_content, num_flashcards=5)
+        with UIComponents.display_spinner("Generating flashcards..."):
+            UIComponents.display_info("Generating flashcards... This may take a moment.")
+            generated_flashcards = pipeline.generate_flashcards_from_text(full_text_content, num_flashcards=constants.NUM_OF_FLASHCARDS)
         
         UIComponents.set_session_state_variable("flashcards", generated_flashcards)
         UIComponents.set_session_state_variable("flashcards_generation_attempted", True)
+        UIComponents.set_session_state_variable("card_index", 0)  # Reset index for new flashcards
+        UIComponents.set_session_state_variable("show_answer", False)  # Reset answer visibility
         
+        # Display success or warning based on generation result
         if generated_flashcards:
             UIComponents.display_success(f"{len(generated_flashcards)} flashcards generated successfully!")
         else:

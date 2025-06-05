@@ -18,7 +18,6 @@ class ClaudeService(BaseLLMService):
             model=self.model_name,
         ) as stream:
             for text in stream.text_stream:
-                print("Anthropic Response: ", text)
                 yield text
         
         end_time = time.time()

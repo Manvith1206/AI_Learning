@@ -52,6 +52,7 @@ CONFIG_CHAT_RESPONSE = "chat_response"
 RERANK_EXPLAINATION = "Chunks sorted by cosine similarity scores (highest to lowest)."
 NO_EXPLAINATION_NEEDED_MESSAGE = "No explanation needed."
 UNABLE_TO_RETRIEVE_MESSAGE = "Unable to retrieve documents currently. Try Again after some time."
+NUM_OF_FLASHCARDS = 5
 
 VECTOR_STORE_MUST_BE_PROVIDED_ERROR_MESSAGE = "Vector store must be provided"
 QUERY_TEXT_MUST_BE_PROVIDED_ERROR_MESSAGE = "Query text must be provided"

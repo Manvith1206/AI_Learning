@@ -309,10 +309,8 @@ class RAGPipeline:
     # process documents
     def process_document(self, file, texts=None):
         try:
-            print(self.chunker)
             chunks =  self.chunker.split_text(text=texts)
 
-            print("Texts: ", chunks)
             documents = []
             for chunk in chunks:
                 doc_id = str(uuid.uuid4())
@@ -326,7 +324,6 @@ class RAGPipeline:
             
             
             documents = self.vector_store.format_documents(documents)
-            print("Self Vector Store: ", self.vector_store)
             self.vector_store.add_embeddings(embeddings, documents)
 
             return documents, chunks
@@ -421,7 +418,6 @@ class RAGPipeline:
             # Ensure documents are available
             
             context_docs, explanation, context_docs_list = self.get_context_docs(query_text)
-            print("CcontextDocsLen: ", len(context_docs))
             if self.query_classifier.is_irrelevant(query_text, context_docs):
                 UIComponents.create_subheader_UI(self.query_classifier.get_irrelevant_question_response())
                 UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_irrelevant_question_response())
@@ -469,12 +465,10 @@ class RAGPipeline:
 
             Answer:
             """
-            print("Answer Prompt: ", answer_prompt)
             placeHolder = UIComponents.create_empty_placeholder()
             full_response = ""
             for delta in self.llm_service.generate_response(answer_prompt):
                 full_response += delta
-                print("Full Response: ", full_response)
                 placeHolder.markdown(full_response)
 
             UIComponents.add_message_to_chat("assistant",  full_response)

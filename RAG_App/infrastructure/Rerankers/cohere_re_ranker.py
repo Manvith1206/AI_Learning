@@ -27,10 +27,6 @@ class CohereReranker(BaseReranker):
             model=self.model,
             top_n=self.top_k_for_reranking
         )
-        print("topk", self.top_k_for_reranking)
-
-        print("Coeherereanking/ resposne", response)
-        
         # Create a list of (document, score) tuples
         doc_score_pairs = [(documents[result.index], result.relevance_score) for result in response.results]
 
@@ -41,7 +37,6 @@ class CohereReranker(BaseReranker):
         sorted_documents = [doc for doc, score in sorted_results]
                             
         explaination = f"Cohere Re ranking Model {self.model} re ranked the docs"
-        print("SortedDocs: ", sorted_documents)
 
         end_time = time.time()
         self.time_taken = end_time - start_time
