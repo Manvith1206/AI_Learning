@@ -17,6 +17,7 @@ class BaseRetriever(ABC):
             List of retrieved documents with relevance scores
         """
         pass
+    
     @abstractmethod
     def get_cost_and_time_taken(self):
         """Returns the time taken for the retrieve operation."""

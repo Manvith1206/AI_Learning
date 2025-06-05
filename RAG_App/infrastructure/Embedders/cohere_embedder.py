@@ -1,9 +1,9 @@
 # cohere_embedder.py
 import time
-from RAG_App.infrastructure.Embedders.base_embedder import BaseEmbedder
+from infrastructure.Embedders.base_embedder import BaseEmbedder
 import cohere
 import os
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 
 class CohereEmbedder(BaseEmbedder):
     def __init__(self, api_key: str = None, model: str = constants.CohereEmbedModels.COHERE_EMBED_MODEL_ENG):

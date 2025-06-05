@@ -19,9 +19,9 @@ class MainPage:
         """Initialize the main page with all required use cases"""
         
         # Initialize UI components
-        self._initialize_components()
+        self.initialize_components()
     
-    def _initialize_components(self):
+    def initialize_components(self):
         """Initialize all UI components"""
         UIComponents.initialize_page()
         # Chat interface
@@ -36,7 +36,7 @@ class MainPage:
             flashcards=[] # Initially empty, will be populated from session state
         )
        
-    def _trigger_flashcard_generation(self):
+    def trigger_flashcard_generation(self):
         """Handles the flashcard generation process using RAGPipeline."""
         pipeline = Utils.Utils.get_pipeline() # Get the RAGPipeline instance
         if not pipeline or not hasattr(pipeline, 'generate_flashcards_from_text'):
@@ -110,7 +110,7 @@ class MainPage:
             UIComponents.create_subheader_UI("Flashcard Generation & Review")
 
             if UIComponents.create_button("✨ Generate Flashcards"): 
-                self._trigger_flashcard_generation()
+                self.trigger_flashcard_generation()
 
             # Ensure session state keys exist before first use
             if "flashcards" not in UIComponents.get_session_state():
@@ -138,9 +138,9 @@ class MainPage:
         
         # Debug tab
         with tabs[3]:
-            self._render_debug_tab()
+            self.render_debug_tab()
     
-    def _render_debug_tab(self):
+    def render_debug_tab(self):
         """Render the debug tab with system information"""
         UIComponents.create_subheader_UI("Debug Information")
         
@@ -149,17 +149,17 @@ class MainPage:
         
         UIComponents.write("Component Metrics")
         if hasattr(UIComponents.get_session_state(), "documents") and UIComponents.get_session_state_variable("documents", None):
-            metrics = self._get_component_metrics()
+            metrics = self.get_component_metrics()
             MetricsDisplay.display_pipeline_metrics(metrics)
         else:
             UIComponents.display_info("Process documents to view component metrics")
     
     # --- Component type getters ---
-    def _get_component_config(self, component_name: str) -> Dict[str, Any]:
+    def get_component_config(self, component_name: str) -> Dict[str, Any]:
         """Get configuration for a specific component"""
         return self.configuration_usecase.get_component_config(component_name)
     
-    def _get_component_metrics(self) -> Dict[str, Any]:
+    def get_component_metrics(self) -> Dict[str, Any]:
         """Get metrics for all components"""
         # This would be implemented to retrieve metrics from the RAG service
         # For now, return mock data
@@ -173,12 +173,3 @@ class MainPage:
             constants.CONFIG_VECTOR_STORE: pipeline.get_vector_store_cost_and_time(),
             constants.CONFIG_LLM: pipeline.get_llm_service_cost_and_time()
         }
-    
-    # def _handle_evaluation(self, ground_truth: str) -> Dict[str, float]:
-    #     """Handle evaluation of last query"""
-    #     try:
-    #         evaluation_result = self.evaluation_usecase.evaluate_last_query(ground_truth)
-    #         return evaluation_result.metrics
-    #     except Exception as e:
-    #         UIComponents.display_error(f"Error during evaluation: {str(e)}")
-    #         return {}

@@ -6,6 +6,7 @@ from deepeval.test_case import LLMTestCase
 import infrastructure.Common.RAG_Constants as constants
 from deepeval.models.llms import gemini_model
 from UI.UI_Components import UIComponents
+
 class DeepEval(BaseEvaluator):
     def __init__(self, metrics=None):
         model = gemini_model.GeminiModel(model_name=constants.GeminiLLMModel.GEMINI_FLASH.value, api_key=UIComponents.get_secrets(constants.GEMINI_API_KEY))
@@ -17,6 +18,7 @@ class DeepEval(BaseEvaluator):
         ]
         self.time_taken = 0
         self.cost = 0
+
     def evaluate(self, question, answer, contexts, ground_truths=None):
         # Replace this with the actual output from your LLM application
         start_time = time.time()  # Start timing
@@ -35,7 +37,6 @@ class DeepEval(BaseEvaluator):
         print("Test Results: ", result.test_results)
 
         metrics_dict = {}
-        
 
         curr_cost_value = 0
         for test_result in result.test_results:
@@ -54,7 +55,6 @@ class DeepEval(BaseEvaluator):
         self.time_taken = end_time - start_time
         self.cost = curr_cost_value
         return metrics_dict
-        print("Result of evaluation: ", result)
     
     def get_cost_and_time_taken(self):
         return self.cost, self.time_taken

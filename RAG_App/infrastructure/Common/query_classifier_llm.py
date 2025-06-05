@@ -43,9 +43,9 @@ class QueryClassifier:
         """
         if not self.llm_service:
             # Fallback to basic classification if LLM service is not available
-            if self._basic_is_greeting(query_text):
+            if self.basic_is_greeting(query_text):
                 return {"type": "greeting", "confidence": 0.9}
-            elif context_docs and self._basic_is_irrelevant(query_text, context_docs):
+            elif context_docs and self.basic_is_irrelevant(query_text, context_docs):
                 return {"type": "irrelevant", "confidence": 0.7}
             else:
                 return {"type": "relevant", "confidence": 0.8}
@@ -54,7 +54,7 @@ class QueryClassifier:
         function_schema = self.llm_service.get_function_schema()
         
         # Create the prompt for classification
-        prompt = self._create_classification_prompt(query_text, context_docs)
+        prompt = self.create_classification_prompt(query_text, context_docs)
         
         # Call the LLM with function calling
         try:
@@ -74,9 +74,9 @@ class QueryClassifier:
             
         except Exception as e:
             print(f"Error in LLM classification: {str(e)}, {str(e.__traceback__)}")
-            return self._fallback_classification(query_text, context_docs)
+            return self.fallback_classification(query_text, context_docs)
     
-    def _create_classification_prompt(self, query_text: str, context_docs: Optional[List[str]]):
+    def create_classification_prompt(self, query_text: str, context_docs: Optional[List[str]]):
         """
         Create a prompt for the LLM to classify the query.
         
@@ -118,7 +118,7 @@ class QueryClassifier:
         
         return prompt
     
-    def _fallback_classification(self, query_text: str, context_docs: Optional[List[str]]):
+    def fallback_classification(self, query_text: str, context_docs: Optional[List[str]]):
         """
         Fallback classification method when LLM fails.
         
@@ -129,14 +129,14 @@ class QueryClassifier:
         Returns:
             Dict[str, Any]: Classification result
         """
-        if self._basic_is_greeting(query_text):
+        if self.basic_is_greeting(query_text):
             return {"type": "greeting", "confidence": 0.8, "explanation": "Query appears to be a greeting"}
-        elif context_docs and self._basic_is_irrelevant(query_text, context_docs):
+        elif context_docs and self.basic_is_irrelevant(query_text, context_docs):
             return {"type": "irrelevant", "confidence": 0.6, "explanation": "Query appears unrelated to context"}
         else:
             return {"type": "relevant", "confidence": 0.7, "explanation": "Query appears to be a relevant question"}
     
-    def _basic_is_greeting(self, query_text: str):
+    def basic_is_greeting(self, query_text: str):
         """
         Basic method to check if a query is a greeting.
         
@@ -161,7 +161,7 @@ class QueryClassifier:
         words = query_lower.split()
         return len(words) <= 3 and any(word in greeting_phrases for word in words)
     
-    def _basic_is_irrelevant(self, query_text: str, context_docs: List[str]):
+    def basic_is_irrelevant(self, query_text: str, context_docs: List[str]):
         """
         Basic method to check if a query is irrelevant to the context.
         
@@ -236,7 +236,7 @@ class QueryClassifier:
         """
         return """Hello! I'm your document assistant. I can help answer questions about the documents you've uploaded. 
         
-How can I help you today? If you have any specific questions about your documents, feel free to ask!"""
+        How can I help you today? If you have any specific questions about your documents, feel free to ask!"""
     
     def get_irrelevant_question_response(self):
         """
@@ -247,4 +247,4 @@ How can I help you today? If you have any specific questions about your document
         """
         return """I'm sorry, but your question appears to be unrelated to the documents I have access to. 
 
-I'm designed to help answer questions specifically about the content in your uploaded documents. Could you please ask a question related to the documents, or upload additional documents if you're looking for information on a different topic?"""
+        I'm designed to help answer questions specifically about the content in your uploaded documents. Could you please ask a question related to the documents, or upload additional documents if you're looking for information on a different topic?"""

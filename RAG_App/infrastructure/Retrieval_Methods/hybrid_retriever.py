@@ -1,5 +1,5 @@
 from .base_retriever import BaseRetriever
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 import time
 from rank_bm25 import BM25Okapi
 import re
@@ -10,7 +10,6 @@ class HybridRetriever(BaseRetriever):
     Retriever that combines BM25 keyword scoring with semantic search
     for better hybrid document retrieval.
     """
-    
     def __init__(self, keyword_weight=0.3, top_k=5):
         self.keyword_weight = keyword_weight
         self.top_k = top_k
@@ -19,21 +18,21 @@ class HybridRetriever(BaseRetriever):
         self.bm25 = None
         self.doc_mapping = {}  # Maps BM25 corpus index to document ID
         
-    def _preprocess_text(self, text: str) -> str:
+    def preprocess_text(self, text: str) -> str:
         """Clean and tokenize text"""
         # Convert to lowercase and remove special characters
         text = text.lower()
         text = re.sub(r'[^\w\s]', ' ', text)
         return text
     
-    def _initialize_bm25(self, documents: List[Dict[str, Any]]):
+    def initialize_bm25(self, documents: List[Dict[str, Any]]):
         """Initialize BM25 with the document corpus"""
         # Preprocess documents
         processed_docs = []
         self.doc_mapping = {}
         
         for idx, doc in enumerate(documents):
-            text = self._preprocess_text(doc[constants.PAGE_CONTENT])
+            text = self.preprocess_text(doc[constants.PAGE_CONTENT])
             tokens = text.split()
             processed_docs.append(tokens)
             self.doc_mapping[idx] = doc[constants.ID]
@@ -55,13 +54,13 @@ class HybridRetriever(BaseRetriever):
         
         # Initialize BM25 if not already done
         if self.bm25 is None:
-            self._initialize_bm25(documents)
+            self.initialize_bm25(documents)
         
         # Get semantic search results
         semantic_results = vector_store.search(query_embedding, top_k=self.top_k*2)
         
         # Get BM25 scores
-        processed_query = self._preprocess_text(query_text)
+        processed_query = self.preprocess_text(query_text)
         query_tokens = processed_query.split()
         bm25_scores = self.bm25.get_scores(query_tokens)
         

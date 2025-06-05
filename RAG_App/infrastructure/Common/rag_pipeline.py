@@ -27,7 +27,7 @@ import traceback
 import json # Added for parsing LLM response for flashcards
 from infrastructure.Evaluators.deep_eval_evaluator import DeepEval
 from infrastructure.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store # Added for caching
-from UI.UI_Components import UIComponents
+
 class RAGPipeline:
     def __init__(self, config_manager=None):
         self.config_manager = config_manager or ConfigManager()
@@ -37,13 +37,13 @@ class RAGPipeline:
     # setup components
     def setup_components(self):
         # Build all core components via factory methods
-        self.chunker = self._build_chunker()
-        self.embedder = self._build_embedder()
-        self.vector_store = self._build_vector_store()
-        self.retriever = self._build_retriever()
-        self.llm_service = self._build_llm_service()
-        self.reranker = self._build_reranker()
-        self.evaluator = self._build_evaluator()
+        self.chunker = self.build_chunker()
+        self.embedder = self.build_embedder()
+        self.vector_store = self.build_vector_store()
+        self.retriever = self.build_retriever()
+        self.llm_service = self.build_llm_service()
+        self.reranker = self.build_reranker()
+        self.evaluator = self.build_evaluator()
         self.query_classifier = QueryClassifier(self.llm_service)
 
     def get_chunker_cost_and_time(self):
@@ -62,7 +62,7 @@ class RAGPipeline:
         return self.evaluator.get_cost_and_time_taken()
     
     # build invidual components
-    def _build_chunker(self):
+    def build_chunker(self):
         from infrastructure.Chunkers.recursive_chunker import RecursiveChunker
         from infrastructure.Chunkers.sentence_chunker import SentenceChunker
         from infrastructure.Chunkers.semantic_chunker import SemanticChunker
@@ -85,7 +85,7 @@ class RAGPipeline:
         else:
             return RecursiveChunker()
 
-    def _build_embedder(self):
+    def build_embedder(self):
         from infrastructure.Embedders.tfidf_embedder import TFIDFEmbedder
         from infrastructure.Embedders.gemini_embedder import GeminiEmbedder
         from infrastructure.Embedders.mistral_embedder import MistralEmbedder
@@ -113,7 +113,7 @@ class RAGPipeline:
         else:
             return TFIDFEmbedder()
 
-    def _build_vector_store(self):
+    def build_vector_store(self):
         from infrastructure.Vector_Stores.pinecone_vector_store import PineConeVectorStore
         from infrastructure.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store
         from infrastructure.Vector_Stores.sklearn_vector_store import SklearnVectorStore
@@ -134,7 +134,7 @@ class RAGPipeline:
         else:
             return SklearnVectorStore(metric=constants.CONFIG_METRIC_COSINE)
 
-    def _build_retriever(self):
+    def build_retriever(self):
         from infrastructure.Retrieval_Methods.similarity_retriever import SimilarityRetriever
         from infrastructure.Retrieval_Methods.sentence_window_retreiver import SentenceWindowRetriever
         from infrastructure.Retrieval_Methods.similarity_retriever import SimilarityRetriever
@@ -154,8 +154,7 @@ class RAGPipeline:
         else:
             return SimilarityRetriever()
 
-    def _build_llm_service(self):
-        
+    def build_llm_service(self):
         from infrastructure.LLM_Chat_Services.gemini_service import GeminiService
 
         cfg = self.config_manager.get_config(constants.CONFIG_LLM)
@@ -177,7 +176,7 @@ class RAGPipeline:
         else:
             return GeminiService(client, model_name=model_name)
 
-    def _build_reranker(self):
+    def build_reranker(self):
         cfg = self.config_manager.get_config(constants.CONFIG_RERANKER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         params = cfg.get(constants.CONFIG_PARAM)
@@ -204,7 +203,7 @@ class RAGPipeline:
 
             return CosineReranker(self.embedder, top_k_for_reranking=top_k)
 
-    def _build_evaluator(self):
+    def build_evaluator(self):
         from infrastructure.Evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
         cfg = self.config_manager.get_config(constants.CONFIG_EVALUATOR)
         evaluator_type = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -256,13 +255,13 @@ class RAGPipeline:
             self.setup_components()
         elif component_name == constants.CONFIG_RETRIEVER:
             # hot-swap retriever only
-            self.retriever = self._build_retriever()
+            self.retriever = self.build_retriever()
         elif component_name == constants.CONFIG_EVALUATOR:
             # hot-swap evaluator only
-            self.evaluator = self._build_evaluator()
+            self.evaluator = self.build_evaluator()
         # else: unknown component, ignore
 
-    def extractText(self, file, temp_dir=constants.TEMP_DOCS_DIR):
+    def extract_text(self, file, temp_dir=constants.TEMP_DOCS_DIR):
         try:
             from infrastructure.document_loaders.pdf_loader import PDFLoader
             from infrastructure.document_loaders.docx_loader import DOCXLoader
@@ -345,7 +344,7 @@ class RAGPipeline:
         )
         return summary
     
-    def greetUser(self, query_text):
+    def greet_user(self, query_text):
         if self.query_classifier.is_greeting(query_text):
             return {
                 constants.ANSWER: self.query_classifier.get_greeting_response(),
@@ -465,13 +464,11 @@ class RAGPipeline:
 
             Answer:
             """
-            placeHolder = UIComponents.create_empty_placeholder()
             full_response = ""
             for delta in self.llm_service.generate_response(answer_prompt):
                 full_response += delta
-                placeHolder.markdown(full_response)
+                yield delta
 
-            UIComponents.add_message_to_chat("assistant",  full_response)
             # Save the query data for potential evaluation
             self.last_query = {
                 constants.QUESTION: query_text,

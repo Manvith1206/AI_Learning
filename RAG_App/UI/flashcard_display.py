@@ -11,7 +11,7 @@ class FlashcardDisplay:
         self.show_answer = False
         self.card = None
 
-    def initialze_session_state(self):
+    def initialize_session_state(self):
         # Properly initialize session state variables if not already set
         if "card_index" not in UIComponents.get_session_state():
             UIComponents.set_session_state_variable("card_index", 0)

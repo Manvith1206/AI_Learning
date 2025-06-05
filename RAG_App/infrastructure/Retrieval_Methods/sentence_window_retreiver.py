@@ -2,7 +2,7 @@ import re
 from typing import List, Dict, Any
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 from .base_retriever import BaseRetriever
 
 class SentenceWindowRetriever(BaseRetriever):
@@ -27,7 +27,7 @@ class SentenceWindowRetriever(BaseRetriever):
         # Regex pattern for sentence tokenization
         self.sentence_pattern = re.compile(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s')
     
-    def _split_into_sentences(self, text: str) -> List[str]:
+    def split_into_sentences(self, text: str) -> List[str]:
         """
         Split text into sentences using regex
         
@@ -77,7 +77,7 @@ class SentenceWindowRetriever(BaseRetriever):
         sentence_indices = {}  # Track the position of each sentence within its original chunk
         
         for chunk_idx, chunk in enumerate(retrieved_chunks):
-            sentences = self._split_into_sentences(chunk)
+            sentences = self.split_into_sentences(chunk)
             chunk_to_sentences[chunk_idx] = sentences
             
             for sent_idx, sentence in enumerate(sentences):
@@ -132,11 +132,11 @@ class SentenceWindowRetriever(BaseRetriever):
             enhanced_contexts.append(window_text)
         
         # Step 4: Merge overlapping windows
-        merged_contexts = self._merge_overlapping_contexts(enhanced_contexts)
+        merged_contexts = self.merge_overlapping_contexts(enhanced_contexts)
         
         return merged_contexts
     
-    def _merge_overlapping_contexts(self, contexts: List[str]) -> List[str]:
+    def merge_overlapping_contexts(self, contexts: List[str]) -> List[str]:
         """Merge contexts that have significant overlap"""
         if not contexts:
             return []
@@ -144,7 +144,7 @@ class SentenceWindowRetriever(BaseRetriever):
         # Convert contexts to sets of sentences for easier overlap detection
         context_sentences = []
         for context in contexts:
-            sentences = set(self._split_into_sentences(context))
+            sentences = set(self.split_into_sentences(context))
             context_sentences.append(sentences)
         
         # Merge overlapping contexts
@@ -157,7 +157,7 @@ class SentenceWindowRetriever(BaseRetriever):
                 # Contexts overlap, merge them
                 # For merging text, we'll use a simple approach - just concatenate and split again
                 combined_text = current_text + " " + contexts[i]
-                combined_sentences = self._split_into_sentences(combined_text)
+                combined_sentences = self.split_into_sentences(combined_text)
                 # Remove duplicates while preserving order
                 seen = set()
                 unique_sentences = []
@@ -194,9 +194,6 @@ class SentenceWindowRetriever(BaseRetriever):
             embedding_function=None,
             **kwargs
         )
-        
-        
-
         return enhanced_contexts
 
 # Example usage with a simple embedding function for demonstration

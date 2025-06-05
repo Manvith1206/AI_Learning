@@ -9,12 +9,14 @@ class TFIDFEmbedder(BaseEmbedder):
         self.vectors = None
         self.time_taken = 0
         self.cost = 0
+
     def fit(self, texts):
         start_time = time.time()
         self.vectors = self.vectorizer.fit_transform(texts)
         end_time = time.time()
         self.time_taken = end_time - start_time
         return self.vectors
+    
     def transform(self, texts):
         # Ensure fit() has been called
         start_time = time.time()
@@ -26,5 +28,6 @@ class TFIDFEmbedder(BaseEmbedder):
         self.time_taken += end_time - start_time
         
         return vectors
+    
     def get_cost_and_time_taken(self):
         return self.cost, self.time_taken

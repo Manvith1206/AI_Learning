@@ -1,8 +1,9 @@
 from .base_reranker import BaseReranker
 import re
 import time
-import RAG_App.infrastructure.Common.RAG_Constants as constants
-from RAG_App.infrastructure.LLM_Chat_Services.base_llm_service import BaseLLMService
+import infrastructure.Common.RAG_Constants as constants
+from infrastructure.LLM_Chat_Services.base_llm_service import BaseLLMService
+
 class LLMReranker(BaseReranker):
     def __init__(self, llm_client: BaseLLMService, model="gemini-2.0-flash", top_k_for_reranking: int = 5):
         self.llm_client = llm_client
@@ -10,8 +11,8 @@ class LLMReranker(BaseReranker):
         self.time_taken = 0
         self.cost = 0
         self.top_k_for_reranking = top_k_for_reranking
+
     def rerank(self, query, documents, **kwargs):
-        
         chunk_list = "\n".join([f"{i+1}. {doc}" for i, doc in enumerate(documents)])
         rerank_prompt = f"""
             Role: 

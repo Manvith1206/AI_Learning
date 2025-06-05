@@ -11,8 +11,9 @@ from ragas.llms import LangchainLLMWrapper
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from UI.UI_Components import UIComponents
-os.environ["OPENAI_API_KEY"] = UIComponents.get_secrets(constants.OPENAI_API_KEY)
 from ragas.llms import LangchainLLMWrapper
+
+os.environ["OPENAI_API_KEY"] = UIComponents.get_secrets(constants.OPENAI_API_KEY)
 
 class RagasEvaluator(BaseEvaluator):
     """Evaluator that uses RAGAS metrics for RAG evaluation"""
@@ -88,6 +89,7 @@ class RagasEvaluator(BaseEvaluator):
         end_time = time.time()
         self.time_taken = end_time - start_time
         return metrics_dict
+    
     def get_cost_and_time_taken(self):
         """
         Get the cost and time taken for the evaluation

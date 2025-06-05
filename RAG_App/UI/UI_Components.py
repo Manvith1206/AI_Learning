@@ -187,7 +187,15 @@ class UIComponents:
         """Display a chat message with a specific role"""
         with st.chat_message(role):
             with st.spinner("🤔 Thinking..."):
-                response = pipeline.query(prompt)
+                full_response = ""
+                answer_placeholder = st.empty()
+                for delta in pipeline.query(prompt):
+                    full_response += delta
+                    answer_placeholder.markdown(full_response)
+                if not full_response:
+                    UIComponents.display_info("No response generated. Please try again.")
+                UIComponents.add_message_to_chat("assistant",  full_response)
+                
                 # UIComponents.create_subheader_UI(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
                 # UIComponents.create_subheader_UI(response["answer"])
                 # UIComponents.add_message_to_chat(role, response["answer"])

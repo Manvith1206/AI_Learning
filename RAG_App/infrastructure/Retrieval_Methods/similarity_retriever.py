@@ -1,6 +1,6 @@
 import numpy as np
 from .base_retriever import BaseRetriever
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 import time
 
 class SimilarityRetriever(BaseRetriever):

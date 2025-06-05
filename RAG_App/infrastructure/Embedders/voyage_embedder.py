@@ -1,8 +1,7 @@
 import time
 import voyageai
-import voyageai.client
 from .base_embedder import BaseEmbedder
-import rag_modular.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 
 class VoyageEmbedder(BaseEmbedder):
     def __init__(self, api_key, model):
@@ -39,6 +38,7 @@ class VoyageEmbedder(BaseEmbedder):
         self.time_taken = end_time - start_time
 
         return self.embeddings
+    
     def transform(self, texts):
         """
         Embed new Texts on demand
@@ -55,6 +55,7 @@ class VoyageEmbedder(BaseEmbedder):
         self.time_taken += end_time - start_time
         self.cost = current_cost_value
         return all_embeddings
+    
     def get_cost_and_time_taken(self):
         return self.cost, self.time_taken
     

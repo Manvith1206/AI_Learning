@@ -2,7 +2,7 @@ import json
 import time
 from .base_llm_service import BaseLLMService
 import anthropic
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 
 class ClaudeService(BaseLLMService):
     def __init__(self, client, model_name="claude-2"):
@@ -10,8 +10,10 @@ class ClaudeService(BaseLLMService):
         self.model_name = model_name
         self.time_taken = 0
         self.cost = 0
+        
     def generate_response(self, prompt, **kwargs):
         start_time = time.time()
+        print(f"Generating response with Claude model: {self.model_name}")
         with self.client.messages.stream(
             max_tokens=2048,
             messages=[{"role": "user", "content": prompt}],
@@ -22,8 +24,6 @@ class ClaudeService(BaseLLMService):
         
         end_time = time.time()
         self.time_taken = end_time - start_time
-
-        
         
     def get_cost_and_time_taken(self):
         """

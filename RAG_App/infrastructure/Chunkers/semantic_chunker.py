@@ -43,11 +43,11 @@ class SemanticChunker(BaseChunker):
         Returns the time taken and cost for the last split operation.
         """
         return self.cost, self.time_taken
-    def _cosine_similarity(self, vec1: np.ndarray, vec2: np.ndarray):
+    def cosine_similarity(self, vec1: np.ndarray, vec2: np.ndarray):
         """Calculate cosine similarity between two vectors."""
         return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
     
-    def _preprocess_text(self, text: str):
+    def preprocess_text(self, text: str):
         """Basic text preprocessing."""
         # Remove extra whitespace
         text = re.sub(r'\s+', ' ', text)
@@ -55,12 +55,12 @@ class SemanticChunker(BaseChunker):
         text = re.sub(r'\n{3,}', '\n\n', text)
         return text.strip()
     
-    def _segment_into_sentences(self, text: str):
+    def segment_into_sentences(self, text: str):
         """
         Split text into sentences using regex pattern matching.
         This is an alternative to NLTK's sentence tokenization.
         """
-        preprocessed_text = self._preprocess_text(text)
+        preprocessed_text = self.preprocess_text(text)
         
         # Split on sentence-ending punctuation followed by whitespace and (optional) quotation marks
         sentence_pattern = r'(?<=[.!?])\s+(?=[A-Z0-9"])'
@@ -81,7 +81,7 @@ class SemanticChunker(BaseChunker):
         # Filter out empty sentences
         return [s for s in final_sentences if s.strip()]
     
-    def _find_chunk_boundaries(self, embeddings: np.ndarray):
+    def find_chunk_boundaries(self, embeddings: np.ndarray):
         """
         Find semantic boundaries based on similarity between adjacent sentence embeddings.
         Returns list of indices where chunks should end.
@@ -120,7 +120,7 @@ class SemanticChunker(BaseChunker):
         """
         # Split text into sentences
         
-        sentences = self._segment_into_sentences(text)
+        sentences = self.segment_into_sentences(text)
         if not sentences:
             return []
             
@@ -128,7 +128,7 @@ class SemanticChunker(BaseChunker):
         embeddings = self.model.encode(sentences)
         
         # Find chunk boundaries
-        boundaries = self._find_chunk_boundaries(embeddings)
+        boundaries = self.find_chunk_boundaries(embeddings)
         
         # Create chunks based on boundaries
         chunks = []

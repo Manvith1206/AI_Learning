@@ -331,10 +331,14 @@ class Sidebar:
         options = list(llm_model_options.keys())
         if UIComponents.get_session_state_variable("pipeline_config").get_config(constants.CONFIG_LLM)[constants.CONFIG_TYPE_PARAM] == llm_service:
             default_option = UIComponents.get_session_state_variable("pipeline_config").get_config(constants.CONFIG_LLM)[constants.CONFIG_PARAM][constants.CONFIG_MODEL]
+            print("Default OptionV1:", default_option)
             default_option = self.get_name_of_llm_model_to_display(llm_service, default_option)
+            print("Default OptionV2:", default_option)
         else:
             default_option = options[0]
         
+        print("LLM Model Options:", llm_model_options)
+        print("LLM Service:", llm_service)
         # Get the index
         index = options.index(default_option)
         user_selected_llm_model = UIComponents.selectbox(
@@ -480,7 +484,7 @@ class Sidebar:
             for model in constants.CLAUDE_MODELS:
                 print("Model:", currModel, "Value:", model.value)
 
-                if model.display_name == currModel:
+                if model.value == currModel:
                     return model.display_name
         else:
             for model in constants.GeminiLLMModel:

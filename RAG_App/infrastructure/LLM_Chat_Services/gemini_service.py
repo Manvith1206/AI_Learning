@@ -1,6 +1,6 @@
 import time
 from .base_llm_service import BaseLLMService
-from RAG_App.infrastructure.Common.RAG_Constants import GeminiLLMModel
+from infrastructure.Common.RAG_Constants import GeminiLLMModel
 from google.genai import types
 from google import genai
 
@@ -10,6 +10,7 @@ class GeminiService(BaseLLMService):
         self.model_name = model_name
         self.cost = 0
         self.time_taken = 0
+        
     def generate_response(self, prompt, **kwargs):
         start_time = time.time()
         for chunk in self.client.models.generate_content_stream(

@@ -36,7 +36,7 @@ class DummyFile:
         self.path = path
         self.name = os.path.basename(path)
 
-    def getbuffer(self):
+    def get_buffer(self):
         with open(self.path, 'rb') as f:
             return f.read()
 
