@@ -5,6 +5,7 @@ import logging
 import json
 import traceback
 import re
+import uuid
 
 # Setup logger for this module
 logger = logging.getLogger(__name__)
@@ -34,7 +35,8 @@ from infrastructure.Common.RAG_Constants import (
 import infrastructure.Common.RAG_Constants as constants
 from infrastructure.Common.query_classifier_llm import QueryClassifier
 
-from infrastructure.Evaluators.deep_eval_evaluator import DeepEvalEvaluator 
+from infrastructure.Evaluators.deep_eval_evaluator import DeepEval 
+import logging
 
 class RAGPipeline:
     def __init__(self, config_manager=None, 
@@ -52,8 +54,9 @@ class RAGPipeline:
         self.mistral_api_key = mistral_api_key
         self.jina_api_key = jina_api_key
         
-        self.setup_components()
         self.query_classifier = None
+        self.setup_components()
+        logging.log(level=0, msg=f"QueryClassigier: {self.query_classifier}, {traceback.print_stack()}")
 
     # setup components
     def setup_components(self):
@@ -62,10 +65,13 @@ class RAGPipeline:
         self.embedder = self.build_embedder()
         self.vector_store = self.build_vector_store()
         self.retriever = self.build_retriever()
+        print("Retriever", self.retriever)
         self.llm_service = self.build_llm_service()
+        print("LLMService: ", self.llm_service)
         self.reranker = self.build_reranker()
         self.evaluator = self.build_evaluator()
         self.query_classifier = QueryClassifier(self.llm_service)
+        print("QueryClassifier", self.query_classifier)
 
     def get_chunker_cost_and_time(self):
         return self.chunker.get_cost_and_time_taken()
@@ -482,7 +488,7 @@ class RAGPipeline:
                     err_msg = f"Gemini API key ('{constants.GEMINI_API_KEY}') not found. It is required by DeepEvalEvaluator as it defaults to a Gemini model. Please provide it during RAGPipeline initialization."
                     logger.error(err_msg) # Error because the default DeepEval will fail without it
                     raise MissingConfigurationError(err_msg)
-                return DeepEvalEvaluator(gemini_api_key=gemini_api_key, **params)
+                return DeepEval(gemini_api_key=gemini_api_key, **params)
             except Exception as e:
                 logger.error(f"Failed to initialize DeepEvalEvaluator: {e}", exc_info=True)
                 raise ComponentBuildError(f"Failed to build DeepEvalEvaluator: {e}")
@@ -554,7 +560,6 @@ class RAGPipeline:
 
             # # Remove extra whitespaces and newlines
             # text = re.sub(r"\s+", " ", text).strip()
-            UIComponents.set_session_state_variable("processed_document_texts", text)
             with open("ExtractedTextFromPdf.txt", "w", encoding="utf-8") as file:
                 file.write(text)
 
@@ -563,7 +568,7 @@ class RAGPipeline:
             else:
                 return text
         except Exception as e:
-            UIComponents.display_error(f"Error extracting text: {e}, Traceback: {traceback.print_exc()}")
+            logging.error(f"Error extracting text: {e}, Traceback: {traceback.print_exc()}")
             return None, None
          
     # process documents
@@ -585,26 +590,16 @@ class RAGPipeline:
             
             documents = self.vector_store.format_documents(documents)
             self.vector_store.add_embeddings(embeddings, documents)
+            print("ProcessDocs / Vector Store", self.vector_store)
+            print("ProcessDocs / Vector Store Docs", self.vector_store.documents)
+            
+            print("Documents Processed Succesfully")
 
             return documents, chunks
         except Exception as e:
-            UIComponents.display_error(f"Error processing document: {e}, Traceback: {traceback.print_exc()}")
+            logging.error(f"Error processing document: {e}, Traceback: {traceback.print_exc()}")
             return None, None
 
-    def rewrite_query(self, query_text, max_assistant_chars=100):
-        if not UIComponents.get_session_state_messages():
-            return f"The user is asking: {query_text}"
-
-        prev_user, prev_assistant = UIComponents.get_session_state_messages[-1]
-        assistant_trimmed = prev_assistant.strip().replace('\n', ' ')[:max_assistant_chars] + "..."
-        
-        summary = (
-            f"The user previously asked:\n{prev_user}\n"
-            f"I responded with:\n{assistant_trimmed}\n"
-            f"Now the user wants:\n{query_text}"
-        )
-        return summary
-    
     def greet_user(self, query_text):
         if self.query_classifier.is_greeting(query_text):
             return {
@@ -623,8 +618,11 @@ class RAGPipeline:
             }
         
     def get_context_docs(self, query_text, top_k=None):
+        print("Vector Store: ", self.vector_store)
         if not hasattr(self.vector_store, 'documents') or not self.vector_store.documents:
-                raise ValueError("No documents processed. Please upload and process a document before querying.")
+            print("Vector Store", self.vector_store)
+            print("Documents", len(self.vector_store.documents))
+            raise ValueError("No documents processed. Please upload and process a document before querying.")
         # Use configured top_k if not specified
         if top_k is None:
             top_k = self.top_k
@@ -664,12 +662,13 @@ class RAGPipeline:
 
         return context_docs, explanation, context_docs_list
     
-    def query(self, query_text, top_k=None):
+    def query(self, query_text, history_text, top_k=None):
         try:
+            print("Self", self)
+            print("QueryClassifier", self.query_classifier)
             if self.query_classifier.is_greeting(query_text):
-                UIComponents.create_subheader_UI(self.query_classifier.get_greeting_response())
-                UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_greeting_response())
-                return {
+                print("IsGreeting")
+                yield  {
                 constants.ANSWER: self.query_classifier.get_greeting_response(),
                 constants.CONTEXTS: "",
                 constants.RERANK_EXPLANATION: ""
@@ -679,16 +678,13 @@ class RAGPipeline:
             
             context_docs, explanation, context_docs_list = self.get_context_docs(query_text)
             if self.query_classifier.is_irrelevant(query_text, context_docs):
-                UIComponents.create_subheader_UI(self.query_classifier.get_irrelevant_question_response())
-                UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_irrelevant_question_response())
-                return {
+                yield  {
                 constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
                 constants.CONTEXTS: context_docs,
                 constants.RERANK_EXPLANATION: ""
             }
             # Join contexts
             context = "\n\n".join(context_docs)
-            history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in UIComponents.get_session_state_messages()])
             with open("Contexts.txt", "w", encoding="utf-8") as file:
                 file.write(context)
 
@@ -728,7 +724,11 @@ class RAGPipeline:
             full_response = ""
             for delta in self.llm_service.generate_response(answer_prompt):
                 full_response += delta
-                yield delta
+                yield {
+                constants.ANSWER: full_response,
+                constants.CONTEXTS: context_docs_list,
+                constants.RERANK_EXPLANATION: explanation
+            }
 
             # Save the query data for potential evaluation
             self.last_query = {

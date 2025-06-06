@@ -1,13 +1,14 @@
 import streamlit as st
 from typing import List, Tuple, Dict, Any, Callable
 import pandas as pd
-
+import infrastructure.Common.RAG_Constants as constants
 class UIComponents:
     """Base UI components for the RAG application"""
     
     @staticmethod
     def initialize_page():
         """Initialize the Streamlit page configuration"""
+        print("Initialize Page")
         st.set_page_config(
             page_title="RAG Modular",
             page_icon=":notebook:",
@@ -185,20 +186,25 @@ class UIComponents:
     @staticmethod 
     def process_chat_input(role: str, content: str, pipeline, prompt: str):
         """Display a chat message with a specific role"""
-        with st.chat_message(role):
-            with st.spinner("🤔 Thinking..."):
-                full_response = ""
-                answer_placeholder = st.empty()
-                for delta in pipeline.query(prompt):
-                    full_response += delta
-                    answer_placeholder.markdown(full_response)
-                if not full_response:
-                    UIComponents.display_info("No response generated. Please try again.")
-                UIComponents.add_message_to_chat("assistant",  full_response)
-                
-                # UIComponents.create_subheader_UI(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
-                # UIComponents.create_subheader_UI(response["answer"])
-                # UIComponents.add_message_to_chat(role, response["answer"])
+        history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in UIComponents.get_session_state_messages()])
+
+        if UIComponents.get_session_state_variable("documents", []):
+            with st.chat_message(role):
+                with st.spinner("🤔 Thinking..."):
+                    full_response = ""
+                    answer_placeholder = st.empty()
+                    for delta in pipeline.query(prompt, history_text=history_text):
+                        full_response += delta[constants.ANSWER]
+                        print("Full Response", full_response)
+                        answer_placeholder.markdown(full_response)
+                    if not full_response:
+                        UIComponents.display_info("No response generated. Please try again.")
+                    UIComponents.add_message_to_chat("assistant",  full_response[constants.ANSWER])
+                    # UIComponents.create_subheader_UI(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
+                    # UIComponents.create_subheader_UI(response["answer"])
+                    # UIComponents.add_message_to_chat(role, response["answer"])
+        else:
+            UIComponents.display_error("Please upload and process documents first.")
 
     @staticmethod
     def markdown(text: str):

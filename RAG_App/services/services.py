@@ -1,14 +1,13 @@
 from typing import Dict, List, Any, Optional, Tuple
-from RAG_App.infrastructure.Common.rag_pipeline import RAGPipeline
-from RAG_App.models import Document, DocumentChunk
-from RAG_App.infrastructure.Chunkers import base_chunker as Chunker
-from RAG_App.infrastructure.Embedders import base_embedder as Embedder
-from RAG_App.infrastructure.Vector_Stores import base_vector_store as VectorStore
-from RAG_App.infrastructure.Retrieval_Methods import base_retriever as Embedder
-from RAG_App.infrastructure.Rerankers import base_reranker as Reranker
-from RAG_App.infrastructure.LLM_Chat_Services import base_llm_service as LLMService
-from RAG_App.infrastructure.Evaluators import base_evaluator as Evaluator
-from RAG_App.models import QueryResult, Flashcard, EvaluationResult
+from infrastructure.Common.rag_pipeline import RAGPipeline
+from infrastructure.Chunkers import base_chunker as Chunker
+from infrastructure.Embedders import base_embedder as Embedder
+from infrastructure.Vector_Stores import base_vector_store as VectorStore
+from infrastructure.Retrieval_Methods import base_retriever as Embedder
+from infrastructure.Rerankers import base_reranker as Reranker
+from infrastructure.LLM_Chat_Services import base_llm_service as LLMService
+from infrastructure.Evaluators import base_evaluator as Evaluator
+from models import QueryResult, Flashcard, EvaluationResult, Document, DocumentChunk
 
 class DocumentProcessor:
     def __init__(self, pipeline: RAGPipeline):
@@ -16,7 +15,7 @@ class DocumentProcessor:
         
     def process_uploaded_file(self, uploaded_file) -> tuple:
         """Process an uploaded document and return documents and chunks"""
-        texts = self.pipeline.extractText(uploaded_file)
+        texts = self.pipeline.extract_text(uploaded_file)
         return self.pipeline.process_document(uploaded_file, texts)
     
 class RAGService:

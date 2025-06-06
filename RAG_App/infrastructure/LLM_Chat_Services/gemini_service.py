@@ -21,6 +21,7 @@ class GeminiService(BaseLLMService):
             )
         ):
             if hasattr(chunk, 'text'):
+                print("StreamedChunks", chunk.text)
                 yield chunk.text
 
         end_time = time.time()

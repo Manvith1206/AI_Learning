@@ -22,20 +22,21 @@ class MainPage:
         """Initialize the main page with all required use cases"""
         self.pipeline = pipeline
         self.config_manager = config_manager
-        
-        # Initialize UI components
         self.initialize_components()
+        print("Pipeline: ", self.pipeline)
+        
     
     def initialize_components(self):
         """Initialize all UI components"""
-        UIComponents.initialize_page()
+        # UIComponents.initialize_page()
         # Chat interface
         self.chat_interface = ChatInterface(
-            on_message_callback=None
+            on_message_callback=None,
+            pipeline=self.pipeline
         )
         
         # Sidebar component
-        self.sidebar = Sidebar(
+        self.sidebar = Sidebar(pipeline=self.pipeline
         )
         self.flashcard_display = FlashcardDisplay(
             flashcards=[] # Initially empty, will be populated from session state
@@ -149,7 +150,7 @@ class MainPage:
                 # Update the existing flashcard_display instance with new/retrieved flashcards
                 self.flashcard_display.flashcards = flashcards 
                 # Initialize session state for card navigation (e.g., reset index if flashcards change)
-                self.flashcard_display.initialze_session_state() 
+                self.flashcard_display.initialize_session_state() 
                 
                 self.flashcard_display.display_card()
                 self.flashcard_display.create_columns()

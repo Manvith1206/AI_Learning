@@ -12,7 +12,7 @@ import Utils.Utils
 
 class Sidebar:
     """Sidebar component for the RAG application"""
-    def __init__(self):
+    def __init__(self, pipeline: RAGPipeline):
         """Initialize the sidebar with all required use cases"""
         UIComponents.initialize_session_state(
             {
@@ -23,11 +23,7 @@ class Sidebar:
             "LLM_Service": constants.LLMServiceType.GEMINI.value,
         }
         )
-        UIComponents.initialize_pipeline(ConfigManager())
-    
-    @staticmethod
-    def initialize_page():
-        UIComponents.initialize_page()
+        self.pipeline = pipeline
     
     @staticmethod
     def create_tabs():
@@ -69,7 +65,7 @@ class Sidebar:
 
     def get_pipeline_metrics(self):
         """Get metrics for all pipeline steps"""
-        pipeline = Utils.Utils.get_pipeline()
+        pipeline = self.pipeline
         return {
             constants.CONFIG_CHUNKER: pipeline.get_chunker_cost_and_time(),
             constants.CONFIG_EMBEDDER: pipeline.get_embedder_cost_and_time(),
@@ -87,7 +83,7 @@ class Sidebar:
             col1, col2, col3 = UIComponents.create_columns(3)
             col1.metric("🕒 Time Taken", time_taken)
             col2.metric("💲 Estimated Cost", cost)
-            cfg = Utils.Utils.get_pipeline().config_manager.get_config(key)
+            cfg = self.pipeline.config_manager.get_config(key)
             name = cfg.get(constants.CONFIG_TYPE_PARAM)
             col3.markdown(f"RAG Pipeline Step Name: \n{name}")
 
@@ -104,14 +100,14 @@ class Sidebar:
         if prompt := UIComponents.chat_input("Ask a question about your documents", key="chat_input"):
             UIComponents.add_message_to_chat(role='user', content=prompt)
             UIComponents.display_message_with_role(role='user', message=prompt)
-            UIComponents.process_chat_input(role='assistant', content=prompt, pipeline=Utils.Utils.get_pipeline(), prompt=prompt)
+            UIComponents.process_chat_input(role='assistant', content=prompt, pipeline=self.pipeline, prompt=prompt)
 
     def process_chat_input(self, prompt: str):
         """Process user chat input and generate response"""
         print("Processing chat input:", prompt)
         if UIComponents.get_session_state_variable("documents"):
             with UIComponents.display_spinner("🤔 Thinking..."):
-                pipeline = Utils.Utils.get_pipeline()
+                pipeline = self.pipeline
                 response = pipeline.query(prompt)
                 UIComponents.write(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
                 UIComponents.write(response["answer"])
@@ -188,7 +184,7 @@ class Sidebar:
         
         with UIComponents.display_spinner("Applying Evaluation Params"):
             if UIComponents.create_button("Apply Evaluation Params", key="apply_evaluation"):
-                Utils.Utils.get_pipeline().update_component(constants.CONFIG_EVALUATOR, evaluator_config)
+                self.pipeline.update_component(constants.CONFIG_EVALUATOR, evaluator_config)
                 UIComponents.display_success("Evaluation configuration updated.")
 
     def get_ui_options(self, option_type, config_name: str):
@@ -205,7 +201,7 @@ class Sidebar:
         ground_truth = UIComponents.create_text_area(constants.GROUND_TRUTH_DISPLAY_NAME, value=constants.GROUND_TRUTH_DEFAULT_VALUE, key="ground_truth_input")
         if UIComponents.create_button("Evaluate Last Query", key="evaluate_last_query"):
             # Initialize pipeline when needed
-            pipeline = Utils.Utils.get_pipeline()
+            pipeline = self.pipeline
             if hasattr(pipeline, constants.LAST_QUERY):
                 try:
                     metrics = pipeline.evaluate(ground_truths=ground_truth)
@@ -242,17 +238,17 @@ class Sidebar:
             file_types=["pdf", "csv", "txt", "docx"],
             accept_multiple_files=False
         )
-        doc_processor = DocumentProcessor(Utils.Utils.get_pipeline())
+        doc_processor = DocumentProcessor(self.pipeline)
         if uploaded_file:
             if UIComponents.create_button("Process Document", key="process_document"):
                 with UIComponents.display_spinner("Processing document..."):
                     # Only initialize pipeline when needed
-                    pipeline = Utils.Utils.get_pipeline()
                     documents, chunks = doc_processor.process_uploaded_file(uploaded_file)
                     
                     if documents and chunks:
                         UIComponents.set_session_state_variable("documents", documents)
                         UIComponents.set_session_state_variable("chunks", chunks)
+                        UIComponents.set_session_state_variable("processed_document_texts", chunks)
                         UIComponents.display_success(f"Processed {len(documents)} chunks from document")
                     else:
                         UIComponents.display_warning("No valid content was extracted from the document")
@@ -355,7 +351,7 @@ class Sidebar:
         }
         
         if UIComponents.create_button("Apply Chat Response Config", key="apply_chat_response"):
-            Utils.Utils.get_pipeline().update_component(constants.CONFIG_LLM, chat_response_config)
+            self.pipeline.update_component(constants.CONFIG_LLM, chat_response_config)
             UIComponents.display_success("Chat response configuration updated.")
 
     def render_test_all_configs_section(self):
@@ -503,15 +499,15 @@ class Sidebar:
     
     def apply_text_processing_config(self, chunker_params, vector_store, embedder_params):
         """Apply text processing configuration to the pipeline"""
-        Utils.Utils.get_pipeline().update_component(constants.CONFIG_CHUNKER, chunker_params)
-        Utils.Utils.get_pipeline().update_component(constants.CONFIG_EMBEDDER, embedder_params)
-        Utils.Utils.get_pipeline().update_component(constants.CONFIG_VECTOR_STORE, vector_store)
+        self.pipeline.update_component(constants.CONFIG_CHUNKER, chunker_params)
+        self.pipeline.update_component(constants.CONFIG_EMBEDDER, embedder_params)
+        self.pipeline.update_component(constants.CONFIG_VECTOR_STORE, vector_store)
         
         UIComponents.display_success("Text processing configuration updated.")
     
     def apply_Retrieval_and_Reranker_config(self, retriever_config, re_ranker_config):
         """Apply text processing configuration to the pipeline"""
-        Utils.Utils.get_pipeline().update_component(constants.CONFIG_RETRIEVER, retriever_config)
-        Utils.Utils.get_pipeline().update_component(constants.CONFIG_RERANKER, re_ranker_config)
+        self.pipeline.update_component(constants.CONFIG_RETRIEVER, retriever_config)
+        self.pipeline.update_component(constants.CONFIG_RERANKER, re_ranker_config)
         
         UIComponents.display_success("Retrieval and Reranking configuration updated.")

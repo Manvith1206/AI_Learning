@@ -29,18 +29,18 @@ class MistralEmbedder(BaseEmbedder):
         # Initialize tokenizer for token counting
         self._tokenizer = tiktoken.get_encoding("cl100k_base")
     
-    def _count_tokens(self, text: str) -> int:
+    def count_tokens(self, text: str) -> int:
         """Count the number of tokens in a text string"""
         return len(self._tokenizer.encode(text))
     
-    def _batch_texts(self, texts, max_tokens_per_batch: int = 7000):
+    def batch_texts(self, texts, max_tokens_per_batch: int = 7000):
         """Split texts into batches based on token count"""
         batches = []
         current_batch = []
         current_batch_tokens = 0
         
         for text in texts:
-            text_tokens = self._count_tokens(text)
+            text_tokens = self.count_tokens(text)
             # If this single text is too large for a batch, we need special handling
             if text_tokens > max_tokens_per_batch:
                 # If we have anything in the current batch, add it to batches
@@ -69,7 +69,7 @@ class MistralEmbedder(BaseEmbedder):
         
         return batches
     
-    def _call_api_with_backoff(self, inputs):
+    def call_api_with_backoff(self, inputs):
         """Call the Mistral API with exponential backoff for rate limiting"""
         retry_count = 0
         delay = self._initial_delay
@@ -113,7 +113,7 @@ class MistralEmbedder(BaseEmbedder):
         if isinstance(texts, str):
             texts = [texts]
             
-        response = self._call_api_with_backoff(texts)
+        response = self.call_api_with_backoff(texts)
         
         # Extract embeddings from response
         embeddings = []
@@ -131,7 +131,7 @@ class MistralEmbedder(BaseEmbedder):
         all_embeddings = []
         
         # Create batches based on token count
-        batches = self._batch_texts(texts)
+        batches = self.batch_texts(texts)
         
         for i, batch in enumerate(batches):
             logger.info(f"Processing batch {i+1}/{len(batches)} with {len(batch)} documents")
@@ -140,7 +140,7 @@ class MistralEmbedder(BaseEmbedder):
             if i > 0:
                 time.sleep(1)  # 1 second delay between batches
             
-            response = self._call_api_with_backoff(batch)
+            response = self.call_api_with_backoff(batch)
             
             # Extract embeddings from the response and add to results
             batch_embeddings = [item.embedding for item in response.data]

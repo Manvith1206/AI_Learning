@@ -2,7 +2,7 @@ from langchain.vectorstores import FAISS, faiss
 import os
 from .base_vector_store import BaseVectorStore
 from langchain_core.documents import Document
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 import numpy as np
 import faiss
 import uuid
@@ -23,6 +23,7 @@ class FAISS_Vector_Store(BaseVectorStore):
         start_time = time.time()
         # Unify embeddings: list, numpy array, or sparse -> dense np.float32
         self.documents = documents
+        
         # Generate and store document IDs
         self.ids = []
         for document in documents:
