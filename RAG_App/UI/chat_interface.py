@@ -1,19 +1,20 @@
 from typing import List, Dict, Any, Callable
 from UI.UI_Components import UIComponents
-import Utils.Utils
+from infrastructure.Common.rag_pipeline import RAGPipeline # Added import
 
 class ChatInterface:
     """Chat interface component for the RAG application"""
     
-    def __init__(self, pipeline, on_message_callback: Callable[[str], Dict[str, Any]]):
+    def __init__(self, pipeline: RAGPipeline, on_message_callback: Callable[[str], Dict[str, Any]]):
         """
         Initialize the chat interface
         
         Args:
+            pipeline: The RAGPipeline instance to use.
             on_message_callback: Callback function to handle new messages
         """
+        self.pipeline = pipeline # Store the pipeline instance
         self.on_message_callback = on_message_callback
-        self.pipeline = pipeline
         self.initialize_session_state()
     
     def initialize_session_state(self):

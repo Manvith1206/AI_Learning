@@ -31,8 +31,8 @@ class MainPage:
         # UIComponents.initialize_page()
         # Chat interface
         self.chat_interface = ChatInterface(
-            on_message_callback=None,
-            pipeline=self.pipeline
+            pipeline=self.pipeline, # Pass the pipeline instance
+            on_message_callback=None
         )
         
         # Sidebar component
