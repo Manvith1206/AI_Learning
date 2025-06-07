@@ -2,7 +2,7 @@ import json
 import time
 from .base_llm_service import BaseLLMService
 import anthropic
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 
 class ClaudeService(BaseLLMService):
     def __init__(self, client, model_name="claude-2"):

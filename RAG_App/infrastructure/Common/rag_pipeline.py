@@ -27,11 +27,15 @@ import traceback
 import json # Added for parsing LLM response for flashcards
 from infrastructure.Evaluators.deep_eval_evaluator import DeepEval
 from infrastructure.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store # Added for caching
-from UI.UI_Components import UIComponents
+import Utils.Exceptions as Exceptions
+import Utils.Utils as Utils
+
 class RAGPipeline:
-    def __init__(self, config_manager=None):
+    def __init__(self, warning_callback, error_callback, config_manager=None):
         self.config_manager = config_manager or ConfigManager()
         self.setup_components()
+        self.warning_callback = warning_callback
+        self.error_callback = error_callback
         self.query_classifier = None
 
     # setup components
@@ -97,17 +101,17 @@ class RAGPipeline:
         if t == EmbedderType.TFIDF.value:
             return TFIDFEmbedder()
         elif t == EmbedderType.GEMINI.value:
-            return GeminiEmbedder(api_key=UIComponents.get_secrets(constants.GEMINI_API_KEY), model_name=model_name)
+            return GeminiEmbedder(api_key=Utils.get_env_var(constants.GEMINI_API_KEY), model_name=model_name)
         elif t == EmbedderType.COHERE.value:
             from infrastructure.Embedders.cohere_embedder import CohereEmbedder
-            return CohereEmbedder(api_key=UIComponents.get_secrets(constants.COHERE_API_KEY),
+            return CohereEmbedder(api_key=Utils.get_env_var(constants.COHERE_API_KEY),
                                   model=model_name)
         elif t == EmbedderType.VOYAGE.value:
             from infrastructure.Embedders.voyage_embedder import VoyageEmbedder
-            return VoyageEmbedder(api_key=UIComponents.get_secrets(constants.VOYAGE_API_KEY),
+            return VoyageEmbedder(api_key=Utils.get_env_var(constants.VOYAGE_API_KEY),
                                   model=model_name)
         elif t == EmbedderType.MISTRAL.value:
-            return MistralEmbedder(api_key=UIComponents.get_secrets(constants.MISTRAL_API_KEY),
+            return MistralEmbedder(api_key=Utils.get_env_var(constants.MISTRAL_API_KEY),
                                   model=model_name,
                                   )
         else:
@@ -121,7 +125,7 @@ class RAGPipeline:
         cfg = self.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
         params = cfg.get(constants.CONFIG_PARAM, {})
         type = cfg.get(constants.CONFIG_TYPE_PARAM)
-        api_key = UIComponents.get_secrets(constants.PINECONE_API_KEY)
+        api_key = Utils.get_env_var(constants.PINECONE_API_KEY)
         if type == constants.VectorStore.SCIKIT_LEARN.value:
             return SklearnVectorStore(**params)
         elif type == constants.VectorStore.PINE_CONE.value:
@@ -161,7 +165,7 @@ class RAGPipeline:
         cfg = self.config_manager.get_config(constants.CONFIG_LLM)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         from google import genai
-        client = genai.Client(api_key=UIComponents.get_secrets(constants.GEMINI_API_KEY))
+        client = genai.Client(api_key=Utils.get_env_var(constants.GEMINI_API_KEY))
         params = cfg.get(constants.CONFIG_PARAM)
         model_name = params.get(constants.CONFIG_MODEL)
 
@@ -172,7 +176,7 @@ class RAGPipeline:
         elif t == LLMServiceType.CLAUDE.value:
             from infrastructure.LLM_Chat_Services.claude_service import ClaudeService
             import anthropic
-            client = anthropic.Anthropic(api_key=UIComponents.get_secrets(constants.CLAUDE_API_KEY))
+            client = anthropic.Anthropic(api_key=Utils.get_env_var(constants.CLAUDE_API_KEY))
             return ClaudeService(client, model_name=model_name)
         else:
             return GeminiService(client, model_name=model_name)
@@ -190,7 +194,7 @@ class RAGPipeline:
         elif t == RerankerType.COHERE.value:
             from infrastructure.Rerankers.cohere_re_ranker import CohereReranker
 
-            return CohereReranker(UIComponents.get_secrets(constants.COHERE_API_KEY), **params)
+            return CohereReranker(Utils.get_env_var(constants.COHERE_API_KEY), **params)
         elif t == RerankerType.JINA.value:
             from infrastructure.Rerankers.jina_reranker import JinaReranker
 
@@ -213,10 +217,10 @@ class RAGPipeline:
             return RagasEvaluator(**cfg.get(constants.CONFIG_PARAM, {}))
         elif evaluator_type == EvaluatorType.CUSTOM.value:
             try:
-                gemini_api_key = UIComponents.get_secrets(constants.GEMINI_API_KEY)
+                gemini_api_key = Utils.get_env_var(constants.GEMINI_API_KEY)
                 if not gemini_api_key:
-                    UIComponents.display_error(f"Gemini API key ({constants.GEMINI_API_KEY}) not found in st.secrets for Custom Evaluator.")
-                    UIComponents.display_warning("Falling back to SimpleEvaluator.")
+                    self.error_callback(f"Gemini API key ({constants.GEMINI_API_KEY}) not found in st.secrets for Custom Evaluator.")
+                    self.warning_callback("Falling back to SimpleEvaluator.")
                     return SimpleEvaluator()
                 
                 llm_service_for_custom_eval = LLM_Evaluation_Service(client=self.llm_service, 
@@ -231,15 +235,14 @@ class RAGPipeline:
                 ]
                 return CustomEvaluator(metrics=metrics_for_custom_eval)
             except Exception as e:
-                UIComponents.display_error(f"Failed to initialize Custom Evaluator: {e}")
-                UIComponents.display_warning("Falling back to SimpleEvaluator due to an error in Custom Evaluator setup.")
+                self.error_callback(f"Failed to initialize Custom Evaluator: {e}")
+                self.error_callback("Falling back to SimpleEvaluator due to an error in Custom Evaluator setup.")
                 return SimpleEvaluator()
         elif evaluator_type == EvaluatorType.SIMPLE.value:
             return SimpleEvaluator()
         elif evaluator_type == EvaluatorType.DEEP_EVAL.value:
             return DeepEval(**cfg.get(constants.CONFIG_PARAM, {}))
         else:
-            UIComponents.display_warning(f"Unknown or unset evaluator type: {evaluator_type}. Defaulting to SimpleEvaluator.")
             return SimpleEvaluator()
 
     # update components
@@ -294,7 +297,6 @@ class RAGPipeline:
 
             # # Remove extra whitespaces and newlines
             # text = re.sub(r"\s+", " ", text).strip()
-            UIComponents.set_session_state_variable("processed_document_texts", text)
             with open("ExtractedTextFromPdf.txt", "w", encoding="utf-8") as file:
                 file.write(text)
 
@@ -303,7 +305,7 @@ class RAGPipeline:
             else:
                 return text
         except Exception as e:
-            UIComponents.display_error(f"Error extracting text: {e}, Traceback: {traceback.print_exc()}")
+            self.error_callback(f"Error extracting text: {e}, Traceback: {traceback.print_exc()}")
             return None, None
          
     # process documents
@@ -328,22 +330,9 @@ class RAGPipeline:
 
             return documents, chunks
         except Exception as e:
-            UIComponents.display_error(f"Error processing document: {e}, Traceback: {traceback.print_exc()}")
+            full_traceback = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
+            self.error_callback(f"Error processing document: {e}, Traceback: {full_traceback}")
             return None, None
-
-    def rewrite_query(self, query_text, max_assistant_chars=100):
-        if not UIComponents.get_session_state_messages():
-            return f"The user is asking: {query_text}"
-
-        prev_user, prev_assistant = UIComponents.get_session_state_messages[-1]
-        assistant_trimmed = prev_assistant.strip().replace('\n', ' ')[:max_assistant_chars] + "..."
-        
-        summary = (
-            f"The user previously asked:\n{prev_user}\n"
-            f"I responded with:\n{assistant_trimmed}\n"
-            f"Now the user wants:\n{query_text}"
-        )
-        return summary
     
     def greetUser(self, query_text):
         if self.query_classifier.is_greeting(query_text):
@@ -404,31 +393,32 @@ class RAGPipeline:
 
         return context_docs, explanation, context_docs_list
     
-    def query(self, query_text, top_k=None):
+    def query(self, query_text, history_text, top_k=None):
         try:
             if self.query_classifier.is_greeting(query_text):
-                UIComponents.create_subheader_UI(self.query_classifier.get_greeting_response())
-                UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_greeting_response())
-                return {
+                # UIComponents.create_subheader_UI(self.query_classifier.get_greeting_response())
+                # UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_greeting_response())
+                yield {
                 constants.ANSWER: self.query_classifier.get_greeting_response(),
                 constants.CONTEXTS: "",
                 constants.RERANK_EXPLANATION: ""
             }
+                return
             # query_text = self.rewrite_query(query_text)
             # Ensure documents are available
             
             context_docs, explanation, context_docs_list = self.get_context_docs(query_text)
             if self.query_classifier.is_irrelevant(query_text, context_docs):
-                UIComponents.create_subheader_UI(self.query_classifier.get_irrelevant_question_response())
-                UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_irrelevant_question_response())
+                # UIComponents.create_subheader_UI(self.query_classifier.get_irrelevant_question_response())
+                # UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_irrelevant_question_response())
                 return {
                 constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
                 constants.CONTEXTS: context_docs,
                 constants.RERANK_EXPLANATION: ""
             }
+            return
             # Join contexts
             context = "\n\n".join(context_docs)
-            history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in UIComponents.get_session_state_messages()])
             with open("Contexts.txt", "w", encoding="utf-8") as file:
                 file.write(context)
 
@@ -465,13 +455,16 @@ class RAGPipeline:
 
             Answer:
             """
-            placeHolder = UIComponents.create_empty_placeholder()
             full_response = ""
             for delta in self.llm_service.generate_response(answer_prompt):
                 full_response += delta
-                placeHolder.markdown(full_response)
+                print("Query / FullResponse", full_response)
+                yield {
+                constants.ANSWER: full_response,
+                constants.CONTEXTS: context_docs,
+                constants.RERANK_EXPLANATION: ""
+            }
 
-            UIComponents.add_message_to_chat("assistant",  full_response)
             # Save the query data for potential evaluation
             self.last_query = {
                 constants.QUESTION: query_text,
@@ -479,13 +472,8 @@ class RAGPipeline:
                 constants.CONTEXTS: context_docs_list
             }
             
-            return {
-                constants.ANSWER: full_response,
-                constants.CONTEXTS: context_docs_list,
-                constants.RERANK_EXPLANATION: explanation
-            }
         except Exception as e:
-            UIComponents.display_error(f"Error during query: {e}, Traceback: {traceback.print_exc()}")
+            self.error_callback(f"Error during query: {e}, Traceback: {traceback.print_exc()}")
             return None
         
     def evaluate(self, question=None, answer=None, contexts=None, ground_truths=None):
@@ -514,13 +502,12 @@ class RAGPipeline:
             metrics = self.evaluator.evaluate(question, answer, contexts, ground_truths)
             return metrics
         except Exception as e:
-            UIComponents.display_error(f"Error during evaluation: {e}, Traceback: {traceback.print_exc()}")
-            return None
+            raise Exceptions.EvaluationError("Error During Evaluation")
 
     def generate_flashcards_from_text(self, text_content: str, num_flashcards: int = 5) -> List[Dict[str, str]]:
         """Generates flashcards from the given text content using the LLM service."""
         if not text_content.strip():
-            UIComponents.display_warning("Cannot generate flashcards from empty content.")
+            self.warning_callback("Cannot generate flashcards from empty content.")
             return []
 
         prompt = f"""
@@ -575,14 +562,14 @@ class RAGPipeline:
             return flashcards[:num_flashcards] # Return up to the requested number
 
         except json.JSONDecodeError as e:
-            UIComponents.display_error(f"Error decoding JSON from LLM for flashcards: {e}\nRaw response: {full_response}")
+            self.error_callback(f"Error decoding JSON from LLM for flashcards: {e}\nRaw response: {full_response}")
             print(f"JSONDecodeError: {e}. Raw LLM response for flashcards:\n{full_response}")
             return []
         except ValueError as e:
-            UIComponents.display_error(f"Error in flashcard data structure from LLM: {e}\nRaw response: {full_response}")
+            self.error_callback(f"Error in flashcard data structure from LLM: {e}\nRaw response: {full_response}")
             print(f"ValueError: {e}. Raw LLM response for flashcards:\n{full_response}")
             return []
         except Exception as e:
-            UIComponents.display_error(f"An unexpected error occurred during flashcard generation: {e}")
+            self.error_callback(f"An unexpected error occurred during flashcard generation: {e}")
             print(f"Unexpected error in generate_flashcards_from_text: {e}, Traceback: {traceback.format_exc()}")
             return []

@@ -1,6 +1,6 @@
 import time
 from .base_llm_service import BaseLLMService
-from RAG_App.infrastructure.Common.RAG_Constants import GeminiLLMModel
+from infrastructure.Common.RAG_Constants import GeminiLLMModel
 from google.genai import types
 from google import genai
 
@@ -19,6 +19,7 @@ class GeminiService(BaseLLMService):
                 temperature=0.1
             )
         ):
+            print("Yielded Chunks", chunk)
             if hasattr(chunk, 'text'):
                 yield chunk.text
 

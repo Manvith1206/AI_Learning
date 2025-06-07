@@ -1,6 +1,7 @@
 import streamlit as st
 from typing import List, Tuple, Dict, Any, Callable
 import pandas as pd
+import infrastructure.Common.RAG_Constants as constants
 
 class UIComponents:
     """Base UI components for the RAG application"""
@@ -187,7 +188,15 @@ class UIComponents:
         """Display a chat message with a specific role"""
         with st.chat_message(role):
             with st.spinner("🤔 Thinking..."):
-                response = pipeline.query(prompt)
+                history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in UIComponents.get_session_state_messages()])
+
+                response = pipeline.query(prompt, history_text=history_text)
+                empty_placeholder = UIComponents.create_empty_placeholder()
+                for delta in response:
+                    print("Delta:", delta)
+                    empty_placeholder.markdown(delta[constants.ANSWER])
+                
+
                 # UIComponents.create_subheader_UI(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
                 # UIComponents.create_subheader_UI(response["answer"])
                 # UIComponents.add_message_to_chat(role, response["answer"])

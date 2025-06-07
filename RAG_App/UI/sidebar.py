@@ -1,5 +1,6 @@
 from typing import Dict, List, Any, Callable, Tuple
 from UI.UI_Components import UIComponents
+from Utils import Exceptions
 from infrastructure.Common.rag_pipeline import RAGPipeline
 from infrastructure.Common.RAG_Constants import ChunkerType, EmbedderType, RetrieverType, RerankerType
 from infrastructure.Common import RAG_Constants as constants
@@ -23,7 +24,6 @@ class Sidebar:
             "LLM_Service": constants.LLMServiceType.GEMINI.value,
         }
         )
-        UIComponents.initialize_pipeline(ConfigManager())
     
     @staticmethod
     def initialize_page():
@@ -105,20 +105,7 @@ class Sidebar:
             UIComponents.add_message_to_chat(role='user', content=prompt)
             UIComponents.display_message_with_role(role='user', message=prompt)
             UIComponents.process_chat_input(role='assistant', content=prompt, pipeline=Utils.Utils.get_pipeline(), prompt=prompt)
-
-    def process_chat_input(self, prompt: str):
-        """Process user chat input and generate response"""
-        print("Processing chat input:", prompt)
-        if UIComponents.get_session_state_variable("documents"):
-            with UIComponents.display_spinner("🤔 Thinking..."):
-                pipeline = Utils.Utils.get_pipeline()
-                response = pipeline.query(prompt)
-                UIComponents.write(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
-                UIComponents.write(response["answer"])
-                UIComponents.add_message_to_chat(role="assistant", content=response["answer"])
-        else:
-            UIComponents.display_error("Please upload and process documents first.")
-
+            
     def render_sidebar(self):
         """Render the sidebar with all configuration options"""
         with UIComponents.create_sidebar():
@@ -193,7 +180,7 @@ class Sidebar:
 
     def get_ui_options(self, option_type, config_name: str):
         options = [e.value for e in option_type]
-        st_config = UIComponents.get_session_state_variable("pipeline_config").get_config(config_name)
+        st_config = UIComponents.get_session_state_variable("pipeline_config")
         print("STCONFIG:", st_config)
         config = UIComponents.get_session_state_variable("pipeline_config").get_config(config_name)
         index = options.index(config[constants.CONFIG_TYPE_PARAM])
@@ -247,12 +234,16 @@ class Sidebar:
             if UIComponents.create_button("Process Document", key="process_document"):
                 with UIComponents.display_spinner("Processing document..."):
                     # Only initialize pipeline when needed
-                    pipeline = Utils.Utils.get_pipeline()
-                    documents, chunks = doc_processor.process_uploaded_file(uploaded_file)
+                    try:
+                        documents, chunks = doc_processor.process_uploaded_file(uploaded_file)
+                    except Exceptions.ExtractionOfText as e:
+                        UIComponents.display_error(e)
                     
                     if documents and chunks:
                         UIComponents.set_session_state_variable("documents", documents)
                         UIComponents.set_session_state_variable("chunks", chunks)
+                        UIComponents.set_session_state_variable("processed_document_texts", chunks)
+
                         UIComponents.display_success(f"Processed {len(documents)} chunks from document")
                     else:
                         UIComponents.display_warning("No valid content was extracted from the document")

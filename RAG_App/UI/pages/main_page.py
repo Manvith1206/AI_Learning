@@ -7,26 +7,31 @@ from UI.metrics_display import MetricsDisplay
 from UI.flashcard_display import FlashcardDisplay
 from models import Flashcard
 from infrastructure.Common.rag_pipeline import RAGPipeline
+from config import ConfigManager
 from infrastructure.Common import RAG_Constants as constants
-import Utils.Utils
+from Utils.Exceptions import FlashcardGenerationError, PipelineError
 
 class MainPage:
     """Main application page integrating all components"""
     
     def __init__(
-        self
+        self,
+        pipeline: RAGPipeline,
+        config_manager: ConfigManager
     ):
         """Initialize the main page with all required use cases"""
+        self.pipeline = pipeline
+        self.config_manager = config_manager
+        self.initialize_components()
+        print("Pipeline: ", self.pipeline)
         
-        # Initialize UI components
-        self._initialize_components()
     
-    def _initialize_components(self):
+    def initialize_components(self):
         """Initialize all UI components"""
-        UIComponents.initialize_page()
+        # UIComponents.initialize_page()
         # Chat interface
         self.chat_interface = ChatInterface(
-            on_message_callback=None
+            on_message_callback=None,
         )
         
         # Sidebar component
@@ -36,10 +41,9 @@ class MainPage:
             flashcards=[] # Initially empty, will be populated from session state
         )
        
-    def _trigger_flashcard_generation(self):
+    def trigger_flashcard_generation(self):
         """Handles the flashcard generation process using RAGPipeline."""
-        pipeline = Utils.Utils.get_pipeline() # Get the RAGPipeline instance
-        if not pipeline or not hasattr(pipeline, 'generate_flashcards_from_text'):
+        if not self.pipeline or not hasattr(self.pipeline, 'generate_flashcards_from_text'):
             UIComponents.display_error("RAG Pipeline not available or misconfigured for flashcard generation.")
             UIComponents.set_session_state_variable("flashcards", [])
             UIComponents.set_session_state_variable("flashcards_generation_attempted", True)
@@ -70,9 +74,24 @@ class MainPage:
             UIComponents.set_session_state_variable("flashcards_generation_attempted", True)
             return
 
-        with UIComponents.display_spinner("Generating flashcards..."):
-            UIComponents.display_info("Generating flashcards... This may take a moment.")
-            generated_flashcards = pipeline.generate_flashcards_from_text(full_text_content, num_flashcards=constants.NUM_OF_FLASHCARDS)
+        generated_flashcards = []  # Initialize to ensure it's defined
+        try:
+            with UIComponents.display_spinner("Generating flashcards..."):
+                UIComponents.display_info("Generating flashcards... This may take a moment.")
+                generated_flashcards = self.pipeline.generate_flashcards_from_text(
+                    full_text_content, 
+                    num_flashcards=constants.NUM_OF_FLASHCARDS
+                )
+        except FlashcardGenerationError as e:
+            UIComponents.display_error(f"Could not generate flashcards: {e}")
+            # generated_flashcards remains []
+        except PipelineError as e:
+            UIComponents.display_error(f"A pipeline error occurred during flashcard generation: {e}")
+            # generated_flashcards remains []
+        except Exception as e:
+            # In a production app, you might want to log this error in more detail
+            UIComponents.display_error(f"An unexpected error occurred while generating flashcards: {e}")
+            # generated_flashcards remains []
         
         UIComponents.set_session_state_variable("flashcards", generated_flashcards)
         UIComponents.set_session_state_variable("flashcards_generation_attempted", True)
@@ -110,7 +129,7 @@ class MainPage:
             UIComponents.create_subheader_UI("Flashcard Generation & Review")
 
             if UIComponents.create_button("✨ Generate Flashcards"): 
-                self._trigger_flashcard_generation()
+                self.trigger_flashcard_generation()
 
             # Ensure session state keys exist before first use
             if "flashcards" not in UIComponents.get_session_state():
@@ -130,7 +149,7 @@ class MainPage:
                 # Update the existing flashcard_display instance with new/retrieved flashcards
                 self.flashcard_display.flashcards = flashcards 
                 # Initialize session state for card navigation (e.g., reset index if flashcards change)
-                self.flashcard_display.initialze_session_state() 
+                self.flashcard_display.initialize_session_state() 
                 
                 self.flashcard_display.display_card()
                 self.flashcard_display.create_columns()
@@ -138,9 +157,9 @@ class MainPage:
         
         # Debug tab
         with tabs[3]:
-            self._render_debug_tab()
+            self.render_debug_tab()
     
-    def _render_debug_tab(self):
+    def render_debug_tab(self):
         """Render the debug tab with system information"""
         UIComponents.create_subheader_UI("Debug Information")
         
@@ -149,36 +168,29 @@ class MainPage:
         
         UIComponents.write("Component Metrics")
         if hasattr(UIComponents.get_session_state(), "documents") and UIComponents.get_session_state_variable("documents", None):
-            metrics = self._get_component_metrics()
+            metrics = self.get_component_metrics()
             MetricsDisplay.display_pipeline_metrics(metrics)
         else:
             UIComponents.display_info("Process documents to view component metrics")
     
     # --- Component type getters ---
-    def _get_component_config(self, component_name: str) -> Dict[str, Any]:
+    def get_component_config(self, component_name: str) -> Dict[str, Any]:
         """Get configuration for a specific component"""
-        return self.configuration_usecase.get_component_config(component_name)
+        return self.config_manager.get_config(component_name)
     
-    def _get_component_metrics(self) -> Dict[str, Any]:
+    def get_component_metrics(self) -> Dict[str, Any]:
         """Get metrics for all components"""
         # This would be implemented to retrieve metrics from the RAG service
         # For now, return mock data
-        pipeline = Utils.Utils.get_pipeline()
+        if not self.pipeline:
+            UIComponents.display_error("RAG Pipeline not available for metrics.")
+            return {}
         return {
-            constants.CONFIG_CHUNKER: pipeline.get_chunker_cost_and_time(),
-            constants.CONFIG_EMBEDDER: pipeline.get_embedder_cost_and_time(),
-            constants.CONFIG_RETRIEVER: pipeline.get_retriever_cost_and_time(),
-            constants.CONFIG_RERANKER: pipeline.get_reranker_cost_and_time(),
-            constants.CONFIG_EVALUATOR: pipeline.get_evaluator_cost_and_time(),
-            constants.CONFIG_VECTOR_STORE: pipeline.get_vector_store_cost_and_time(),
-            constants.CONFIG_LLM: pipeline.get_llm_service_cost_and_time()
+            constants.CONFIG_CHUNKER: self.pipeline.get_chunker_cost_and_time(),
+            constants.CONFIG_EMBEDDER: self.pipeline.get_embedder_cost_and_time(),
+            constants.CONFIG_RETRIEVER: self.pipeline.get_retriever_cost_and_time(),
+            constants.CONFIG_RERANKER: self.pipeline.get_reranker_cost_and_time(),
+            constants.CONFIG_EVALUATOR: self.pipeline.get_evaluator_cost_and_time(),
+            constants.CONFIG_VECTOR_STORE: self.pipeline.get_vector_store_cost_and_time(),
+            constants.CONFIG_LLM: self.pipeline.get_llm_service_cost_and_time()
         }
-    
-    # def _handle_evaluation(self, ground_truth: str) -> Dict[str, float]:
-    #     """Handle evaluation of last query"""
-    #     try:
-    #         evaluation_result = self.evaluation_usecase.evaluate_last_query(ground_truth)
-    #         return evaluation_result.metrics
-    #     except Exception as e:
-    #         UIComponents.display_error(f"Error during evaluation: {str(e)}")
-    #         return {}
