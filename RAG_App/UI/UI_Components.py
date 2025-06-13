@@ -192,14 +192,16 @@ class UIComponents:
 
                 response = pipeline.query(prompt, history_text=history_text)
                 empty_placeholder = UIComponents.create_empty_placeholder()
+                full_response = ""
+                is_rerank_explaination_rendered = False
                 for delta in response:
-                    print("Delta:", delta)
-                    empty_placeholder.markdown(delta[constants.ANSWER])
+                    if delta[constants.RERANK_EXPLANATION] and is_rerank_explaination_rendered == False:
+                        UIComponents.create_subheader_UI(f"**Re-ranking Explanation:**\n{delta[constants.RERANK_EXPLANATION]}")
+                        is_rerank_explaination_rendered = True
+                    full_response = delta[constants.ANSWER]
+                    empty_placeholder.markdown(full_response)
                 
-
-                # UIComponents.create_subheader_UI(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
-                # UIComponents.create_subheader_UI(response["answer"])
-                # UIComponents.add_message_to_chat(role, response["answer"])
+                UIComponents.add_message_to_chat(role, full_response)
 
     @staticmethod
     def markdown(text: str):

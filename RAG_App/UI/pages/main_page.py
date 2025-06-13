@@ -149,7 +149,7 @@ class MainPage:
                 # Update the existing flashcard_display instance with new/retrieved flashcards
                 self.flashcard_display.flashcards = flashcards 
                 # Initialize session state for card navigation (e.g., reset index if flashcards change)
-                self.flashcard_display.initialize_session_state() 
+                self.flashcard_display.initialze_session_state() 
                 
                 self.flashcard_display.display_card()
                 self.flashcard_display.create_columns()
@@ -165,8 +165,10 @@ class MainPage:
         
         with UIComponents.create_expander("Session State", expanded=False):
             UIComponents.write(UIComponents.get_session_state())
-        
         UIComponents.write("Component Metrics")
+        UIComponents.write("This section provides the performance and cost metrics for each step in the RAG pipeline.")
+        UIComponents.write("The metrics include time taken for processing and estimated cost for each step.")
+        UIComponents.write("**Note:** The cost is an estimate based on the current configuration and may vary based on actual usage.")
         if hasattr(UIComponents.get_session_state(), "documents") and UIComponents.get_session_state_variable("documents", None):
             metrics = self.get_component_metrics()
             MetricsDisplay.display_pipeline_metrics(metrics)

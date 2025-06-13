@@ -1,8 +1,7 @@
 import time
 import voyageai
-import voyageai.client
 from .base_embedder import BaseEmbedder
-import rag_modular.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 
 class VoyageEmbedder(BaseEmbedder):
     def __init__(self, api_key, model):

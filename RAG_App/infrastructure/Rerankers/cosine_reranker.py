@@ -1,7 +1,7 @@
 from .base_reranker import BaseReranker
 from sklearn.metrics.pairwise import cosine_similarity
 import time
-from infrastructure.Common.RAG_Constants import RERANK_EXPLAINATION
+from infrastructure.Common.RAG_Constants import COSINE_SIMILARITY_RERANK_EXPLAINATION
 
 class CosineReranker(BaseReranker):
     """
@@ -29,7 +29,7 @@ class CosineReranker(BaseReranker):
         sorted_docs = [doc for doc, score in paired]
         sorted_docs = sorted_docs[:self.top_k_for_reranking]
         # Explanation
-        explanation = RERANK_EXPLAINATION
+        explanation = COSINE_SIMILARITY_RERANK_EXPLAINATION
         end_time = time.time()
         self.time_taken = end_time - start_time
         return sorted_docs, explanation

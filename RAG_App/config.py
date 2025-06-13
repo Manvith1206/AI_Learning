@@ -15,7 +15,7 @@ class ConfigManager:
             constants.CONFIG_VECTOR_STORE: {constants.CONFIG_TYPE_PARAM: constants.VectorStore.SCIKIT_LEARN.value, constants.CONFIG_PARAM: {constants.CONFIG_VECTOR_STORE_METRIC: constants.CONFIG_METRIC_COSINE}},
             constants.CONFIG_RETRIEVER: {constants.CONFIG_TYPE_PARAM: RetrieverType.SIMILARITY.value, constants.CONFIG_PARAM: {constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.0, constants.CONFIG_TOP_K_PARAM: 5}},
             constants.CONFIG_RERANKER: {constants.CONFIG_TYPE_PARAM: RerankerType.LLM.value, constants.CONFIG_PARAM: {constants.CONFIG_TOP_K_FOR_RERANKING_PARAM: 5}},
-            constants.CONFIG_LLM: {constants.CONFIG_TYPE_PARAM: LLMServiceType.CLAUDE.value, constants.CONFIG_PARAM: {constants.CONFIG_MODEL: constants.CLAUDE_MODELS.CLAUDE_OPUS_THREE.display_name}},
+            constants.CONFIG_LLM: {constants.CONFIG_TYPE_PARAM: LLMServiceType.CLAUDE.value, constants.CONFIG_PARAM: {constants.CONFIG_MODEL: constants.CLAUDE_MODELS.CLAUDE_OPUS_THREE.value}},
             constants.CONFIG_EVALUATOR: {constants.CONFIG_TYPE_PARAM: EvaluatorType.RAGAS.value}
         }
 

@@ -146,15 +146,16 @@ class RAGPipeline:
         cfg = self.config_manager.get_config(constants.CONFIG_RETRIEVER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         params = cfg.get(constants.CONFIG_PARAM, {})
+        print("Params: ", params)
         self.top_k = params.get(constants.CONFIG_TOP_K_PARAM, getattr(self, 'top_k', 5))
         if t == RetrieverType.SIMILARITY.value:
             return SimilarityRetriever(**params)
         elif t == RetrieverType.HYBRID.value:
             from infrastructure.Retrieval_Methods.hybrid_retriever import HybridRetriever
-
             return HybridRetriever(**params)
-        # elif t == RetrieverType.SENTENCE_WINDOW.value:
-        #     return SentenceWindowRetriever(**params)
+        elif t == RetrieverType.SENTENCE_WINDOW.value:
+            print("SentenceWindowRetriever/params", params)
+            return SentenceWindowRetriever(**params)
         else:
             return SimilarityRetriever()
 
@@ -373,7 +374,8 @@ class RAGPipeline:
                 vector_store=self.vector_store,
                 query_text=query_text
                 )
-        retrieved_docs = [result[constants.Document][constants.PAGE_CONTENT] for result in results]
+        print("RetrievedDocs: ", results)
+        retrieved_docs = [result for result in results]
             
         # Use retriever to get relevant documents
         if not retrieved_docs:
@@ -411,12 +413,12 @@ class RAGPipeline:
             if self.query_classifier.is_irrelevant(query_text, context_docs):
                 # UIComponents.create_subheader_UI(self.query_classifier.get_irrelevant_question_response())
                 # UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_irrelevant_question_response())
-                return {
+                yield {
                 constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
                 constants.CONTEXTS: context_docs,
                 constants.RERANK_EXPLANATION: ""
             }
-            return
+                return
             # Join contexts
             context = "\n\n".join(context_docs)
             with open("Contexts.txt", "w", encoding="utf-8") as file:

@@ -5,7 +5,7 @@ from google.genai import types
 from google import genai
 
 class GeminiService(BaseLLMService):
-    def __init__(self, client, model_name=GeminiLLMModel.GEMINI_FLASH.value):
+    def __init__(self, client: genai.Client, model_name=GeminiLLMModel.GEMINI_FLASH.value):
         self.client = client
         self.model_name = model_name
         self.cost = 0

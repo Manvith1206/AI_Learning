@@ -266,6 +266,9 @@ class Sidebar:
         elif retriever_type == RetrieverType.HYBRID.value:
             keyword_weight = UIComponents.display_slider(constants.KEYWORD_WEIGHT_DISPLAY_NAME, 0.0, 1.0, 0.3, 0.05)
             retriever_params = {constants.CONFIG_KEYWORD_WEIGHT: keyword_weight, constants.CONFIG_TOP_K_PARAM: top_k}
+        elif retriever_type == RetrieverType.SENTENCE_WINDOW.value:
+            window_size = UIComponents.display_slider(constants.WINDOW_SIZE_DISPLAY_NAME, max_value=100, min_value=0, step=1)
+            retriever_params = {constants.CONFIG_WINDOW_SIZE: window_size, constants.CONFIG_TOP_K_PARAM: top_k}
         
         retriever_config = {
             constants.CONFIG_TYPE_PARAM: retriever_type,
@@ -471,7 +474,7 @@ class Sidebar:
             for model in constants.CLAUDE_MODELS:
                 print("Model:", currModel, "Value:", model.value)
 
-                if model.display_name == currModel:
+                if model.value == currModel:
                     return model.display_name
         else:
             for model in constants.GeminiLLMModel:

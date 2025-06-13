@@ -1,6 +1,6 @@
 import numpy as np
 from .base_retriever import BaseRetriever
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 import time
 
 class SimilarityRetriever(BaseRetriever):
@@ -45,7 +45,11 @@ class SimilarityRetriever(BaseRetriever):
         ]
         end_time = time.time()
         self.time_taken = end_time - start_time
-        return filtered_results
+        print("Filtered Results: ", filtered_results)
+        final_results = [
+            result[constants.Document][constants.PAGE_CONTENT] for result in filtered_results 
+        ]
+        return final_results
     
     def get_cost_and_time_taken(self):
         """Returns the time taken for the retrieve operation."""

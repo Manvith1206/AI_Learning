@@ -1,215 +1,79 @@
-import re
-from typing import List, Dict, Any
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import os
+import openai
+from dotenv import load_dotenv
+from llama_index.core import Document
+from llama_index.core import SimpleDirectoryReader
+from llama_index.core.node_parser import SentenceWindowNodeParser
+from llama_index.core import load_index_from_storage
+from llama_index.llms.openai import OpenAI
+from llama_index.core import Settings
+from llama_index.core import VectorStoreIndex, StorageContext
+from llama_index.core.postprocessor import MetadataReplacementPostProcessor
+from llama_index.core.indices.postprocessor import SentenceTransformerRerank
 from .base_retriever import BaseRetriever
+import infrastructure.Common.RAG_Constants as constants
+import Utils.Utils as Utils
+import time
 
 class SentenceWindowRetriever(BaseRetriever):
-    """
-    A retrieval enhancement layer that applies sentence window retrieval
-    on top of an existing retrieval system.
-    
-    This assumes you already have:
-    1. Documents chunked and stored
-    2. A way to retrieve relevant chunks based on a query
-    3. A way to get embeddings for sentences
-    """
-    
-    def __init__(self, window_size: int = 2):
-        """
-        Initialize the sentence window retriever
-        
-        Args:
-            window_size: Number of sentences to include on each side of the matched sentence
-        """
+
+    def __init__(self, window_size: int, top_k: int):
         self.window_size = window_size
-        # Regex pattern for sentence tokenization
-        self.sentence_pattern = re.compile(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s')
-    
-    def _split_into_sentences(self, text: str) -> List[str]:
-        """
-        Split text into sentences using regex
-        
-        Args:
-            text: The text to split
-            
-        Returns:
-            List of sentences
-        """
-        
-        # Split text using regex
-        sentences = self.sentence_pattern.split(text)
-        
-        # Clean up sentences
-        cleaned_sentences = []
-        for sentence in sentences:
-            # Remove leading/trailing whitespace
-            sentence = sentence.strip()
-            if sentence:  # Skip empty sentences
-                cleaned_sentences.append(sentence)
-        
-        return cleaned_sentences
-    
-    def apply_sentence_window_retrieval(
-        self,
-        query: str,
-        retrieved_chunks: List[str],
-        embedding_function=None,  # Optional function to get embeddings
-        **func_kwargs
-    ) -> List[str]:
-        """
-        Enhance retrieved chunks by applying sentence window retrieval
-        
-        Args:
-            query: The user's query
-            retrieved_chunks: List of text chunks retrieved by your existing system
-            embedding_function: Optional function that takes text and returns embeddings
-                                If None, will use basic string matching for demonstration
-        
-        Returns:
-            List of enhanced context windows
-        """
-        # Step 1: Split all chunks into sentences
-        all_sentences = []
-        chunk_to_sentences = {}
-        sentence_to_chunk = {}
-        sentence_indices = {}  # Track the position of each sentence within its original chunk
-        
-        for chunk_idx, chunk in enumerate(retrieved_chunks):
-            sentences = self._split_into_sentences(chunk)
-            chunk_to_sentences[chunk_idx] = sentences
-            
-            for sent_idx, sentence in enumerate(sentences):
-                sentence_idx = len(all_sentences)
-                all_sentences.append(sentence)
-                sentence_to_chunk[sentence_idx] = chunk_idx
-                sentence_indices[sentence_idx] = sent_idx
-        
-        # Step 2: Find the most relevant sentences for the query
-        if embedding_function:
-            
-            # Use provided embedding of query if available
-            query_emb = func_kwargs.pop('query_embedding', None)
-            # Sentence embeddings
-            sentence_embeddings = embedding_function(all_sentences, **func_kwargs)
-            # Query embedding: use provided or compute
-            if query_emb is None:
-                query_emb = embedding_function([query], **func_kwargs)[0]
-            # else assume it's already a flat vector
-            similarities = cosine_similarity([query_emb], sentence_embeddings)[0]
-            
-            # Get top sentence indices
-            top_sentence_indices = np.argsort(similarities)[-5:][::-1]  # Get top 5 most similar sentences
-        else:
-            
-            # Simple fallback using basic word overlap if no embedding function provided
-            word_overlaps = []
-            query_words = set(query.lower().split())
-            
-            for sentence in all_sentences:
-                sentence_words = set(sentence.lower().split())
-                overlap = len(query_words.intersection(sentence_words))
-                word_overlaps.append(overlap)
-            
-            top_sentence_indices = np.argsort(word_overlaps)[-5:][::-1]  # Get top 5 sentences with most word overlap
-        
-        # Step 3: For each top sentence, get its window of surrounding sentences
-        enhanced_contexts = []
-        
-        for sentence_idx in top_sentence_indices:
-            chunk_idx = sentence_to_chunk[sentence_idx]
-            sent_idx_in_chunk = sentence_indices[sentence_idx]
-            
-            # Get sentences in window (respecting chunk boundaries)
-            sentences_in_chunk = chunk_to_sentences[chunk_idx]
-            start_idx = max(0, sent_idx_in_chunk - self.window_size)
-            end_idx = min(len(sentences_in_chunk) - 1, sent_idx_in_chunk + self.window_size)
-            
-            window_sentences = sentences_in_chunk[start_idx:end_idx + 1]
-            window_text = " ".join(window_sentences)
-            
-            enhanced_contexts.append(window_text)
-        
-        # Step 4: Merge overlapping windows
-        merged_contexts = self._merge_overlapping_contexts(enhanced_contexts)
-        
-        return merged_contexts
-    
-    def _merge_overlapping_contexts(self, contexts: List[str]) -> List[str]:
-        """Merge contexts that have significant overlap"""
-        if not contexts:
-            return []
-        
-        # Convert contexts to sets of sentences for easier overlap detection
-        context_sentences = []
-        for context in contexts:
-            sentences = set(self._split_into_sentences(context))
-            context_sentences.append(sentences)
-        
-        # Merge overlapping contexts
-        merged = []
-        current = context_sentences[0]
-        current_text = contexts[0]
-        
-        for i in range(1, len(context_sentences)):
-            if len(current.intersection(context_sentences[i])) > 0:
-                # Contexts overlap, merge them
-                # For merging text, we'll use a simple approach - just concatenate and split again
-                combined_text = current_text + " " + contexts[i]
-                combined_sentences = self._split_into_sentences(combined_text)
-                # Remove duplicates while preserving order
-                seen = set()
-                unique_sentences = []
-                for s in combined_sentences:
-                    if s not in seen:
-                        seen.add(s)
-                        unique_sentences.append(s)
-                
-                current_text = " ".join(unique_sentences)
-                current = set(unique_sentences)
-            else:
-                # No overlap, add current to results and start a new one
-                merged.append(current_text)
-                current = context_sentences[i]
-                current_text = contexts[i]
-        
-        # Add the last context
-        merged.append(current_text)
-        
-        return merged
+        self.top_k = top_k
+        self.documents = None
+        self.document = None
+        self.time_taken = 0
+        self.cost = 0
+        openai.api_key = Utils.get_env_var(constants.OPENAI_API_KEY)
 
-    def retrieve(self, query_embedding, documents, **kwargs):
-        
-        query_text = kwargs.get(constants.QUERY_TEXT)
-        
-        if not query_text:
-            raise ValueError(constants.QUERY_TEXT_MUST_BE_PROVIDED_ERROR_MESSAGE)
-        
-        # Apply sentence window retrieval
-        retriever = SentenceWindowRetriever(window_size=self.window_size)
-        enhanced_contexts = retriever.apply_sentence_window_retrieval(
-            query_text,
-            documents,
-            embedding_function=None,
-            **kwargs
+    def get_sentence_window_index(self, documents, index_dir, sentence_window_size=3):
+        Node_parser = SentenceWindowNodeParser.from_defaults(
+            window_size=sentence_window_size,
+            window_metadata_key="window",
+            original_text_metadata_key="original_sentence",
         )
+
+        Settings.llm = OpenAI()
+        Settings.embed_model = "local:BAAI/bge-small-en-v1.5"
+        Settings.node_parser = Node_parser
+
+        if not os.path.exists(index_dir):
+            sentence_index = VectorStoreIndex.from_documents([self.document])
+            sentence_index.storage_context.persist(persist_dir=index_dir)
+            
+        else:
+            sentence_index = load_index_from_storage(StorageContext.from_defaults(persist_dir=index_dir))
+        return sentence_index
+
+    def get_sentence_window_engine(self, sentence_index):
         
+        postprocessor = MetadataReplacementPostProcessor(target_metadata_key="window")
+        sentence_window_engine = sentence_index.as_query_engine(similarity_top_k=self.top_k, node_postprocessors=[postprocessor])
         
-
-        return enhanced_contexts
-
-# Example usage with a simple embedding function for demonstration
-def simple_embedding_function(texts,  **kwargs):
-    """
-    A placeholder for your actual embedding function.
-    In a real system, this would use your preferred embedding method.
-    """
+        return sentence_window_engine
     
-    vector_store = kwargs.get(constants.CONFIG_EMBEDDER)
-    if not vector_store:
-        raise ValueError(constants.VECTOR_STORE_MUST_BE_PROVIDED_ERROR_MESSAGE)
+    def retrieve(self, query_embedding, documents, **kwargs):
+        start_time = time.time()
 
-    embeddings = vector_store.fit(texts)
-    
-    return embeddings
+        self.documents = documents
+        print("Docs: ", self.documents)
+        self.document = Document(text="\n\n".join([doc["page_content"] for doc in self.documents]))
+
+        index_dir = "./sentence_index_1"
+        print("WindowSize", self.window_size)
+        sw_index_1 = self.get_sentence_window_index(documents, index_dir, sentence_window_size=self.window_size)
+        sw_engine_1 = self.get_sentence_window_engine(sw_index_1)
+
+        query_text = kwargs.get("query_text")
+        window_response_1 = sw_engine_1.query(
+            query_text
+        )
+        retrieved_contexts = [sn.node.metadata["window"] for sn in window_response_1.source_nodes]
+        end_time = time.time()
+        self.time_taken = end_time - start_time
+        print("Sentence WIndow / Retrieved Contexts: " )
+        print(retrieved_contexts)
+        return retrieved_contexts
+        
+    def get_cost_and_time_taken(self):
+        return self.cost, self.time_taken

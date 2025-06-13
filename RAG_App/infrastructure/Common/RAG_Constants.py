@@ -49,7 +49,7 @@ EMBED_MODEL_DISPLAY_NAME = "Embed Model"
 CONFIG_CHAT_RESPONSE = "chat_response"
 
 # constants
-RERANK_EXPLAINATION = "Chunks sorted by cosine similarity scores (highest to lowest)."
+COSINE_SIMILARITY_RERANK_EXPLAINATION = "Chunks sorted by cosine similarity scores (highest to lowest)."
 NO_EXPLAINATION_NEEDED_MESSAGE = "No explanation needed."
 UNABLE_TO_RETRIEVE_MESSAGE = "Unable to retrieve documents currently. Try Again after some time."
 NUM_OF_FLASHCARDS = 5
@@ -149,7 +149,7 @@ class EmbedderType(Enum):
 class RetrieverType(Enum):
     SIMILARITY = "similarity"
     HYBRID = "hybrid"
-    # SENTENCE_WINDOW = "sentence_window"
+    SENTENCE_WINDOW = "sentence_window"
 
 class RerankerType(Enum):
     COSINE = "Cosine"
