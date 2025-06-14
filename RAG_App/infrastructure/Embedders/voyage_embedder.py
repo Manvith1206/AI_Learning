@@ -19,7 +19,6 @@ class VoyageEmbedder(BaseEmbedder):
     def batch_chunks(self, chunks, batch_size=80):
         """Yield successive batches of size batch_size."""
         for i in range(0, len(chunks), batch_size):
-            print("batching is in progress")
             yield chunks[i:i + batch_size]
         
     def fit(self, texts):
@@ -30,14 +29,20 @@ class VoyageEmbedder(BaseEmbedder):
         start_time = time.time()
         self.texts = texts
         all_embeddings = []
+        total_tokens = 0
         for batch in self.batch_chunks(texts, batch_size=80): # Adjust batch_size as needed for Voyage
             emb = self.client.embed(texts=batch, model=self.model)
             all_embeddings.extend(emb.embeddings)
+            total_tokens += emb.total_tokens
+
         self.embeddings = all_embeddings
         end_time = time.time()
+        self.cost = self.get_cost_based_on_model(total_tokens)
         self.time_taken = end_time - start_time
 
         return self.embeddings
+    
+
     def transform(self, texts):
         """
         Embed new Texts on demand

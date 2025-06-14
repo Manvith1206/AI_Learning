@@ -29,6 +29,8 @@ from infrastructure.Evaluators.deep_eval_evaluator import DeepEval
 from infrastructure.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store # Added for caching
 import Utils.Exceptions as Exceptions
 import Utils.Utils as Utils
+from infrastructure.PromptProviders.LLM_Chat_Prompt_Provider import LLM_Chat_Prompt_Provider
+from infrastructure.PromptProviders.flashcards_generation_prompt_provider import FlashCardsGeneration_Prompt_Provider
 
 class RAGPipeline:
     def __init__(self, warning_callback, error_callback, config_manager=None):
@@ -37,6 +39,7 @@ class RAGPipeline:
         self.warning_callback = warning_callback
         self.error_callback = error_callback
         self.query_classifier = None
+        self.flashcard_prompt_provider = FlashCardsGeneration_Prompt_Provider()
 
     # setup components
     def setup_components(self):
@@ -146,7 +149,6 @@ class RAGPipeline:
         cfg = self.config_manager.get_config(constants.CONFIG_RETRIEVER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         params = cfg.get(constants.CONFIG_PARAM, {})
-        print("Params: ", params)
         self.top_k = params.get(constants.CONFIG_TOP_K_PARAM, getattr(self, 'top_k', 5))
         if t == RetrieverType.SIMILARITY.value:
             return SimilarityRetriever(**params)
@@ -154,7 +156,6 @@ class RAGPipeline:
             from infrastructure.Retrieval_Methods.hybrid_retriever import HybridRetriever
             return HybridRetriever(**params)
         elif t == RetrieverType.SENTENCE_WINDOW.value:
-            print("SentenceWindowRetriever/params", params)
             return SentenceWindowRetriever(**params)
         else:
             return SimilarityRetriever()
@@ -374,7 +375,6 @@ class RAGPipeline:
                 vector_store=self.vector_store,
                 query_text=query_text
                 )
-        print("RetrievedDocs: ", results)
         retrieved_docs = [result for result in results]
             
         # Use retriever to get relevant documents
@@ -424,43 +424,13 @@ class RAGPipeline:
             with open("Contexts.txt", "w", encoding="utf-8") as file:
                 file.write(context)
 
+            llm_chat_prompt_provider = LLM_Chat_Prompt_Provider()
             # Generate answer
-            answer_prompt = f"""
-            <system>
-            You are a highly detailed assistant that must answer questions based only on the provided context. Do not make up facts or include any information not explicitly supported by the context. If the answer is not present, respond with "The context does not provide enough information to answer this question."
-            You are a expert in Digital Data Communications for University Students
-            You have knowledge of Digital Data Communication Techniques like Synchronous and Asynchronous transmission and different line configurations
-            
-            Answer the question directly and concisely using only the provided context. 
-            Focus on the specific question asked without adding extra information.
-            <system/>
-
-            Your answers must be:
-            - Detailed and well-explained (minimum 6 sentences)
-            - Faithfully based only on the context
-            - Avoid any assumptions or hallucinations
-            
-            <user>
-            # CONTEXT
-            # Below are contexts:
-            Context:
-            {context}
-
-            # QUERY
-            Below is the query asked by User:
-            
-            Question: {query_text}
-            </user>
-
-            Chat History:
-            {history_text}
-
-            Answer:
-            """
+            answer_prompt = llm_chat_prompt_provider.get_final_prompt(context=context, query_text=query_text, history_text=history_text)
+            print("AnswerPrompt: ", answer_prompt)
             full_response = ""
             for delta in self.llm_service.generate_response(answer_prompt):
                 full_response += delta
-                print("Query / FullResponse", full_response)
                 yield {
                 constants.ANSWER: full_response,
                 constants.CONTEXTS: context_docs,
@@ -512,32 +482,7 @@ class RAGPipeline:
             self.warning_callback("Cannot generate flashcards from empty content.")
             return []
 
-        prompt = f"""
-        <system>
-        You are an expert flashcard creator. Your task is to generate {num_flashcards} distinct and high-quality flashcards (question and answer pairs) based on the provided text content.
-        Each flashcard should focus on a key concept or piece of information from the text.
-        Questions should be clear and concise.
-        Answers should be accurate and directly derivable from the text.
-
-        Respond ONLY with a valid JSON array of objects. Each object must have two keys: "question" and "answer".
-        Do NOT include any other text, explanations, or apologies before or after the JSON array.
-        Example format:
-        [        
-          {{"question": "What is the main topic of the text?", "answer": "The main topic is..."}},
-          {{"question": "Define the term 'XYZ'.", "answer": "XYZ is defined as..."}}
-        ]
-        </system>
-
-        <user>
-        # TEXT CONTENT
-        {text_content}
-
-        # TASK
-        Generate {num_flashcards} flashcards in the specified JSON format based on the text content above.
-        </user>
-
-        JSON Output:
-        """
+        prompt = self.flashcard_prompt_provider.get_final_prompt(text_content=text_content, num_flashcards=num_flashcards)
         
         try:
             full_response = ""

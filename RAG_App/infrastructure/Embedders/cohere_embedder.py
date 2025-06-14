@@ -1,9 +1,9 @@
 # cohere_embedder.py
 import time
-from RAG_App.infrastructure.Embedders.base_embedder import BaseEmbedder
+from infrastructure.Embedders.base_embedder import BaseEmbedder
 import cohere
 import os
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 
 class CohereEmbedder(BaseEmbedder):
     def __init__(self, api_key: str = None, model: str = constants.CohereEmbedModels.COHERE_EMBED_MODEL_ENG):
@@ -23,7 +23,6 @@ class CohereEmbedder(BaseEmbedder):
     def batch_chunks(self, chunks, batch_size=80):
         """Yield successive batches of size batch_size."""
         for i in range(0, len(chunks), batch_size):
-            print("batching is in progress")
             yield chunks[i:i + batch_size]
 
     def fit(self, texts: list[str]):
@@ -37,10 +36,10 @@ class CohereEmbedder(BaseEmbedder):
         current_cost_value = 0
         for batch in self.batch_chunks(texts, batch_size=80): # Adjust batch_size as needed for Cohere
             resp = self.client.embed(texts=batch, model=self.model, input_type="search_document")
-            # if resp.meta and resp.meta.billed_units and resp.meta.billed_units.input_tokens is not None:
-            #     current_cost_value += self.get_cost_based_on_model(resp.meta.billed_units.input_tokens)
-            # else:
-            #     print("Warning: Cohere API response did not include input_tokens. Cost metric might be inaccurate.")
+            if resp.meta and resp.meta.billed_units and resp.meta.billed_units.input_tokens is not None:
+                current_cost_value += self.get_cost_based_on_model(resp.meta.billed_units.input_tokens)
+            else:
+                print("Warning: Cohere API response did not include input_tokens. Cost metric might be inaccurate.")
             all_embeddings.extend(resp.embeddings)
         self.embeddings = all_embeddings
         end_time = time.time()

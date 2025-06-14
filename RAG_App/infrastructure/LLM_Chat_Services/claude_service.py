@@ -5,13 +5,14 @@ import anthropic
 import infrastructure.Common.RAG_Constants as constants
 
 class ClaudeService(BaseLLMService):
-    def __init__(self, client, model_name="claude-2"):
+    def __init__(self, client: anthropic.Client, model_name="claude-2"):
         self.client = client
         self.model_name = model_name
         self.time_taken = 0
         self.cost = 0
     def generate_response(self, prompt, **kwargs):
         start_time = time.time()
+        total_tokens = 0
         with self.client.messages.stream(
             max_tokens=2048,
             messages=[{"role": "user", "content": prompt}],
@@ -19,7 +20,10 @@ class ClaudeService(BaseLLMService):
         ) as stream:
             for text in stream.text_stream:
                 yield text
+            final_message = stream.get_final_message()
+            total_tokens = final_message.usage.output_tokens
         
+        self.cost = self.get_cost_based_on_model(total_tokens)
         end_time = time.time()
         self.time_taken = end_time - start_time
 
@@ -78,7 +82,7 @@ class ClaudeService(BaseLLMService):
                     },
                     "confidence": {
                         "type": "number",
-                        "description": "Confidence score between 0 and 1"
+                        "description": "Confidence describes how confident you are that this query falls under query_type category, score between 0 and 1"
                     },
                     "explanation": {
                         "type": "string",

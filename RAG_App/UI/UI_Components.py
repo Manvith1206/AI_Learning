@@ -180,7 +180,6 @@ class UIComponents:
     @staticmethod
     def chat_input(label: str, key: str = None):
         """Create a chat input field"""
-        print("Chat Input:", label)
         return st.chat_input(label, key=key)
     
     @staticmethod 

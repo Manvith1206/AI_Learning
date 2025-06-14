@@ -1,8 +1,9 @@
 from .base_reranker import BaseReranker
 import re
 import time
-import RAG_App.infrastructure.Common.RAG_Constants as constants
-from RAG_App.infrastructure.LLM_Chat_Services.base_llm_service import BaseLLMService
+import infrastructure.Common.RAG_Constants as constants
+from infrastructure.LLM_Chat_Services.base_llm_service import BaseLLMService
+
 class LLMReranker(BaseReranker):
     def __init__(self, llm_client: BaseLLMService, model="gemini-2.0-flash", top_k_for_reranking: int = 5):
         self.llm_client = llm_client
@@ -39,7 +40,6 @@ class LLMReranker(BaseReranker):
         for delta in self.llm_client.generate_response(rerank_prompt):
             full_response += delta
 
-        print("topk", self.top_k_for_reranking)
         best_chunks_match = re.search(r"Reranked Chunk\(s\):\s*\[([^\]]+)\]", full_response)
         explanation_match = re.search(r"Explanation:\s*(.*)", full_response, re.DOTALL)
         selected_indices = []
@@ -48,8 +48,7 @@ class LLMReranker(BaseReranker):
             selected_indices = [int(idx.strip())-1 for idx in indices_str.split(",") if idx.strip().isdigit()]
         explanation = explanation_match.group(1).strip() if explanation_match else constants.NO_EXPLAINATION_NEEDED_MESSAGE
         selected_documents = [documents[i] for i in selected_indices if 0 <= i < len(documents)]
-        print("SelectedDocs: ", selected_documents)
-        print("Documents: ", documents)
+        
         selected_documents = selected_documents[:self.top_k_for_reranking]
         if not selected_documents:
             selected_documents = documents

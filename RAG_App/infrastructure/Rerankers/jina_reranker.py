@@ -41,7 +41,6 @@ class JinaReranker(BaseReranker):
         }
 
         response = requests.post(url, headers=headers, json=data)
-        print("topk", self.top_k_for_reranking)
 
          # Create a list of (document, score) tuples
         results = response.json().get('results', [])

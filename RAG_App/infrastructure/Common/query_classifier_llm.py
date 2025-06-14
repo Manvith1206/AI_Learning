@@ -3,6 +3,8 @@ Query classifier module using LLM function calling to detect greetings and irrel
 """
 import json
 from typing import List, Dict, Any, Optional, Literal
+from infrastructure.PromptProviders.query_classifier_prompt_provider import Query_Classifier_Prompt_Provider
+from infrastructure.LLM_Chat_Services.base_llm_service import BaseLLMService
 
 class QueryClassifier:
     """
@@ -12,7 +14,7 @@ class QueryClassifier:
     - Relevant questions (default)
     """
     
-    def __init__(self, llm_service=None):
+    def __init__(self, llm_service: BaseLLMService=None):
         """
         Initialize the query classifier.
         
@@ -20,6 +22,7 @@ class QueryClassifier:
             llm_service: LLM service to use for classification (will be set by RAGPipeline)
         """
         self.llm_service = llm_service
+        self.prompt_provider = Query_Classifier_Prompt_Provider()
     
     def set_llm_service(self, llm_service):
         """
@@ -58,12 +61,17 @@ class QueryClassifier:
         
         # Call the LLM with function calling
         try:
+            print("LLM Service: ", self.llm_service)
             response = self.llm_service.function_call(
                 functions=[function_schema],
                 prompt=prompt
             )
+            print("FunctionCall Response: ", response)
+
             # Parse the response
             function_args = self.llm_service.get_function_args(response)
+            print("FunctionCall / FunctionArgs: ", function_args)
+            
             if isinstance(function_args, str):
                 function_args = json.loads(function_args)
             return {
@@ -87,34 +95,13 @@ class QueryClassifier:
         Returns:
             str: Prompt for the LLM
         """
-        prompt = f"""
-        You are an AI assistant that classifies user queries into one of three categories:
-        1. greeting - if the user is simply greeting or making small talk
-        2. relevant - if the query is relevant to the provided context
-        3. irrelevant - if the query is unrelated to the provided context
-        
-        User query: "{query_text}"
-        """
+        prompt = self.prompt_provider.get_base_prompt(query_text=query_text)
         
         if context_docs:
             context_text = "\n\n".join(context_docs)
-            prompt += f"""
-            
-            Context from documents:
-            {context_text}
-            
-            Based on the user query and the context provided, classify the query as 'greeting', 'relevant', or 'irrelevant'.
-            If the query is asking for information that might be in the context, classify as 'relevant'.
-            If the query is completely unrelated to the context, classify as 'irrelevant'.
-            If the query is just a greeting or small talk, classify as 'greeting'.
-            """
+            prompt += self.prompt_provider.get_prompt_with_contexts(context_text=context_text)
         else:
-            prompt += """
-            
-            No context is available. Determine if the query is a greeting or small talk.
-            If it's a greeting or small talk, classify as 'greeting'.
-            Otherwise, classify as 'relevant' assuming the user is asking a substantive question.
-            """
+            prompt += self.prompt_provider.get_prompt_without_contexts()
         
         return prompt
     

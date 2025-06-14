@@ -1,0 +1,14 @@
+from .Base_Prompt_Provider import BasePromptProvider
+import infrastructure.PromptTemplates.llm_chat_prompt_templates as prompt_templates
+
+class LLM_Chat_Prompt_Provider(BasePromptProvider):
+    def get_system_prompt(self):
+        return prompt_templates.LLM_CHAT_SYSTEM_PROMPT
+    
+    def get_user_prompt(self, **kwargs):
+        return self._format_prompt(prompt_templates.LLM_CHAT_USER_PROMPT, **kwargs)
+    
+    def get_final_prompt(self, **kwargs):
+        system_prompt = self.get_system_prompt()
+        user_prompt = self.get_user_prompt(**kwargs)
+        return system_prompt + "\n" + user_prompt

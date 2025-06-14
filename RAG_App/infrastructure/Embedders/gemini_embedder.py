@@ -39,6 +39,7 @@ class GeminiEmbedder(BaseEmbedder):
                     model=self.model,
                     contents=text_batch  # Pass the individual batch (list of strings)
                 )
+                
             except Exception as e:
                 # Consider logging the error and deciding how to handle failed batches
                 # For example, you could skip this batch or raise the exception.

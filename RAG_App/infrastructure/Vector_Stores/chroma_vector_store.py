@@ -23,14 +23,12 @@ class ChromaVectorStore(BaseVectorStore):
         # for i in range(0, self.client.list_collections().count()):
         #     if self.client.list_collections()[i].name == self.collectionName:
         #         self.client.delete_collection(collectionName)
-        print("First", type(self.embeddings))
 
         if hasattr(embeddings, "toarray"):
             emb_arr = self.embeddings.toarray().astype(np.float32)
         else:
             emb_arr = np.array(self.embeddings, dtype=np.float32)
 
-        print("Second", type(emb_arr))
         collection = self.client.get_or_create_collection(self.collectionName)
         self.collection = collection
         ids = [f"doc_{i}" for i in range(len(self.documents))]  # Auto-generate IDs
@@ -60,10 +58,7 @@ class ChromaVectorStore(BaseVectorStore):
         normalized = (distances - distances.min()) / (distances.max() - distances.min())
 
         similarity_scores = 1 - normalized  # if distance is in [0, 1]
-        print("Similarity Scores", similarity_scores)
-        print("IDs", ids)
-        print("Documents", docs)
-        print("Type of Docs", type(docs))
+        
         for id, doc, score in zip(ids, docs, similarity_scores):
             print(f"Format ID: {id}, Document: {doc}, Score: {score}")
         formatted_results = [

@@ -178,7 +178,6 @@ def evaluate_rag_combination(
         pipeline.update_component(constants.CONFIG_RERANKER, reranker_config)
         
         # Process document
-        print(f"Processing document with configuration...")
         start_time = time.time()
         docs, chunks = pipeline.process_document(DummyFile(TEST_FILE_PATH))
         process_time = time.time() - start_time
@@ -248,7 +247,6 @@ def run_evaluation():
         len(TEST_QUERIES)
     )
     
-    print(f"Starting evaluation of {total_combinations} combinations...")
     
     # Create CSV file with headers
     with open(RESULTS_CSV_PATH, 'w', newline='', encoding='utf-8') as f:
@@ -361,7 +359,6 @@ def run_single_combination(
         query
     )
     
-    print("\nResults:")
     for key, value in result.items():
         if key != "contexts":  # Skip printing the full contexts
             print(f"{key}: {value}")

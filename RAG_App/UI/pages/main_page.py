@@ -23,7 +23,6 @@ class MainPage:
         self.pipeline = pipeline
         self.config_manager = config_manager
         self.initialize_components()
-        print("Pipeline: ", self.pipeline)
         
     
     def initialize_components(self):

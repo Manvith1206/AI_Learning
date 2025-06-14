@@ -16,3 +16,6 @@ class BaseLLMService(ABC):
     @abstractmethod
     def get_function_args(self):
         pass
+    @abstractmethod
+    def function_call(self, functions, prompt, **kwargs):
+        pass

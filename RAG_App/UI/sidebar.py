@@ -99,7 +99,6 @@ class Sidebar:
         for message in UIComponents.get_session_state_messages():
             UIComponents.display_message_with_role(role=message["role"], message=message['content'])
 
-        print("Chat Messages:", UIComponents.get_session_state_messages())
         # Chat input
         if prompt := UIComponents.chat_input("Ask a question about your documents", key="chat_input"):
             UIComponents.add_message_to_chat(role='user', content=prompt)
@@ -181,7 +180,6 @@ class Sidebar:
     def get_ui_options(self, option_type, config_name: str):
         options = [e.value for e in option_type]
         st_config = UIComponents.get_session_state_variable("pipeline_config")
-        print("STCONFIG:", st_config)
         config = UIComponents.get_session_state_variable("pipeline_config").get_config(config_name)
         index = options.index(config[constants.CONFIG_TYPE_PARAM])
         return options, index

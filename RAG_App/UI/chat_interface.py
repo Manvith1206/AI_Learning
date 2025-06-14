@@ -45,7 +45,6 @@ class ChatInterface:
         # for message in UIComponents.get_session_state_messages():
         #     UIComponents.display_message_with_role(role=message["role"], message=message['content'])
 
-        print("Chat Messages:", UIComponents.get_session_state_messages())
         # Chat input
         import streamlit as st
         with st.container():

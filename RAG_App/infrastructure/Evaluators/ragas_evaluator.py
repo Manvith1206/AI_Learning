@@ -54,10 +54,6 @@ class RagasEvaluator(BaseEvaluator):
             constants.CONTEXTS: contexts_list,
             "ground_truth": ground_truths_list
         })
-        print("Question: ", question)
-        print("Answer: ", answer)
-        print("Contexts: ", contexts_list)
-        print("Ground Truths: ", ground_truths)
 
         chatLLM = ChatOpenAI(
             model="gpt-4o",
@@ -68,8 +64,6 @@ class RagasEvaluator(BaseEvaluator):
             temperature=0.0,
             google_api_key=UIComponents.get_secrets(constants.GEMINI_API_KEY)
         )
-        print("Using LLM: ", geminiLLM)
-        print("Using OpenAI LLM: ", chatLLM)
         with UIComponents.display_spinner("Running RAG evaluation..."):
             result = evaluate(
                 data,
@@ -77,8 +71,6 @@ class RagasEvaluator(BaseEvaluator):
                 raise_exceptions=True,
                 llm = chatLLM
             )
-        print("Cost", result.cost_cb)
-        print("TotalCost", result.total_cost)
 
         metrics_dict = {}
         metrics_dict[constants.FAITHFULNESS] = round((result[constants.FAITHFULNESS][0]), 2)

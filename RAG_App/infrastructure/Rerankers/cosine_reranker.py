@@ -19,7 +19,6 @@ class CosineReranker(BaseReranker):
         
         query_vec = self.embedder.transform([query])  # shape (1, dim)
         doc_vecs = self.embedder.transform(documents)  # shape (n, dim)
-        print("topk", self.top_k_for_reranking)
         
         # Compute cosine similarities
         sims = cosine_similarity(doc_vecs, query_vec).flatten()

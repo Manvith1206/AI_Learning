@@ -31,7 +31,6 @@ class FlashcardDisplay:
                     card_index -= 1
                     UIComponents.set_session_state_variable("card_index", card_index)
                     UIComponents.set_session_state_variable("show_answer", False)
-                    print(f"Previous Button / Card index updated to: {card_index}")
                     UIComponents.rerun()
 
         with col2:
@@ -41,7 +40,6 @@ class FlashcardDisplay:
                     card_index += 1
                     UIComponents.set_session_state_variable("card_index", card_index)
                     UIComponents.set_session_state_variable("show_answer", False)
-                    print(f"Next Button / Card index updated to: {card_index}")
                     UIComponents.rerun()
 
     def display_card(self):        
@@ -49,7 +47,6 @@ class FlashcardDisplay:
             return
 
         card_index = UIComponents.get_session_state_variable("card_index", 0)
-        print(f"Displaying card at index: {card_index}")
 
         # Current flashcard
         card = self.flashcards[card_index]

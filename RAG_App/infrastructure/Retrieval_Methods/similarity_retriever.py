@@ -37,7 +37,6 @@ class SimilarityRetriever(BaseRetriever):
         # Get search results from vector store
         
         results = vector_store.search(emb_arr, top_k=self.top_k)
-        print("Results: ", results)
         # Filter by similarity threshold if needed
         filtered_results = [
             result for result in results 
@@ -45,7 +44,6 @@ class SimilarityRetriever(BaseRetriever):
         ]
         end_time = time.time()
         self.time_taken = end_time - start_time
-        print("Filtered Results: ", filtered_results)
         final_results = [
             result[constants.Document][constants.PAGE_CONTENT] for result in filtered_results 
         ]

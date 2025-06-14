@@ -12,6 +12,7 @@ class GeminiService(BaseLLMService):
         self.time_taken = 0
     def generate_response(self, prompt, **kwargs):
         start_time = time.time()
+        total_tokens = 0
         for chunk in self.client.models.generate_content_stream(
             model=self.model_name,
             contents=prompt,
@@ -19,13 +20,26 @@ class GeminiService(BaseLLMService):
                 temperature=0.1
             )
         ):
-            print("Yielded Chunks", chunk)
             if hasattr(chunk, 'text'):
+                total_tokens += chunk.usage_metadata.total_token_count
                 yield chunk.text
 
+        self.cost = self.get_cost_based_on_model(total_tokens)
+    
         end_time = time.time()
         self.time_taken = end_time - start_time
-    
+        
+    def get_cost_based_on_model(self, tokens):
+        if self.model_name == GeminiLLMModel.GEMINI_FLASH:
+            return (tokens / 1000000) * 0.80
+        elif self.model_name == GeminiLLMModel.GEMINI_PRO:
+            if tokens <= 200000:
+                  return (tokens / 1000000) * 10
+            else:
+                  return (tokens / 1000000) * 15
+        elif self.model_name == GeminiLLMModel.GEMINI_TWO_5_FLASH:
+            return 0
+        
     def function_call(self, functions, prompt, **kwargs):
         tools = [types.Tool(function_declarations=[func]) for func in functions]
 

@@ -32,10 +32,8 @@ class DeepEval(BaseEvaluator):
         )
 
         result = evaluate(test_cases=[test_case], metrics=self.metrics)
-        print("Test Results: ", result.test_results)
 
         metrics_dict = {}
-        
 
         curr_cost_value = 0
         for test_result in result.test_results:
@@ -54,7 +52,6 @@ class DeepEval(BaseEvaluator):
         self.time_taken = end_time - start_time
         self.cost = curr_cost_value
         return metrics_dict
-        print("Result of evaluation: ", result)
     
     def get_cost_and_time_taken(self):
         return self.cost, self.time_taken

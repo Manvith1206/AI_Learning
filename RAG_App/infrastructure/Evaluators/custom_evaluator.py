@@ -167,13 +167,12 @@ class AnswerRelevancyMetric(EvaluationMetric):
             return 0.0
 
         generated_questions = self.llm_service.generate_questions(
-            question,
-            answer, 
-            self.question_gen_prompt_template,
-            self.num_generated_questions
+            answer=answer, 
+            original_question=question,
+            prompt_template=self.question_gen_prompt_template,
+            num_questions=self.num_generated_questions
         )
-        print("GeneratedQuestions: ", generated_questions)
-
+        breakpoint()
         if not generated_questions:
             return 0.0
 
@@ -195,6 +194,8 @@ class CustomEvaluator(BaseEvaluator):
         However, current metric design requires LLMService at metric initialization.
         """
         self.metrics = metrics
+        self.cost = 0
+        self.time_taken = 0
         # Each metric should be initialized with an LLM service already.
         # self.llm_service = llm_service 
 
@@ -211,6 +212,7 @@ class CustomEvaluator(BaseEvaluator):
         Returns:
             Dictionary of evaluation scores, with metric names as keys.
         """
+        breakpoint()
         results = {}
         start_time = time.time()
         
@@ -227,95 +229,4 @@ class CustomEvaluator(BaseEvaluator):
         return results
     
     def get_cost_and_time_taken(self):
-        return 0,0
-
-
-# # --- Example Usage (for testing purposes) ---
-# if __name__ == '__main__':
-#     # Configure API keys (ensure these are set in Streamlit secrets or environment variables)
-#     # For Gemini (ensure st.secrets has constants.GEMINI_API_KEY)
-#     try:
-#         gemini_api_key = st.secrets[constants.GEMINI_API_KEY]
-#     except (AttributeError, KeyError):
-#         gemini_api_key = "YOUR_GEMINI_API_KEY_FALLBACK" # Fallback if secrets not found, for local testing
-#         print("Warning: Gemini API key not found in st.secrets. Using fallback.")
-
-#     # This is a mock/conceptual LLM service for demonstration.
-#     # We will now use the GeminiLLMService if the API key is available.
-#     # If you want to test OpenAI, ensure 'openai_api_key' is configured similarly.
-
-#     # In a real application, you'd use a concrete implementation like OpenAILLMService,
-#     # GeminiLLMService, AnthropicLLMService, etc., with actual API keys and client setup.
-#     # Initialize the LLM service (e.g., Gemini)
-#     if gemini_api_key and gemini_api_key != "YOUR_GEMINI_API_KEY_FALLBACK":
-#         llm_service = GeminiLLMService(api_key=gemini_api_key)
-#         print("Using GeminiLLMService for evaluation example.")
-#     else:
-#         print("Gemini API key not configured or fallback is active. Using Mock OpenAILLMService for example.")
-#         # Fallback to mock OpenAI if Gemini key is not set up for the example
-#         llm_service = OpenAILLMService(api_key="DUMMY_KEY_FOR_MOCK_OPENAI")
-
-#     # Initialize metrics with the chosen LLM service
-#     faithfulness_metric = FaithfulnessMetric(llm_service=llm_service)
-#     context_precision_metric = ContextPrecisionMetric(llm_service=llm_service)
-#     context_recall_metric = ContextRecallMetric(llm_service=llm_service)
-#     answer_relevancy_metric = AnswerRelevancyMetric(llm_service=llm_service)
-
-#     # Initialize CustomEvaluator with the list of metrics
-#     custom_eval = CustomEvaluator(
-#         metrics=[
-#             faithfulness_metric,
-#             context_precision_metric,
-#             context_recall_metric,
-#             answer_relevancy_metric
-#         ]
-#     )
-
-#     # Sample data for evaluation
-#     sample_question = "What is the capital of France?"
-#     sample_answer = "The capital of France is Paris."
-#     sample_contexts = [
-#         "France is a country in Western Europe. Paris is its capital and largest city.",
-#         "Berlin is the capital of Germany.",
-#         "The Eiffel Tower is a famous landmark in Paris."
-#     ]
-#     sample_ground_truth = "Paris is the capital city of France."
-
-#     print("\nRunning custom evaluation...")
-#     evaluation_results = custom_eval.evaluate(
-#         question=sample_question,
-#         answer=sample_answer,
-#         contexts=sample_contexts,
-#         ground_truths=sample_ground_truth
-#     )
-
-#     print("\nEvaluation Results:")
-#     if evaluation_results:
-#         for metric_name, score in evaluation_results.items():
-#             print(f"  {metric_name}: {score:.2f}" if score is not None else f"  {metric_name}: Error/Unavailable")
-#     else:
-#         print("  No evaluation results produced.")
-        
-#     # Example with a custom prompt for Faithfulness
-#     custom_faith_prompt = (
-#         "Based *only* on the provided text: '{context}', is the claim '{statement}' verifiably true? Answer 'yes' or 'no'."
-#     )
-#     faithfulness_metric_custom_prompt = FaithfulnessMetric(
-#         llm_service=llm_service, 
-#         prompt_template=custom_faith_prompt
-#     )
-#     custom_eval_single_metric = CustomEvaluator(metrics=[faithfulness_metric_custom_prompt])
-    
-#     print("\nRunning custom evaluation for single metric (Faithfulness with custom prompt)...")
-#     single_metric_results = custom_eval_single_metric.evaluate(
-#         question=sample_question,
-#         answer=sample_answer,
-#         contexts=sample_contexts,
-#         ground_truths=sample_ground_truth
-#     )
-    
-#     if single_metric_results and FaithfulnessMetric.metric_name in single_metric_results:
-#         score = single_metric_results[FaithfulnessMetric.metric_name]
-#         print(f"  Faithfulness with custom prompt: {score:.2f}" if score is not None else "  Faithfulness with custom prompt: Error/Unavailable")
-#     else:
-#         print("  Could not retrieve Faithfulness score with custom prompt.")
+        return 0,self.time_taken

@@ -38,6 +38,12 @@ class CohereReranker(BaseReranker):
                             
         explaination = f"Cohere Re ranking Model {self.model} re ranked the docs"
 
+        if response.meta and response.meta.billed_units and response.meta.billed_units.input_tokens is not None:
+            current_cost_value += self.get_cost_based_on_model(response.meta.billed_units.input_tokens)
+        else:
+            print("Warning: Cohere API response did not include input_tokens. Cost metric might be inaccurate.")
+
+        self.cost = current_cost_value
         end_time = time.time()
         self.time_taken = end_time - start_time
 
@@ -47,3 +53,11 @@ class CohereReranker(BaseReranker):
         """Returns the time taken for the rerank operation."""
         return self.cost, self.time_taken
 
+    
+    def get_cost_based_on_model(self, tokens):
+        if self.model == constants.CohereLLMModel.RERANK_DEFAULT_MODEL.value:
+            return (tokens/1000) * 0.0001
+        elif self.model == constants.CohereLLMModel.RERANK_ENGLISH.value:
+            return (tokens / 1000000) * 0.12
+        elif self.model == constants.CohereLLMModel.RERANK_MULTLINGUAL.value:
+            pass

@@ -56,11 +56,9 @@ class SentenceWindowRetriever(BaseRetriever):
         start_time = time.time()
 
         self.documents = documents
-        print("Docs: ", self.documents)
         self.document = Document(text="\n\n".join([doc["page_content"] for doc in self.documents]))
 
         index_dir = "./sentence_index_1"
-        print("WindowSize", self.window_size)
         sw_index_1 = self.get_sentence_window_index(documents, index_dir, sentence_window_size=self.window_size)
         sw_engine_1 = self.get_sentence_window_engine(sw_index_1)
 
@@ -71,8 +69,6 @@ class SentenceWindowRetriever(BaseRetriever):
         retrieved_contexts = [sn.node.metadata["window"] for sn in window_response_1.source_nodes]
         end_time = time.time()
         self.time_taken = end_time - start_time
-        print("Sentence WIndow / Retrieved Contexts: " )
-        print(retrieved_contexts)
         return retrieved_contexts
         
     def get_cost_and_time_taken(self):
