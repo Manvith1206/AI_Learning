@@ -18,12 +18,12 @@ _original_print = builtins.print
 #     except Exception:
 #         pass
 
-from RAG_App.infrastructure.Common.rag_pipeline import RAGPipeline
-from RAG_App.config import ConfigManager
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+from infrastructure.Common.rag_pipeline import RAGPipeline
+from config import ConfigManager
+import infrastructure.Common.RAG_Constants as constants
 
 # Path to the test document
-TEST_FILE_PATH = r"E:\Manvith\Coding\AI\RAG\RAG_App.infrastructure\TestFile\DCA2104 Unit-08_V1.1.pdf"
+TEST_FILE_PATH = r"E:\Manvith\Coding\AI\RAG\infrastructure\TestFile\DCA2104 Unit-08_V1.1.pdf"
 TEST_QUESTION = "What is Synchronous Transmission"
 
 # Load test questions for evaluation

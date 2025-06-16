@@ -1,7 +1,7 @@
 from sklearn.neighbors import NearestNeighbors
 import numpy as np
 from .base_vector_store import BaseVectorStore
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+import infrastructure.Common.RAG_Constants as constants
 import uuid
 import time
 

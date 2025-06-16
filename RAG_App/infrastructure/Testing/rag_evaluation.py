@@ -9,12 +9,12 @@ import pandas as pd
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.insert(0, ROOT)
 
-from RAG_App.infrastructure.Common.rag_pipeline import RAGPipeline
-from RAG_App.config import ConfigManager
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+from infrastructure.Common.rag_pipeline import RAGPipeline
+from config import ConfigManager
+import infrastructure.Common.RAG_Constants as constants
 
 # Path to the test document and output file
-TEST_FILE_PATH = r"E:\Manvith\Coding\AI\RAG\RAG_App.infrastructure\TestFile\DCA2104 Unit-08_V1.1.pdf"
+TEST_FILE_PATH = r"E:\Manvith\Coding\AI\RAG\infrastructure\TestFile\DCA2104 Unit-08_V1.1.pdf"
 RESULTS_CSV_PATH = os.path.join(ROOT, "rag_evaluation_results.csv")
 
 # Test query to use for all combinations

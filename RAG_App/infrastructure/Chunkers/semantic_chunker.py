@@ -3,8 +3,8 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import re
 from typing import List, Dict, Any
-from RAG_App.infrastructure.Chunkers.base_chunker import BaseChunker
-import RAG_App.infrastructure.Common.RAG_Constants as constants
+from infrastructure.Chunkers.base_chunker import BaseChunker
+import infrastructure.Common.RAG_Constants as constants
 max_sentences = 300
 
 class SemanticChunker(BaseChunker):

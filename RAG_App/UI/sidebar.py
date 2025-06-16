@@ -223,9 +223,9 @@ class Sidebar:
     def render_upload_file_section(self):
         """Render file upload section in sidebar with caching."""
         UIComponents.create_subheader_UI("Upload Documents")
-        uploaded_file = UIComponents.upload_file(
+        uploaded_file = UIComponents.create_file_uploader(
             "Upload a document to start",
-            type=["pdf", "docx", "txt", "csv"]
+            file_types=["pdf", "docx", "txt", "csv"]
         )
 
         if uploaded_file:
@@ -235,10 +235,12 @@ class Sidebar:
             # Get current configuration for caching
             chunker_config = pipeline.config_manager.get_config(constants.CONFIG_CHUNKER)
             embedder_config = pipeline.config_manager.get_config(constants.CONFIG_EMBEDDER)
+            vector_store_config = pipeline.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
             
             processing_params = {
                 "chunker": chunker_config,
                 "embedder": embedder_config,
+                "vector_store": vector_store_config
             }
 
             file_bytes = uploaded_file.getvalue()

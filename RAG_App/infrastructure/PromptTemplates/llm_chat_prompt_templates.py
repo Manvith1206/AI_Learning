@@ -16,42 +16,11 @@ Format the content using the following structure:
 - Break down complex processes into simple steps
 - Use analogies where helpful for understanding
 
-## 3. Key Components/Elements of [{query_text}]
-- List and explain the main parts/aspects
-- Organize using subheadings (A, B, C format)
-- Include technical details appropriate for the audience level
-
 ## 4. Practical Examples
 - Provide 2-3 real-world examples
 - Show calculations or scenarios where applicable
 - Use relatable situations (everyday technology, common applications)
 - Format examples clearly with scenarios and explanations
-
-## 5. Advantages of [{query_text}]
-- Create a table format with: Advantage | Explanation | Impact
-- Focus on practical benefits
-- Quantify benefits where possible
-
-## 6. Disadvantages/Limitations of [{query_text}]
-- Create a table format with: Disadvantage | Explanation | Impact
-- Be honest about limitations
-- Explain when this approach might not be suitable
-
-## 7. Comparison Section (if applicable)
-- Compare with related concepts/alternatives
-- Use table format for easy comparison
-- Include aspects like: performance, cost, complexity, use cases
-
-## 8. Real-World Applications
-- List specific industries/scenarios where this is used
-- Organize by category or application type
-- Include both current and emerging applications
-
-## 9. Key Takeaways for Students
-- Summarize the most important points using checkmarks (✅)
-- List common exam questions or interview topics
-- Provide memory aids or mnemonics
-
 
 Additional Requirements:
 - Use tables, bullet points, and visual formatting for clarity

@@ -9,8 +9,8 @@ from UI.pages.main_page import MainPage
 def main():
     """Main function to run the RAG Application."""
     UIComponents.initialize_page()
-    config_manager = ConfigManager(config_path='config.json')
-    
+    config_manager = ConfigManager()
+    UIComponents.get_session_state_variable("pipeline_config", config_manager)
     # This is where the pipeline initialization logic will be updated.
     # For now, we keep the existing structure.
     pipeline = RAGPipeline(
