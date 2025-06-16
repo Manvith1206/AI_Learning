@@ -33,8 +33,9 @@ from infrastructure.PromptProviders.LLM_Chat_Prompt_Provider import LLM_Chat_Pro
 from infrastructure.PromptProviders.flashcards_generation_prompt_provider import FlashCardsGeneration_Prompt_Provider
 
 class RAGPipeline:
-    def __init__(self, warning_callback, error_callback, config_manager=None):
+    def __init__(self, warning_callback, error_callback, config_manager=None, vector_store=None):
         self.config_manager = config_manager or ConfigManager()
+        self.vector_store = vector_store
         self.setup_components()
         self.warning_callback = warning_callback
         self.error_callback = error_callback
@@ -46,7 +47,8 @@ class RAGPipeline:
         # Build all core components via factory methods
         self.chunker = self._build_chunker()
         self.embedder = self._build_embedder()
-        self.vector_store = self._build_vector_store()
+        if self.vector_store is None:
+            self.vector_store = self._build_vector_store()
         self.retriever = self._build_retriever()
         self.llm_service = self._build_llm_service()
         self.reranker = self._build_reranker()
@@ -329,12 +331,12 @@ class RAGPipeline:
             
             documents = self.vector_store.format_documents(documents)
             self.vector_store.add_embeddings(embeddings, documents)
-
-            return documents, chunks
+            self.vector_store.documents = documents  # Attach documents for caching
+            return self.vector_store
         except Exception as e:
             full_traceback = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
             self.error_callback(f"Error processing document: {e}, Traceback: {full_traceback}")
-            return None, None
+            return None
     
     def greetUser(self, query_text):
         if self.query_classifier.is_greeting(query_text):

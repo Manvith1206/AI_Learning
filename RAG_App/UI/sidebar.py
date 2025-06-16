@@ -10,6 +10,7 @@ from services.services import DocumentProcessor
 from UI.flashcard_display import FlashcardDisplay
 from config import ConfigManager
 import Utils.Utils
+from Utils.cache_manager import CacheManager
 
 class Sidebar:
     """Sidebar component for the RAG application"""
@@ -220,31 +221,64 @@ class Sidebar:
                 UIComponents.display_warning("No query to evaluate. Ask a question first.")
 
     def render_upload_file_section(self):
-        """Render file upload section in sidebar"""
-        UIComponents.create_subheader_UI("Upload and Process Documents")
-        uploaded_file = UIComponents.create_file_uploader(
-            "Upload Document",
-            file_types=["pdf", "csv", "txt", "docx"],
-            accept_multiple_files=False
+        """Render file upload section in sidebar with caching."""
+        UIComponents.create_subheader_UI("Upload Documents")
+        uploaded_file = UIComponents.upload_file(
+            "Upload a document to start",
+            type=["pdf", "docx", "txt", "csv"]
         )
-        doc_processor = DocumentProcessor(Utils.Utils.get_pipeline())
-        if uploaded_file:
-            if UIComponents.create_button("Process Document", key="process_document"):
-                with UIComponents.display_spinner("Processing document..."):
-                    # Only initialize pipeline when needed
-                    try:
-                        documents, chunks = doc_processor.process_uploaded_file(uploaded_file)
-                    except Exceptions.ExtractionOfText as e:
-                        UIComponents.display_error(e)
-                    
-                    if documents and chunks:
-                        UIComponents.set_session_state_variable("documents", documents)
-                        UIComponents.set_session_state_variable("chunks", chunks)
-                        UIComponents.set_session_state_variable("processed_document_texts", chunks)
 
-                        UIComponents.display_success(f"Processed {len(documents)} chunks from document")
-                    else:
-                        UIComponents.display_warning("No valid content was extracted from the document")
+        if uploaded_file:
+            pipeline = Utils.Utils.get_pipeline()
+            cache_manager = CacheManager()
+
+            # Get current configuration for caching
+            chunker_config = pipeline.config_manager.get_config(constants.CONFIG_CHUNKER)
+            embedder_config = pipeline.config_manager.get_config(constants.CONFIG_EMBEDDER)
+            
+            processing_params = {
+                "chunker": chunker_config,
+                "embedder": embedder_config,
+            }
+
+            file_bytes = uploaded_file.getvalue()
+            cache_key = cache_manager.generate_cache_key(file_bytes, processing_params)
+            
+            cached_vector_store = cache_manager.load_from_cache(cache_key)
+            
+            if cached_vector_store:
+                with UIComponents.display_spinner("Loading processed document from cache..."):
+                    pipeline.vector_store = cached_vector_store
+                    UIComponents.set_session_state_variable("vector_store", cached_vector_store)
+                    documents = cached_vector_store.documents
+                    UIComponents.set_session_state_variable("documents", documents)
+                    if documents:
+                        UIComponents.set_session_state_variable("processed_document_texts", [doc.get('page_content', '') for doc in documents])
+
+                UIComponents.display_success(f"Successfully loaded pre-processed document '{uploaded_file.name}' from cache.")
+            else:
+                with UIComponents.display_spinner(f"Processing document '{uploaded_file.name}'... This may take a moment."):
+                    try:
+                        texts = pipeline.extractText(uploaded_file)
+                        if texts:
+                            processed_vector_store = pipeline.process_document(uploaded_file, texts)
+                            
+                            if processed_vector_store:
+                                cache_manager.save_to_cache(cache_key, processed_vector_store)
+                                pipeline.vector_store = processed_vector_store
+                                UIComponents.set_session_state_variable("vector_store", processed_vector_store)
+                                documents = processed_vector_store.documents
+                                UIComponents.set_session_state_variable("documents", documents)
+                                if documents:
+                                    UIComponents.set_session_state_variable("processed_document_texts", [doc.get('page_content', '') for doc in documents])
+                                
+                                UIComponents.display_success(f"Document '{uploaded_file.name}' processed and saved to cache.")
+                            else:
+                                UIComponents.display_error("Failed to process the document.")
+                        else:
+                            UIComponents.display_error("Failed to extract text from the document.")
+                    except Exception as e:
+                        UIComponents.display_error(f"An error occurred during processing: {e}")
 
     def get_retriever_config(self) -> dict[str, Any]:
 
