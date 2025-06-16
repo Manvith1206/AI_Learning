@@ -246,13 +246,16 @@ class Sidebar:
             file_bytes = uploaded_file.getvalue()
             cache_key = cache_manager.generate_cache_key(file_bytes, processing_params)
             
-            cached_vector_store = cache_manager.load_from_cache(cache_key)
+            cached_data = cache_manager.load_from_cache(cache_key)
             
-            if cached_vector_store:
+            if cached_data:
                 with UIComponents.display_spinner("Loading processed document from cache..."):
-                    pipeline.vector_store = cached_vector_store
-                    UIComponents.set_session_state_variable("vector_store", cached_vector_store)
-                    documents = cached_vector_store.documents
+                    # Restore both vector_store and the fitted embedder
+                    pipeline.vector_store = cached_data['vector_store']
+                    pipeline.embedder = cached_data['embedder']
+                    
+                    UIComponents.set_session_state_variable("vector_store", pipeline.vector_store)
+                    documents = pipeline.vector_store.documents
                     UIComponents.set_session_state_variable("documents", documents)
                     if documents:
                         UIComponents.set_session_state_variable("processed_document_texts", [doc.get('page_content', '') for doc in documents])
@@ -263,11 +266,18 @@ class Sidebar:
                     try:
                         texts = pipeline.extractText(uploaded_file)
                         if texts:
+                            # This returns the vector_store, but the embedder is now fitted inside the pipeline instance
                             processed_vector_store = pipeline.process_document(uploaded_file, texts)
                             
                             if processed_vector_store:
-                                cache_manager.save_to_cache(cache_key, processed_vector_store)
-                                pipeline.vector_store = processed_vector_store
+                                # Cache both the vector_store and the fitted embedder
+                                data_to_cache = {
+                                    'vector_store': processed_vector_store,
+                                    'embedder': pipeline.embedder
+                                }
+                                cache_manager.save_to_cache(cache_key, data_to_cache)
+                                
+                                # The pipeline's vector_store is already updated by process_document
                                 UIComponents.set_session_state_variable("vector_store", processed_vector_store)
                                 documents = processed_vector_store.documents
                                 UIComponents.set_session_state_variable("documents", documents)
