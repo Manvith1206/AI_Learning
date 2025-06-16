@@ -11,7 +11,8 @@ def get_pipeline():
             rag_pipeline = RAGPipeline(
                 config_manager=UIComponents.get_session_state_variable('pipeline_config'),
                 warning_callback=handleWarning, 
-                error_callback=handleError)
+                error_callback=handleError,
+                process_doc_callback=process_doc_success)
             UIComponents.set_session_state_variable(var_name='pipeline', value=rag_pipeline)
             UIComponents.set_session_state_variable(var_name="pipeline_created",value=True)
     return UIComponents.get_session_state_variable("pipeline", None)
@@ -24,6 +25,9 @@ def get_env_var(var_name: str):
 def handleWarning(message: str):
      UIComponents.display_warning(message=message)
 
+@staticmethod 
+def process_doc_success(message: str):
+    UIComponents.display_success(message=message)
 
 @staticmethod
 def handleError(message: str):

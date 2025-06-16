@@ -202,7 +202,7 @@ class VoyageEmbedModels(Enum):
     VOYAGE_CODE_2_EMBED_MODEL = "voyage-code-2"
 
 class GeminiEmbedModels(Enum):
-    # GEMINI_EMBED_EXP_MODEL =  "gemini-embedding-exp-03-07"
+    GEMINI_EMBED_EXP_MODEL =  "gemini-embedding-exp-03-07"
     GEMINI_TEXT_EMBED_MODEL = "models/text-embedding-004"
     GEMINI_EMBED_001_MODEL = "models/embedding-001"
 

@@ -397,7 +397,8 @@ class Sidebar:
         UIComponents.write("Click the button below to test all configurations with different combinations of chunkers, embedder, vector store, and reranker.")
 
         if UIComponents.create_button("Test All Configurations", key="test_all_combinations"):
-            UIComponents.display_error("Testing functionality is currently unavailable.")
+            from infrastructure.Testing.RAG_Testing import test_rag_combinations
+            test_rag_combinations()
 
     def get_chunker_config(self, chunker_type: str) -> dict:
         """Get parameters for the selected chunker type"""

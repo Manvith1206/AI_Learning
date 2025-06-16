@@ -33,12 +33,13 @@ from infrastructure.PromptProviders.LLM_Chat_Prompt_Provider import LLM_Chat_Pro
 from infrastructure.PromptProviders.flashcards_generation_prompt_provider import FlashCardsGeneration_Prompt_Provider
 
 class RAGPipeline:
-    def __init__(self, warning_callback, error_callback, config_manager=None, vector_store=None):
+    def __init__(self, warning_callback, error_callback, process_doc_callback, config_manager=None, vector_store=None):
         self.config_manager = config_manager or ConfigManager()
         self.vector_store = vector_store
         self.setup_components()
         self.warning_callback = warning_callback
         self.error_callback = error_callback
+        self.process_doc_callback = process_doc_callback
         self.query_classifier = None
         self.flashcard_prompt_provider = FlashCardsGeneration_Prompt_Provider()
 
@@ -332,6 +333,8 @@ class RAGPipeline:
             documents = self.vector_store.format_documents(documents)
             self.vector_store.add_embeddings(embeddings, documents)
             self.vector_store.documents = documents  # Attach documents for caching
+            self.process_doc_callback(f"Document Processed Succesfully with Chunks: {len(chunks)}")
+            
             return self.vector_store
         except Exception as e:
             full_traceback = ''.join(traceback.format_exception(type(e), e, e.__traceback__))

@@ -59,13 +59,13 @@ class ClaudeService(BaseLLMService):
                     return function_args
                 
     def get_cost_based_on_model(self, tokens):
-        if self.model == constants.CLAUDE_MODELS.CLAUDE_HAIKU_THREE_5.value:
+        if self.model_name == constants.CLAUDE_MODELS.CLAUDE_HAIKU_THREE_5.value:
             return (tokens / 1000000) * 0.80
-        elif self.model == constants.CLAUDE_MODELS.CLAUDE_SONNET_THREE_7.value:
+        elif self.model_name == constants.CLAUDE_MODELS.CLAUDE_SONNET_THREE_7.value:
             return (tokens / 1000000) * 3
-        elif self.model == constants.CLAUDE_MODELS.CLAUDE_SONNET_THREE_5.value:
+        elif self.model_name == constants.CLAUDE_MODELS.CLAUDE_SONNET_THREE_5.value:
             return (tokens / 1000000) * 3
-        elif self.model == constants.CLAUDE_MODELS.CLAUDE_OPUS_THREE.value:
+        elif self.model_name == constants.CLAUDE_MODELS.CLAUDE_OPUS_THREE.value:
             return (tokens / 1000000) * 15
         
     def get_function_schema(self):
