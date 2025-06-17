@@ -17,7 +17,7 @@ import re
 from infrastructure.Common.RAG_Constants import (
     ChunkerType, EmbedderType,
     RetrieverType, RerankerType,
-    EvaluatorType, LLMServiceType, GeminiLLMModel
+    EvaluatorType, LLMServiceType
 )
 import infrastructure.Common.RAG_Constants as constants
 from infrastructure.LLM_Chat_Services.cohere_service import CohereChat
@@ -26,22 +26,43 @@ from infrastructure.Common.query_classifier_llm import QueryClassifier
 import traceback
 import json # Added for parsing LLM response for flashcards
 from infrastructure.Evaluators.deep_eval_evaluator import DeepEval
-from infrastructure.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store # Added for caching
 import Utils.Exceptions as Exceptions
-import Utils.Utils as Utils
 from infrastructure.PromptProviders.LLM_Chat_Prompt_Provider import LLM_Chat_Prompt_Provider
 from infrastructure.PromptProviders.flashcards_generation_prompt_provider import FlashCardsGeneration_Prompt_Provider
 
 class RAGPipeline:
-    def __init__(self, warning_callback, error_callback, process_doc_callback, config_manager=None, vector_store=None):
+    def __init__(self, 
+                geminiApiKey,
+                cohereApiKey, 
+                voyageApiKey, 
+                mistralApiKey, 
+                pineconeApiKey, 
+                jinaApiKey, 
+                claudeApiKey, 
+                warning_callback, 
+                error_callback, 
+                process_doc_callback, 
+                config_manager=None, 
+                vector_store=None):
+        
         self.config_manager = config_manager or ConfigManager()
         self.vector_store = vector_store
-        self.setup_components()
         self.warning_callback = warning_callback
         self.error_callback = error_callback
         self.process_doc_callback = process_doc_callback
+        
+        # API Keys assignment (if needed for further use within the pipeline)
+        self.geminiApiKey = geminiApiKey
+        self.cohereApiKey = cohereApiKey
+        self.voyageApiKey = voyageApiKey
+        self.mistralApiKey = mistralApiKey
+        self.pineconeApiKey = pineconeApiKey
+        self.jinaApiKey = jinaApiKey
+        self.claudeApiKey = claudeApiKey
+        
         self.query_classifier = None
         self.flashcard_prompt_provider = FlashCardsGeneration_Prompt_Provider()
+        self.setup_components()
 
     # setup components
     def setup_components(self):
@@ -55,6 +76,7 @@ class RAGPipeline:
         self.reranker = self._build_reranker()
         self.evaluator = self._build_evaluator()
         self.query_classifier = QueryClassifier(self.llm_service)
+        print("Setup Components")
 
     def get_chunker_cost_and_time(self):
         return self.chunker.get_cost_and_time_taken()
@@ -107,17 +129,17 @@ class RAGPipeline:
         if t == EmbedderType.TFIDF.value:
             return TFIDFEmbedder()
         elif t == EmbedderType.GEMINI.value:
-            return GeminiEmbedder(api_key=Utils.get_env_var(constants.GEMINI_API_KEY), model_name=model_name)
+            return GeminiEmbedder(api_key=self.geminiApiKey, model_name=model_name)
         elif t == EmbedderType.COHERE.value:
             from infrastructure.Embedders.cohere_embedder import CohereEmbedder
-            return CohereEmbedder(api_key=Utils.get_env_var(constants.COHERE_API_KEY),
+            return CohereEmbedder(api_key=self.cohereApiKey,
                                   model=model_name)
         elif t == EmbedderType.VOYAGE.value:
             from infrastructure.Embedders.voyage_embedder import VoyageEmbedder
-            return VoyageEmbedder(api_key=Utils.get_env_var(constants.VOYAGE_API_KEY),
+            return VoyageEmbedder(api_key=self.voyageApiKey,
                                   model=model_name)
         elif t == EmbedderType.MISTRAL.value:
-            return MistralEmbedder(api_key=Utils.get_env_var(constants.MISTRAL_API_KEY),
+            return MistralEmbedder(api_key=self.mistralApiKey,
                                   model=model_name,
                                   )
         else:
@@ -131,7 +153,7 @@ class RAGPipeline:
         cfg = self.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
         params = cfg.get(constants.CONFIG_PARAM, {})
         type = cfg.get(constants.CONFIG_TYPE_PARAM)
-        api_key = Utils.get_env_var(constants.PINECONE_API_KEY)
+        api_key = self.pineconeApiKey
         if type == constants.VectorStore.SCIKIT_LEARN.value:
             return SklearnVectorStore(**params)
         elif type == constants.VectorStore.PINE_CONE.value:
@@ -170,7 +192,7 @@ class RAGPipeline:
         cfg = self.config_manager.get_config(constants.CONFIG_LLM)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         from google import genai
-        client = genai.Client(api_key=Utils.get_env_var(constants.GEMINI_API_KEY))
+        client = genai.Client(api_key=self.geminiApiKey)
         params = cfg.get(constants.CONFIG_PARAM)
         model_name = params.get(constants.CONFIG_MODEL)
 
@@ -181,7 +203,7 @@ class RAGPipeline:
         elif t == LLMServiceType.CLAUDE.value:
             from infrastructure.LLM_Chat_Services.claude_service import ClaudeService
             import anthropic
-            client = anthropic.Anthropic(api_key=Utils.get_env_var(constants.CLAUDE_API_KEY))
+            client = anthropic.Anthropic(api_key=self.claudeApiKey)
             return ClaudeService(client, model_name=model_name)
         else:
             return GeminiService(client, model_name=model_name)
@@ -199,7 +221,7 @@ class RAGPipeline:
         elif t == RerankerType.COHERE.value:
             from infrastructure.Rerankers.cohere_re_ranker import CohereReranker
 
-            return CohereReranker(Utils.get_env_var(constants.COHERE_API_KEY), **params)
+            return CohereReranker(self.cohereApiKey, **params)
         elif t == RerankerType.JINA.value:
             from infrastructure.Rerankers.jina_reranker import JinaReranker
 
@@ -222,7 +244,7 @@ class RAGPipeline:
             return RagasEvaluator(**cfg.get(constants.CONFIG_PARAM, {}))
         elif evaluator_type == EvaluatorType.CUSTOM.value:
             try:
-                gemini_api_key = Utils.get_env_var(constants.GEMINI_API_KEY)
+                gemini_api_key = self.geminiApiKey
                 if not gemini_api_key:
                     self.error_callback(f"Gemini API key ({constants.GEMINI_API_KEY}) not found in st.secrets for Custom Evaluator.")
                     self.warning_callback("Falling back to SimpleEvaluator.")
@@ -402,6 +424,7 @@ class RAGPipeline:
     
     def query(self, query_text, history_text, top_k=None):
         try:
+            print("Query")
             if self.query_classifier.is_greeting(query_text):
                 # UIComponents.create_subheader_UI(self.query_classifier.get_greeting_response())
                 # UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_greeting_response())
@@ -467,6 +490,7 @@ class RAGPipeline:
         """
         try:
             # Use last query data if not provided
+            breakpoint()
             if hasattr(self, constants.LAST_QUERY) and (question is None or answer is None or contexts is None):
                 question = question or self.last_query[constants.QUESTION]
                 answer = answer or self.last_query[constants.ANSWER]

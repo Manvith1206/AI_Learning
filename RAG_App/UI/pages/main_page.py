@@ -109,10 +109,10 @@ class MainPage:
         UIComponents.create_title("RAG Modular Application")
         
         # Render sidebar
-        self.sidebar.render_sidebar()
+        # self.sidebar.render_sidebar()
         
         # Create main tabs
-        tabs = UIComponents.create_tabs(["Chat", "Evaluation", "FlashCards", "Debug"])
+        tabs = UIComponents.create_tabs(["Chat", "Evaluation", "FlashCards", "Debug", "Upload File"])
         
         # Chat tab
         with tabs[0]:
@@ -122,6 +122,7 @@ class MainPage:
         with tabs[1]:
             self.sidebar.render_evaluation_section()
             self.sidebar.render_evaluation_config()
+            self.render_test_all_configs()
         
         # Flashcards tab
         with tabs[2]:
@@ -157,7 +158,112 @@ class MainPage:
         # Debug tab
         with tabs[3]:
             self.render_debug_tab()
+        with tabs[4]:
+            self.render_upload_file_section()
     
+    def render_upload_file_section(self):
+        """Render file upload section in sidebar with caching."""
+        UIComponents.create_subheader_UI("Upload Documents")
+        uploaded_file = UIComponents.create_file_uploader(
+            "Upload a document to start",
+            file_types=["pdf", "docx", "txt", "csv"]
+        )
+
+        self.load_pre_processed_docs_or_process_the_doc(uploaded_file)
+
+    def render_test_all_configs(self):
+        from infrastructure.Testing.RAG_Testing import test_rag_combinations
+        if UIComponents.create_button("Test All Configurations", key="TEST_ALL_CONFIGS"):
+            test_rag_combinations()
+
+    def load_pre_processed_docs_or_process_the_doc(self, uploaded_file):
+        """
+        Process the uploaded document by retrieving a pre-processed version from cache if available,
+        or by extracting text and processing the document to generate a new vector store if not.
+        Parameters:
+            uploaded_file (file-like object): The uploaded document to be processed. It should support
+                                               a 'getvalue()' method for retrieving file content, and
+                                               must have a 'name' attribute representing the file name.
+        Behavior:
+            - Retrieves the current configuration parameters for the chunker, embedder, and vector store.
+            - Generates a unique cache key based on the document's content and processing configurations.
+            - If a cached vector store exists for the generated key, it loads the vector store and updates
+              the session state with the associated documents and their texts.
+            - If no cached vector store is found, it extracts text from the document, processes the document
+              to generate a new vector store, caches this result, and updates the session state accordingly.
+            - Provides user feedback for successful operations or errors encountered during processing via UI components.
+        Raises:
+            Exception: Any exception that occurs during text extraction or document processing is caught and
+                       reported using UIComponents error messages rather than being propagated.
+        Returns:
+            None: The method updates relevant session state variables and UI components based on the processing outcome.
+        """
+        """Process the docs if new docs or new params are configured, Get docs from"""
+
+        import Utils.Utils 
+
+        from Utils.cache_manager import CacheManager
+
+        if uploaded_file:
+            pipeline = Utils.Utils.get_pipeline()
+            cache_manager = CacheManager()
+
+            # Get current configuration for caching
+            chunker_config = pipeline.config_manager.get_config(constants.CONFIG_CHUNKER)
+            embedder_config = pipeline.config_manager.get_config(constants.CONFIG_EMBEDDER)
+            vector_store_config = pipeline.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
+            
+            processing_params = {
+                "chunker": chunker_config,
+                "embedder": embedder_config,
+                "vector_store": vector_store_config
+            }
+
+            file_bytes = uploaded_file.getvalue()
+            cache_key = cache_manager.generate_cache_key(file_bytes, processing_params)
+            
+            cached_vector_store = cache_manager.load_from_cache(cache_key)
+            
+            if cached_vector_store:
+                with UIComponents.display_spinner("Loading processed document from cache..."):
+                    pipeline.vector_store = cached_vector_store
+                    
+                    UIComponents.set_session_state_variable("vector_store", pipeline.vector_store)
+                    documents = pipeline.vector_store.documents
+                    UIComponents.set_session_state_variable("documents", documents)
+                    if documents:
+                        UIComponents.set_session_state_variable("processed_document_texts", [doc.get('page_content', '') for doc in documents])
+
+                UIComponents.display_success(f"Successfully loaded pre-processed document '{uploaded_file.name}' from cache.")
+            else:
+                with UIComponents.display_spinner(f"Processing document '{uploaded_file.name}'... This may take a moment."):
+                    try:
+                        texts = pipeline.extractText(uploaded_file)
+                        if texts:
+                            # This returns the vector_store, but the embedder is now fitted inside the pipeline instance
+                            processed_vector_store = pipeline.process_document(uploaded_file, texts)
+                            
+                            if processed_vector_store:
+                                # Cache both the vector_store and the fitted embedder
+                                data_to_cache = processed_vector_store
+                                
+                                cache_manager.save_to_cache(cache_key, data_to_cache)
+                                
+                                # The pipeline's vector_store is already updated by process_document
+                                UIComponents.set_session_state_variable("vector_store", processed_vector_store)
+                                documents = processed_vector_store.documents
+                                UIComponents.set_session_state_variable("documents", documents)
+                                if documents:
+                                    UIComponents.set_session_state_variable("processed_document_texts", [doc.get('page_content', '') for doc in documents])
+                                
+                                UIComponents.display_success(f"Document '{uploaded_file.name}' processed and saved to cache.")
+                            else:
+                                UIComponents.display_error("Failed to process the document.")
+                        else:
+                            UIComponents.display_error("Failed to extract text from the document.")
+                    except Exception as e:
+                        UIComponents.display_error(f"An error occurred during processing: {e}")
+
     def render_debug_tab(self):
         """Render the debug tab with system information"""
         UIComponents.create_subheader_UI("Debug Information")

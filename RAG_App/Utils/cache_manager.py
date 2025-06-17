@@ -40,6 +40,7 @@ class CacheManager:
     def load_from_cache(self, key: str) -> Any:
         """Load data from a cache file if it exists."""
         cache_path = self.get_cache_path(key)
+        
         if os.path.exists(cache_path):
             try:
                 with open(cache_path, 'rb') as f:

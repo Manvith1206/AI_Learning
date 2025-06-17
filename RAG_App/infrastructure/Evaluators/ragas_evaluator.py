@@ -46,10 +46,10 @@ class RagasEvaluator(BaseEvaluator):
         answers = [answer]
         contexts_list = [contexts]
         ground_truths_list = [ground_truths]
-
+        breakpoint()
 
         data = Dataset.from_dict({
-            constants.QUESTION: questions,
+            constants.QUESTION: question,
             constants.ANSWER: answers,
             constants.CONTEXTS: contexts_list,
             "ground_truth": ground_truths_list

@@ -246,13 +246,11 @@ class Sidebar:
             file_bytes = uploaded_file.getvalue()
             cache_key = cache_manager.generate_cache_key(file_bytes, processing_params)
             
-            cached_data = cache_manager.load_from_cache(cache_key)
+            cached_vector_store = cache_manager.load_from_cache(cache_key)
             
-            if cached_data:
+            if cached_vector_store:
                 with UIComponents.display_spinner("Loading processed document from cache..."):
-                    # Restore both vector_store and the fitted embedder
-                    pipeline.vector_store = cached_data['vector_store']
-                    pipeline.embedder = cached_data['embedder']
+                    pipeline.vector_store = cached_vector_store
                     
                     UIComponents.set_session_state_variable("vector_store", pipeline.vector_store)
                     documents = pipeline.vector_store.documents
@@ -271,10 +269,8 @@ class Sidebar:
                             
                             if processed_vector_store:
                                 # Cache both the vector_store and the fitted embedder
-                                data_to_cache = {
-                                    'vector_store': processed_vector_store,
-                                    'embedder': pipeline.embedder
-                                }
+                                data_to_cache = processed_vector_store
+                                
                                 cache_manager.save_to_cache(cache_key, data_to_cache)
                                 
                                 # The pipeline's vector_store is already updated by process_document

@@ -4,6 +4,7 @@ from infrastructure.Common.RAG_Constants import (
     RetrieverType, RerankerType,
     EvaluatorType, LLMServiceType
 )
+from UI.pages.main_page import MainPage
 
 configs = [
   {
@@ -41,9 +42,9 @@ configs = [
       }
     },
     constants.CONFIG_LLM: {
-      constants.CONFIG_TYPE_PARAM: LLMServiceType.CLAUDE.value,
+      constants.CONFIG_TYPE_PARAM: LLMServiceType.GEMINI.value,
       constants.CONFIG_PARAM: {
-        constants.CONFIG_MODEL: constants.CLAUDE_MODELS.CLAUDE_SONNET_THREE_7.value
+        constants.CONFIG_MODEL: constants.GeminiLLMModel.GEMINI_FLASH.value
       }
     },
     constants.CONFIG_EVALUATOR: {
@@ -232,22 +233,27 @@ class DummyFile:
         with open(self.path, 'rb') as f:
             return f.read()
         
+    def getvalue(self):
+        """Return file contents as bytes (mimics Streamlit's getvalue method)"""
+        with open(self.path, 'rb') as f:
+            return f.read()
+        
 import json
-TEST_EVAL_SET_PATH = r"C:\Users\ibc-dev\Manvith\AI\RAG\rag_modular\Testing\EvalSet.json"
-TEST_FILE_PATH = r"C:\Users\ibc-dev\Manvith\AI\RAG\rag_modular\Testing\TestFile.pdf"
-RESULTS_CSV_PATH = r"C:\Users\ibc-dev\Manvith\AI\RAG\rag_modular\Testing\rag_evaluation_results.csv"
+TEST_EVAL_SET_PATH = r"C:\Users\ibc-dev\Manvith\AI\RAG_App\infrastructure\Testing\EvalSet.json"
+TEST_FILE_PATH = r"C:\Users\ibc-dev\Manvith\AI\RAG_App\infrastructure\Testing\TestFile.pdf"
+RESULTS_CSV_PATH = r"C:\Users\ibc-dev\Manvith\AI\RAG_App\infrastructure\Testing\rag_evaluation_results.csv"
 import csv
-from infrastructure.Common.rag_pipeline import RAGPipeline
-from infrastructure.Common.config_manager import ConfigManager
 import os
-import UI.UI_Components as UIComponents
-config_manager = ConfigManager()
-ragPipeline = RAGPipeline(
-    config_manager=config_manager,
-                          error_callback=UIComponents.UIComponents.display_error,
-                          warning_callback=UIComponents.UIComponents.display_warning,
-                          process_doc_callback=UIComponents.UIComponents.display_success)
+import Utils.Utils as Utils
+from config import ConfigManager
+
 def test_rag_combinations():
+    
+    ragPipeline = Utils.get_pipeline()
+    config_manager = ConfigManager()
+    mainPage = MainPage(ragPipeline, config_manager=config_manager)
+
+        
     with open(RESULTS_CSV_PATH, 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         writer.writerow([
@@ -268,7 +274,6 @@ def test_rag_combinations():
     # Open and load the JSON file
     with open(TEST_EVAL_SET_PATH, "r") as file:
         data = json.load(file)
-    texts = ragPipeline.extractText(DummyFile(TEST_FILE_PATH))
     # Accessing the content
     for item in data:
         for config in configs:
@@ -279,21 +284,24 @@ def test_rag_combinations():
             ragPipeline.update_component(constants.CONFIG_RERANKER, config[constants.CONFIG_RERANKER])
             ragPipeline.update_component(constants.CONFIG_LLM, config[constants.CONFIG_LLM])
             ragPipeline.update_component(constants.CONFIG_EVALUATOR, config[constants.CONFIG_EVALUATOR])
-
-            print("test_rag_combinations / Texts:", texts)
-            docs, chunks = ragPipeline.process_document(DummyFile(TEST_FILE_PATH), texts)
-            if not docs or not chunks:
-                print(f"Stopping item {item['Question']} due to empty docs or chunks.")
-                return
-            response = ragPipeline.query(item["Question"])
-
+            mainPage.load_pre_processed_docs_or_process_the_doc(DummyFile(TEST_FILE_PATH))
+            
+            response = ragPipeline.query(item["Question"], "")
+            contexts = None
+            full_response = ""
+            for delta in response:
+                print("Delta: ", delta)
+                full_response += delta[constants.ANSWER]
+                contexts = delta[constants.CONTEXTS]
+            breakpoint()
             metric_iter_dict = {}
             metrics_dict = {}
             for i in range(0, 3):
+                breakpoint()
                 result = ragPipeline.evaluate(
                     question=item["Question"], 
-                    answer=response[constants.ANSWER], 
-                    contexts=response[constants.CONTEXTS], 
+                    answer=full_response, 
+                    contexts=contexts, 
                     ground_truths=item["Ground_Truth"]
                 )
                 metric_iter_dict[f"iteration_{i}"] = result

@@ -37,7 +37,7 @@ class CohereReranker(BaseReranker):
         sorted_documents = [doc for doc, score in sorted_results]
                             
         explaination = f"Cohere Re ranking Model {self.model} re ranked the docs"
-
+        current_cost_value = 0
         if response.meta and response.meta.billed_units and response.meta.billed_units.input_tokens is not None:
             current_cost_value += self.get_cost_based_on_model(response.meta.billed_units.input_tokens)
         else:

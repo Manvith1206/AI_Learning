@@ -172,7 +172,7 @@ class AnswerRelevancyMetric(EvaluationMetric):
             prompt_template=self.question_gen_prompt_template,
             num_questions=self.num_generated_questions
         )
-        breakpoint()
+        
         if not generated_questions:
             return 0.0
 
@@ -212,7 +212,7 @@ class CustomEvaluator(BaseEvaluator):
         Returns:
             Dictionary of evaluation scores, with metric names as keys.
         """
-        breakpoint()
+        
         results = {}
         start_time = time.time()
         
