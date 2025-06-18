@@ -490,7 +490,7 @@ class RAGPipeline:
         """
         try:
             # Use last query data if not provided
-            breakpoint()
+            
             if hasattr(self, constants.LAST_QUERY) and (question is None or answer is None or contexts is None):
                 question = question or self.last_query[constants.QUESTION]
                 answer = answer or self.last_query[constants.ANSWER]

@@ -42,7 +42,7 @@ configs = [
       }
     },
     constants.CONFIG_LLM: {
-      constants.CONFIG_TYPE_PARAM: LLMServiceType.GEMINI.value,
+      constants.CONFIG_TYPE_PARAM: LLMServiceType.CLAUDE.value,
       constants.CONFIG_PARAM: {
         constants.CONFIG_MODEL: constants.GeminiLLMModel.GEMINI_FLASH.value
       }
@@ -293,15 +293,15 @@ def test_rag_combinations():
                 print("Delta: ", delta)
                 full_response += delta[constants.ANSWER]
                 contexts = delta[constants.CONTEXTS]
-            breakpoint()
+            
             metric_iter_dict = {}
             metrics_dict = {}
             for i in range(0, 3):
-                breakpoint()
+                
                 result = ragPipeline.evaluate(
                     question=item["Question"], 
                     answer=full_response, 
-                    contexts=contexts, 
+                    contexts=[contexts], 
                     ground_truths=item["Ground_Truth"]
                 )
                 metric_iter_dict[f"iteration_{i}"] = result

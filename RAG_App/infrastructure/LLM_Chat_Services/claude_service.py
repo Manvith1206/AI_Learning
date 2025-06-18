@@ -13,6 +13,7 @@ class ClaudeService(BaseLLMService):
     def generate_response(self, prompt, **kwargs):
         start_time = time.time()
         total_tokens = 0
+        
         with self.client.messages.stream(
             max_tokens=2048,
             messages=[{"role": "user", "content": prompt}],

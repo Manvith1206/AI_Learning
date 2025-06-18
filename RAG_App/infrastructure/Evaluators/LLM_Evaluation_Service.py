@@ -44,7 +44,7 @@ class LLM_Evaluation_Service():
     def calculate_similarity(self, text1: str, text2: str):
         """Calculates semantic similarity between two texts (e.g., using embeddings and cosine similarity)."""
         try:
-            breakpoint()
+            
             text1_vec = self.embedder.transform([text1])  # shape (1, dim)
             text2_vecs = self.embedder.transform(text2)  # shape (n, dim)
 
