@@ -5,8 +5,8 @@ from infrastructure.Chunkers.base_chunker import BaseChunker
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 
 class SemanticChunkerWithLangChain(BaseChunker):
-    def __init__(self):
-        self.embed_model = FastEmbedEmbeddings(model_name="BAAI/bge-base-en-v1.5")
+    def __init__(self, embed_model):
+        self.embed_model = embed_model
         self.semantic_chunker = SemanticChunker(self.embed_model, breakpoint_threshold_type="percentile")
         self.time_taken = 0
         self.cost = 0

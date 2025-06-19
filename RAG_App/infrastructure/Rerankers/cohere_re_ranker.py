@@ -55,9 +55,9 @@ class CohereReranker(BaseReranker):
 
     
     def get_cost_based_on_model(self, tokens):
-        if self.model == constants.CohereLLMModel.RERANK_DEFAULT_MODEL.value:
+        if self.model == constants.CohereRerankingModels.RERANK_DEFAULT_MODEL.value:
             return (tokens/1000) * 0.0001
-        elif self.model == constants.CohereLLMModel.RERANK_ENGLISH.value:
+        elif self.model == constants.CohereRerankingModels.RERANK_ENGLISH.value:
             return (tokens / 1000000) * 0.12
-        elif self.model == constants.CohereLLMModel.RERANK_MULTLINGUAL.value:
+        elif self.model == constants.CohereRerankingModels.RERANK_MULTLINGUAL.value:
             pass

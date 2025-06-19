@@ -203,7 +203,6 @@ class MainPage:
         import Utils.Utils 
 
         from Utils.cache_manager import CacheManager
-
         if uploaded_file:
             pipeline = Utils.Utils.get_pipeline()
             cache_manager = CacheManager()
@@ -228,6 +227,7 @@ class MainPage:
                 with UIComponents.display_spinner("Loading processed document from cache..."):
                     pipeline.vector_store = cached_vector_store
                     
+
                     UIComponents.set_session_state_variable("vector_store", pipeline.vector_store)
                     documents = pipeline.vector_store.documents
                     UIComponents.set_session_state_variable("documents", documents)
@@ -240,6 +240,8 @@ class MainPage:
                     try:
                         texts = pipeline.extractText(uploaded_file)
                         if texts:
+                            
+
                             # This returns the vector_store, but the embedder is now fitted inside the pipeline instance
                             processed_vector_store = pipeline.process_document(uploaded_file, texts)
                             

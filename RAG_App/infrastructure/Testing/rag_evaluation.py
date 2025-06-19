@@ -143,7 +143,7 @@ RERANKER_PARAM_GRID = [
     }),
     (constants.RerankerType.COHERE.value, {
         constants.CONFIG_TYPE_PARAM: constants.RerankerType.COHERE.value, 
-        constants.CONFIG_PARAM: constants.CohereLLMModel.RERANK_DEFAULT_MODEL.value
+        constants.CONFIG_PARAM: constants.CohereRerankingModels.RERANK_DEFAULT_MODEL.value
     }),
     (constants.RerankerType.JINA.value, {
         constants.CONFIG_TYPE_PARAM: constants.RerankerType.JINA.value, 

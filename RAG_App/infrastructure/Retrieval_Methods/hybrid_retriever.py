@@ -97,8 +97,11 @@ class HybridRetriever(BaseRetriever):
         combined_results.sort(key=lambda x: x[constants.Score], reverse=True)
         end_time = time.time()
         self.time_taken = end_time - start_time
+        
+        final_results = []
+        for result in combined_results[:self.top_k]:
+            final_results.append(result[constants.Document][constants.PAGE_CONTENT])
 
-        final_results = combined_results[:self.top_k][constants.Document][constants.PAGE_CONTENT]
         return final_results
 
     def get_cost_and_time_taken(self):

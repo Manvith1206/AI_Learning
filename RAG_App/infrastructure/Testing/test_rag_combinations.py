@@ -14,7 +14,7 @@ import infrastructure.Common.RAG_Constants as constants
 from infrastructure.Common.RAG_Constants import (
     ChunkerType, EmbedderType, RetrieverType,
     RerankerType, VectorStore, GeminiLLMModel,
-    CohereLLMModel, JINA_RERANKER_MODELS
+    CohereRerankingModels, JINA_RERANKER_MODELS
 )
 from infrastructure.Evaluators.ragas_evaluator import RagasEvaluator
 from UI.UI_Components import UIComponents
@@ -223,7 +223,7 @@ def run_tests():
         
         (RerankerType.COHERE.value, {
             constants.CONFIG_TYPE_PARAM: RerankerType.COHERE.value, 
-            constants.CONFIG_PARAM: CohereLLMModel.RERANK_DEFAULT_MODEL.value
+            constants.CONFIG_PARAM: CohereRerankingModels.RERANK_DEFAULT_MODEL.value
         }),
     ]
 

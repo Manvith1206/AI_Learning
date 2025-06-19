@@ -17,7 +17,7 @@ class ClaudeService(BaseLLMService):
         with self.client.messages.stream(
             max_tokens=2048,
             messages=[{"role": "user", "content": prompt}],
-            model=self.model_name,
+            model=self.model_name
         ) as stream:
             for text in stream.text_stream:
                 yield text

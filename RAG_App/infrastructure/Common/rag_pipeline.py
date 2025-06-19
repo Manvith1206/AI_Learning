@@ -67,8 +67,8 @@ class RAGPipeline:
     # setup components
     def setup_components(self):
         # Build all core components via factory methods
-        self.chunker = self._build_chunker()
         self.embedder = self._build_embedder()
+        self.chunker = self._build_chunker()
         if self.vector_store is None:
             self.vector_store = self._build_vector_store()
         self.retriever = self._build_retriever()
@@ -76,6 +76,7 @@ class RAGPipeline:
         self.reranker = self._build_reranker()
         self.evaluator = self._build_evaluator()
         self.query_classifier = QueryClassifier(self.llm_service)
+        
         print("Setup Components")
 
     def get_chunker_cost_and_time(self):
@@ -113,7 +114,7 @@ class RAGPipeline:
         elif type == ChunkerType.PAGE.value:
             return PageChunker()
         elif type == ChunkerType.SEMANTIC_WITH_LANGCHAIN.value:
-            return SemanticChunkerWithLangChain()
+            return SemanticChunkerWithLangChain(self.embedder)
         else:
             return RecursiveChunker()
 
@@ -192,14 +193,13 @@ class RAGPipeline:
         cfg = self.config_manager.get_config(constants.CONFIG_LLM)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         from google import genai
+        print("GeminiAPIkey", self.geminiApiKey)
         client = genai.Client(api_key=self.geminiApiKey)
         params = cfg.get(constants.CONFIG_PARAM)
         model_name = params.get(constants.CONFIG_MODEL)
 
         if t == LLMServiceType.GEMINI.value:
             return GeminiService(client, model_name=model_name)
-        # elif t == LLMServiceType.COHERE.value:
-        #     return CohereChat(st.secrets[constants.COHERE_API_KEY], model_name=model_name)
         elif t == LLMServiceType.CLAUDE.value:
             from infrastructure.LLM_Chat_Services.claude_service import ClaudeService
             import anthropic
@@ -225,7 +225,7 @@ class RAGPipeline:
         elif t == RerankerType.JINA.value:
             from infrastructure.Rerankers.jina_reranker import JinaReranker
 
-            return JinaReranker(**params)
+            return JinaReranker(**params, api_key=self.jinaApiKey)
         elif t == RerankerType.COSINE.value:
             from infrastructure.Rerankers.cosine_reranker import CosineReranker
 
@@ -268,7 +268,7 @@ class RAGPipeline:
         elif evaluator_type == EvaluatorType.SIMPLE.value:
             return SimpleEvaluator()
         elif evaluator_type == EvaluatorType.DEEP_EVAL.value:
-            return DeepEval(**cfg.get(constants.CONFIG_PARAM, {}))
+            return DeepEval(**cfg.get(constants.CONFIG_PARAM, {}), api_key=self.geminiApiKey)
         else:
             return SimpleEvaluator()
 
@@ -340,6 +340,7 @@ class RAGPipeline:
         try:
             chunks =  self.chunker.split_text(text=texts)
 
+            
             documents = []
             for chunk in chunks:
                 doc_id = str(uuid.uuid4())
@@ -349,7 +350,8 @@ class RAGPipeline:
                     constants.METADATA: {"source": file.name}
                 })
             texts = [doc[constants.PAGE_CONTENT] for doc in documents]
-            embeddings = self.embedder.fit(texts)
+            
+            embeddings = self.embedder.embed_documents(texts)
             
             
             documents = self.vector_store.format_documents(documents)
@@ -381,6 +383,7 @@ class RAGPipeline:
             }
         
     def get_context_docs(self, query_text, top_k=None):
+        
         if not hasattr(self.vector_store, 'documents') or not self.vector_store.documents:
                 raise ValueError("No documents processed. Please upload and process a document before querying.")
         # Use configured top_k if not specified

@@ -186,7 +186,7 @@ class VectorStore(Enum):
     CHROMA = "chroma"
 
 # Common LLM model names
-class CohereLLMModel(Enum):
+class CohereRerankingModels(Enum):
     RERANK_DEFAULT_MODEL = "rerank-v3.5"
     RERANK_ENGLISH = "rerank-english-v3.0"
     RERANK_MULTLINGUAL = "rerank-multilingual-v3.0"
@@ -194,6 +194,8 @@ class CohereLLMModel(Enum):
 class CohereEmbedModels(Enum):
     COHERE_EMBED_MODEL_DEFAULT = "embed-v4.0"
     COHERE_EMBED_MODEL_ENG = "embed-english-v3.0"
+    COHERE_EMBEDDING_MULTILINGUAL_V3_0 = "embed-multilingual-v3.0"
+
 
 class VoyageEmbedModels(Enum):
     VOYAGE_EMBED_DEFAULT_MODEL = "voyage-3-large"

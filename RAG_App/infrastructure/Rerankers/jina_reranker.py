@@ -10,7 +10,7 @@ class JinaReranker(BaseReranker):
     """
     A reranker using JINA AI's reranker models from Hugging Face.
     """
-    def __init__(self, model: str = "jinaai/jina-reranker-v1-base-en", top_k_for_reranking: int = 5):
+    def __init__(self, api_key, model: str = "jinaai/jina-reranker-v1-base-en", top_k_for_reranking: int = 5):
         """
         Initialize the JINA reranker with a specified model.
         
@@ -22,6 +22,7 @@ class JinaReranker(BaseReranker):
         self.time_taken = 0
         self.cost = 0
         self.top_k_for_reranking = top_k_for_reranking
+        self.api_key = api_key
 
     def rerank(self, query, documents, **kwargs):
         import requests
@@ -29,7 +30,7 @@ class JinaReranker(BaseReranker):
         url = 'https://api.jina.ai/v1/rerank'
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': UIComponents.get_secrets(constants.JINA_RERANKER_API_KEY)  # Ensure you have set this in your secrets
+            'Authorization': self.api_key  # Ensure you have set this in your secrets
         }
         start_time = time.time()
         data = {

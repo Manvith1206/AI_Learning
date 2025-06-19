@@ -21,7 +21,7 @@ class VoyageEmbedder(BaseEmbedder):
         for i in range(0, len(chunks), batch_size):
             yield chunks[i:i + batch_size]
         
-    def fit(self, texts):
+    def embed_documents(self, texts):
         """
         For Voyage embeddings we don't need a separate fit step;
         we just embed the texts and cache if desired.

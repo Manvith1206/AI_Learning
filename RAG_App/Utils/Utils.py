@@ -10,6 +10,8 @@ def get_pipeline() -> RAGPipeline:
     
     if not UIComponents.get_session_state_variable("pipeline_created", False):
         with UIComponents.display_spinner("Initializing RAG pipeline..."):
+            
+            os.environ["OPENAI_API_KEY"] = get_env_var(constants.OPENAI_API_KEY)
             rag_pipeline = RAGPipeline(
                 geminiApiKey=get_env_var(constants.GEMINI_API_KEY),
                 cohereApiKey=get_env_var(constants.COHERE_API_KEY),

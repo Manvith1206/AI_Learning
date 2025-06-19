@@ -7,8 +7,8 @@ import infrastructure.Common.RAG_Constants as constants
 from deepeval.models.llms import gemini_model
 from UI.UI_Components import UIComponents
 class DeepEval(BaseEvaluator):
-    def __init__(self, metrics=None):
-        model = gemini_model.GeminiModel(model_name=constants.GeminiLLMModel.GEMINI_FLASH.value, api_key=UIComponents.get_secrets(constants.GEMINI_API_KEY))
+    def __init__(self, api_key, metrics=None):
+        model = gemini_model.GeminiModel(model_name=constants.GeminiLLMModel.GEMINI_FLASH.value, api_key=api_key)
         self.metrics = metrics or [
             FaithfulnessMetric(threshold=0.7, model=model, include_reason=True),
             AnswerRelevancyMetric(threshold=0.7, model=model, include_reason=True),

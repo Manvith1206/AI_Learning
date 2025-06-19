@@ -19,13 +19,16 @@ class CohereEmbedder(BaseEmbedder):
         self.embeddings = [] # Initialize as empty list for batching
         self.cost = 0
         self.time_taken = 0
+        
+        print("Model", self.client.models.list)
+
 
     def batch_chunks(self, chunks, batch_size=80):
         """Yield successive batches of size batch_size."""
         for i in range(0, len(chunks), batch_size):
             yield chunks[i:i + batch_size]
 
-    def fit(self, texts: list[str]):
+    def embed_documents(self, texts: list[str]):
         """
         For Cohere embeddings we don't need a separate fit step;
         we just embed the texts and cache if desired.
@@ -51,9 +54,10 @@ class CohereEmbedder(BaseEmbedder):
         """
         Embed new texts on demand.
         """
+
         all_embeddings = []
         for batch in self.batch_chunks(texts, batch_size=80): # Adjust batch_size as needed for Cohere
-            resp = self.client.embed(texts=batch, model=self.model)
+            resp =self.client.embed(texts=batch, model=self.model, input_type="search_document")
             all_embeddings.extend(resp.embeddings)
         return all_embeddings
     
@@ -65,3 +69,5 @@ class CohereEmbedder(BaseEmbedder):
             return (tokens/1000) * 0.0001
         elif self.model == constants.CohereEmbedModels.COHERE_EMBED_MODEL_DEFAULT.value:
             return (tokens / 1000000) * 0.12
+        else:
+            return 0

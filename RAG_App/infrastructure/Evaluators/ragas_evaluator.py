@@ -11,7 +11,7 @@ from ragas.llms import LangchainLLMWrapper
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from UI.UI_Components import UIComponents
-os.environ["OPENAI_API_KEY"] = UIComponents.get_secrets(constants.OPENAI_API_KEY)
+
 from ragas.llms import LangchainLLMWrapper
 
 class RagasEvaluator(BaseEvaluator):
@@ -59,11 +59,7 @@ class RagasEvaluator(BaseEvaluator):
             model="gpt-4o",
             temperature=0.0,
         )
-        geminiLLM = ChatGoogleGenerativeAI(
-            model=constants.GeminiLLMModel.GEMINI_FLASH.value,
-            temperature=0.0,
-            google_api_key=UIComponents.get_secrets(constants.GEMINI_API_KEY)
-        )
+        
         with UIComponents.display_spinner("Running RAG evaluation..."):
             result = evaluate(
                 data,

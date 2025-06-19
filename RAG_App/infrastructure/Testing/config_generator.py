@@ -53,7 +53,13 @@ EMBEDDERS = [
         constants.CONFIG_PARAM: {
             constants.CONFIG_MODEL: constants.CohereEmbedModels.COHERE_EMBED_MODEL_ENG.value
         }
-    }
+    },
+    {
+        constants.CONFIG_TYPE_PARAM: EmbedderType.COHERE.value,
+        constants.CONFIG_PARAM: {
+            constants.CONFIG_MODEL: constants.CohereEmbedModels.COHERE_EMBEDDING_MULTILINGUAL_V3_0.value
+        }
+    },
 ]
 
 VECTOR_STORES = [
@@ -72,14 +78,14 @@ RETRIEVERS = [
         constants.CONFIG_TYPE_PARAM: RetrieverType.SIMILARITY.value,
         constants.CONFIG_PARAM: {
             constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.0,
-            constants.CONFIG_TOP_K_PARAM: 5
+            constants.CONFIG_TOP_K_PARAM: 20
         }
     },
     {
         constants.CONFIG_TYPE_PARAM: RetrieverType.HYBRID.value,
         constants.CONFIG_PARAM: {
             constants.CONFIG_KEYWORD_WEIGHT: 0.5,
-            constants.CONFIG_TOP_K_PARAM: 5
+            constants.CONFIG_TOP_K_PARAM: 20
         }
     }
 ]
@@ -89,7 +95,21 @@ RERANKERS = [
         constants.CONFIG_TYPE_PARAM: RerankerType.COHERE.value,
         constants.CONFIG_PARAM: {
             constants.CONFIG_TOP_K_FOR_RERANKING_PARAM: 5,
-            constants.CONFIG_MODEL: constants.CohereLLMModel.RERANK_DEFAULT_MODEL.value
+            constants.CONFIG_MODEL: constants.CohereRerankingModels.RERANK_DEFAULT_MODEL.value
+        }
+    },
+    {
+        constants.CONFIG_TYPE_PARAM: RerankerType.COHERE.value,
+        constants.CONFIG_PARAM: {
+            constants.CONFIG_TOP_K_FOR_RERANKING_PARAM: 5,
+            constants.CONFIG_MODEL: constants.CohereRerankingModels.RERANK_ENGLISH.value
+        }
+    },
+    {
+        constants.CONFIG_TYPE_PARAM: RerankerType.COHERE.value,
+        constants.CONFIG_PARAM: {
+            constants.CONFIG_TOP_K_FOR_RERANKING_PARAM: 5,
+            constants.CONFIG_MODEL: constants.CohereRerankingModels.RERANK_MULTLINGUAL.value
         }
     },
     {
@@ -154,6 +174,10 @@ def generate_configurations():
         }
         configs.append(config)
     
+    import json
+    with open("Configs.txt", "w", encoding="utf-8") as file:
+        file.write(json.dumps(configs, indent=2))
+
     return configs
 
 if __name__ == '__main__':
@@ -161,5 +185,4 @@ if __name__ == '__main__':
     all_configs = generate_configurations()
     print(f"Generated {len(all_configs)} configurations.")
     # You can uncomment the line below to see all the generated configurations
-    # import json
-    # print(json.dumps(all_configs, indent=2))
+    

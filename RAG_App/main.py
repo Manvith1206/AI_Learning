@@ -6,7 +6,7 @@ from infrastructure.Common.rag_pipeline import RAGPipeline
 from config import ConfigManager
 from UI.pages.main_page import MainPage
 import Utils.Utils as Utils
-
+from dotenv import load_dotenv
 def main():
     """Main function to run the RAG Application."""
     UIComponents.initialize_page()
@@ -20,4 +20,5 @@ def main():
     main_page.render()
 
 if __name__ == "__main__":
+    load_dotenv()
     main()

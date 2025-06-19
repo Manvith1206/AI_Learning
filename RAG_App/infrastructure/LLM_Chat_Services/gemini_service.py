@@ -10,6 +10,7 @@ class GeminiService(BaseLLMService):
         self.model_name = model_name
         self.cost = 0
         self.time_taken = 0
+        
     def generate_response(self, prompt, **kwargs):
         start_time = time.time()
         total_tokens = 0

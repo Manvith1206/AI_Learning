@@ -9,15 +9,47 @@ import infrastructure.Common.RAG_Constants as constants
 class ConfigManager:
     """Manages configuration for RAG components"""
     def __init__(self, config=None):
-        self.config = config or {
-            constants.CONFIG_CHUNKER: {constants.CONFIG_TYPE_PARAM: ChunkerType.RECURSIVE.value, constants.CONFIG_PARAM: {constants.CONFIG_CHUNK_SIZE_PARAM: 600, constants.CONFIG_CHUNK_OVERLAP_PARAM: 200}},
-            constants.CONFIG_EMBEDDER: {constants.CONFIG_TYPE_PARAM: EmbedderType.COHERE.value, constants.CONFIG_PARAM: {constants.CONFIG_MODEL: constants.CohereEmbedModels.COHERE_EMBED_MODEL_DEFAULT.value}},
-            constants.CONFIG_VECTOR_STORE: {constants.CONFIG_TYPE_PARAM: constants.VectorStore.SCIKIT_LEARN.value, constants.CONFIG_PARAM: {constants.CONFIG_VECTOR_STORE_METRIC: constants.CONFIG_METRIC_COSINE}},
-            constants.CONFIG_RETRIEVER: {constants.CONFIG_TYPE_PARAM: RetrieverType.SIMILARITY.value, constants.CONFIG_PARAM: {constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.0, constants.CONFIG_TOP_K_PARAM: 5}},
-            constants.CONFIG_RERANKER: {constants.CONFIG_TYPE_PARAM: RerankerType.LLM.value, constants.CONFIG_PARAM: {constants.CONFIG_TOP_K_FOR_RERANKING_PARAM: 5}},
-            constants.CONFIG_LLM: {constants.CONFIG_TYPE_PARAM: LLMServiceType.CLAUDE.value, constants.CONFIG_PARAM: {constants.CONFIG_MODEL: constants.CLAUDE_MODELS.CLAUDE_SONNET_THREE_7.value}},
-            constants.CONFIG_EVALUATOR: {constants.CONFIG_TYPE_PARAM: EvaluatorType.RAGAS.value}
-        }
+        self.config = config or   {
+    "chunker": {
+      "type": "semantic_with_langchain",
+      "params": {
+        
+      }
+    },
+    "embedder": {
+      "type": "cohere",
+      "params": {
+        "model": "embed-multilingual-v3.0"
+      }
+    },
+    "vector_store": {
+      "type": "faiss",
+      "params": {}
+    },
+    "retriever": {
+      "type": "hybrid",
+      "params": {
+        "keyword_weight": 0.5,
+        "top_k": 20
+      }
+    },
+    "reranker": {
+      "type": "Jina",
+      "params": {
+        "top_k_for_reranking": 5,
+        "model": "jina-reranker-v1-turbo-en"
+      }
+    },
+    "llm": {
+      "type": "Gemini",
+      "params": {
+        "model": "gemini-2.5-pro-preview-05-06"
+      }
+    },
+    "evaluator": {
+      "type": "Ragas"
+    }
+  }
 
     def get_config(self, component=None):
         if component:

@@ -125,7 +125,7 @@ class MistralEmbedder(BaseEmbedder):
         # Return a list of embeddings (2D array)
         return embeddings
     
-    def fit(self, texts ):
+    def embed_documents(self, texts ):
         """Convert a list of document strings to embedding vectors with automatic batching and rate limiting"""
         start_time = time.time()
         all_embeddings = []

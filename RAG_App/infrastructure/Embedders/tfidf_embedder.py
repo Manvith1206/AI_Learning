@@ -9,7 +9,7 @@ class TFIDFEmbedder(BaseEmbedder):
         self.vectors = None
         self.time_taken = 0
         self.cost = 0
-    def fit(self, texts):
+    def embed_documents(self, texts):
         start_time = time.time()
         self.vectors = self.vectorizer.fit_transform(texts)
         end_time = time.time()

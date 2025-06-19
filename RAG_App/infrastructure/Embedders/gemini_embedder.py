@@ -19,7 +19,7 @@ class GeminiEmbedder(BaseEmbedder):
         for i in range(0, len(chunks), batch_size):
             yield chunks[i:i + batch_size]
 
-    def fit(self, texts):
+    def embed_documents(self, texts):
         start_time = time.time()  # Start timing the embedding process
         self.texts = texts  # Store original texts if needed for other purposes
 

@@ -67,7 +67,7 @@ RETRIEVER_PARAM_GRID = [
 RERANKER_PARAM_GRID = [
     (constants.RerankerType.COSINE.value, {}),
 ] + [(constants.RerankerType.LLM.value, {constants.CONFIG_PARAM: constants.GeminiLLMModel.GEMINI_FLASH.value})] \
-  + [(constants.RerankerType.COHERE.value, {constants.CONFIG_PARAM: constants.CohereLLMModel.RERANK_DEFAULT_MODEL.value})]
+  + [(constants.RerankerType.COHERE.value, {constants.CONFIG_PARAM: constants.CohereRerankingModels.RERANK_DEFAULT_MODEL.value})]
 
 EVALUATOR_PARAM_GRID = [
     (constants.EvaluatorType.RAGAS.value, {}),

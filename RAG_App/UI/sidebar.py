@@ -527,7 +527,7 @@ class Sidebar:
         if reranker_type == RerankerType.LLM.value:
             return self.get_llm_model_options(UIComponents.get_session_state_variable("LLM_Service"))
         elif reranker_type == RerankerType.COHERE.value:
-            return {model.value: model for model in constants.CohereLLMModel}
+            return {model.value: model for model in constants.CohereRerankingModels}
         elif reranker_type == RerankerType.JINA.value:
             return {model.value: model for model in constants.JINA_RERANKER_MODELS}
         return {}
