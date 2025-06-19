@@ -5,3 +5,4 @@
 *.text
 *.json
 *.sqlite
+*.env
