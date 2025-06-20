@@ -7,8 +7,8 @@ from .base_evaluator import BaseEvaluator
 import google.generativeai as genai
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-import infrastructure.Common.RAG_Constants as constants
-from infrastructure.Evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
+import infrastructure.common.rag_constants as constants
+from infrastructure.evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
 
 # --- Evaluation Metric Base Class ---
 class EvaluationMetric(ABC):

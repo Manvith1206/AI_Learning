@@ -4,8 +4,8 @@ from typing import List, Dict, Union, Tuple
 from .base_reranker import BaseReranker
 import requests
 import time
-import infrastructure.Common.RAG_Constants as constants
-from UI.UI_Components import UIComponents
+import infrastructure.common.rag_constants as constants
+from UI.ui_components import UIComponents
 class JinaReranker(BaseReranker):
     """
     A reranker using JINA AI's reranker models from Hugging Face.

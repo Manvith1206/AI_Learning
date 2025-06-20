@@ -1,6 +1,6 @@
 from sklearn.metrics.pairwise import cosine_similarity
-from infrastructure.LLM_Chat_Services.base_llm_service import BaseLLMService
-from infrastructure.Embedders.base_embedder import BaseEmbedder
+from infrastructure.llm_chat_services.base_llm_service import BaseLLMService
+from infrastructure.embedders.base_embedder import BaseEmbedder
 
 class LLM_Evaluation_Service():
     """Protocol for a generic LLM service."""

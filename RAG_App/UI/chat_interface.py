@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Callable
-from UI.UI_Components import UIComponents
-import Utils.Utils
+from UI.ui_components import UIComponents
+import Utils.utils
 
 class ChatInterface:
     """Chat interface component for the RAG application"""
@@ -51,7 +51,7 @@ class ChatInterface:
             if prompt := UIComponents.chat_input("Ask a question about your documents", key="chat_input"):
                 UIComponents.add_message_to_chat(role='user', content=prompt)
                 UIComponents.display_message_with_role(role='user', message=prompt)
-                UIComponents.process_chat_input(role='assistant', content=prompt, pipeline=Utils.Utils.get_pipeline(), prompt=prompt)
+                UIComponents.process_chat_input(role='assistant', content=prompt, pipeline=Utils.utils.get_pipeline(), prompt=prompt)
     
     def display_message(self, response):
         """Display the response message in the chat interface"""        

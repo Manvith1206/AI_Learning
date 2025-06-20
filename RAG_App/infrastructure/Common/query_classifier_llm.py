@@ -3,8 +3,8 @@ Query classifier module using LLM function calling to detect greetings and irrel
 """
 import json
 from typing import List, Dict, Any, Optional, Literal
-from infrastructure.PromptProviders.query_classifier_prompt_provider import Query_Classifier_Prompt_Provider
-from infrastructure.LLM_Chat_Services.base_llm_service import BaseLLMService
+from infrastructure.prompt_providers.query_classifier_prompt_provider import Query_Classifier_Prompt_Provider
+from infrastructure.llm_chat_services.base_llm_service import BaseLLMService
 
 class QueryClassifier:
     """

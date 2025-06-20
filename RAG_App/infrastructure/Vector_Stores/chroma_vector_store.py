@@ -1,7 +1,7 @@
 from .base_vector_store import BaseVectorStore
 import chromadb
 import numpy as np
-import infrastructure.Common.RAG_Constants as constants
+import infrastructure.common.rag_constants as constants
 
 class ChromaVectorStore(BaseVectorStore):
     def __init__(self, collectionName):

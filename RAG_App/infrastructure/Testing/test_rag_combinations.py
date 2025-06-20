@@ -8,16 +8,16 @@ import time
 ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, ROOT)
 
-from infrastructure.Common.rag_pipeline import RAGPipeline
+from infrastructure.common.rag_pipeline import RAGPipeline
 from config import ConfigManager
-import infrastructure.Common.RAG_Constants as constants
-from infrastructure.Common.RAG_Constants import (
+import infrastructure.common.rag_constants as constants
+from infrastructure.common.rag_constants import (
     ChunkerType, EmbedderType, RetrieverType,
     RerankerType, VectorStore, GeminiLLMModel,
     CohereRerankingModels, JINA_RERANKER_MODELS
 )
-from infrastructure.Evaluators.ragas_evaluator import RagasEvaluator
-from UI.UI_Components import UIComponents
+from infrastructure.evaluators.ragas_evaluator import RagasEvaluator
+from UI.ui_components import UIComponents
 # Path to the test document and output file
 TEST_FILE_PATH = "E:/Manvith/Coding/AI/RAG/infrastructure/Testing/TestFile/DCA2104 Unit-08_V1.1.pdf"
 RESULTS_CSV_PATH = os.path.join(ROOT, "rag_evaluation_results_iterative.csv") # Changed output file name

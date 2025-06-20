@@ -1,5 +1,5 @@
-from .Base_Prompt_Provider import BasePromptProvider
-import infrastructure.PromptTemplates.query_classifier_prompt_templates as prompt_templates
+from .base_prompt_provider import BasePromptProvider
+import infrastructure.prompt_templates.query_classifier_prompt_templates as prompt_templates
 
 class Query_Classifier_Prompt_Provider(BasePromptProvider):
     def get_base_prompt(self, **kwargs):

@@ -1,4 +1,4 @@
-from infrastructure.Common.rag_pipeline import RAGPipeline
+from infrastructure.common.rag_pipeline import RAGPipeline
 
 class DocumentProcessor:
     def __init__(self, pipeline: RAGPipeline):

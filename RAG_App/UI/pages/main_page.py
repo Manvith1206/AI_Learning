@@ -1,15 +1,15 @@
 from typing import Dict, List, Any, Optional
 
-from UI.UI_Components import UIComponents
+from UI.ui_components import UIComponents
 from UI.chat_interface import ChatInterface
 from UI.sidebar import Sidebar
 from UI.metrics_display import MetricsDisplay
 from UI.flashcard_display import FlashcardDisplay
 from models import Flashcard
-from infrastructure.Common.rag_pipeline import RAGPipeline
+from infrastructure.common.rag_pipeline import RAGPipeline
 from config import ConfigManager
-from infrastructure.Common import RAG_Constants as constants
-from Utils.Exceptions import FlashcardGenerationError, PipelineError
+from infrastructure.common import rag_constants as constants
+from Utils.exceptions import FlashcardGenerationError, PipelineError
 
 class MainPage:
     """Main application page integrating all components"""
@@ -172,7 +172,7 @@ class MainPage:
         self.load_pre_processed_docs_or_process_the_doc(uploaded_file)
 
     def render_test_all_configs(self):
-        from infrastructure.Testing.RAG_Testing import test_rag_combinations
+        from infrastructure.testing.RAG_Testing import test_rag_combinations
         if UIComponents.create_button("Test All Configurations", key="TEST_ALL_CONFIGS"):
             test_rag_combinations()
 
@@ -200,11 +200,11 @@ class MainPage:
         """
         """Process the docs if new docs or new params are configured, Get docs from"""
 
-        import Utils.Utils 
+        import Utils.utils 
 
         from Utils.cache_manager import CacheManager
         if uploaded_file:
-            pipeline = Utils.Utils.get_pipeline()
+            pipeline = Utils.utils.get_pipeline()
             cache_manager = CacheManager()
 
             # Get current configuration for caching

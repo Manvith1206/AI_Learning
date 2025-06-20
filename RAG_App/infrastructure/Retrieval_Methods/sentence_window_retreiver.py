@@ -1,6 +1,5 @@
 import os
 import openai
-from dotenv import load_dotenv
 from llama_index.core import Document
 from llama_index.core import SimpleDirectoryReader
 from llama_index.core.node_parser import SentenceWindowNodeParser
@@ -11,8 +10,8 @@ from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.core.postprocessor import MetadataReplacementPostProcessor
 from llama_index.core.indices.postprocessor import SentenceTransformerRerank
 from .base_retriever import BaseRetriever
-import infrastructure.Common.RAG_Constants as constants
-import Utils.Utils as Utils
+import infrastructure.common.rag_constants as constants
+import Utils.utils as Utils
 import time
 
 class SentenceWindowRetriever(BaseRetriever):

@@ -1,6 +1,6 @@
 import time
 from .base_llm_service import BaseLLMService
-from infrastructure.Common.RAG_Constants import GeminiLLMModel
+from infrastructure.common.rag_constants import GeminiLLMModel
 from google.genai import types
 from google import genai
 

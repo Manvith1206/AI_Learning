@@ -1,7 +1,7 @@
 from .base_reranker import BaseReranker
 from sklearn.metrics.pairwise import cosine_similarity
 import time
-from infrastructure.Common.RAG_Constants import COSINE_SIMILARITY_RERANK_EXPLAINATION
+from infrastructure.common.rag_constants import COSINE_SIMILARITY_RERANK_EXPLAINATION
 
 class CosineReranker(BaseReranker):
     """

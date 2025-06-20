@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Dict, List, Any
-from UI.UI_Components import UIComponents
+from UI.ui_components import UIComponents
 
 
 class MetricsDisplay:

@@ -1,16 +1,15 @@
-from UI.UI_Components import UIComponents
+from UI.ui_components import UIComponents
 import os
 
-from infrastructure.Common.rag_pipeline import RAGPipeline
-import infrastructure.Common.RAG_Constants as constants
+from infrastructure.common.rag_pipeline import RAGPipeline
+import infrastructure.common.rag_constants as constants
 
 @staticmethod
 def get_pipeline() -> RAGPipeline:
     """Get or initialize the pipeline"""
-    
+
     if not UIComponents.get_session_state_variable("pipeline_created", False):
         with UIComponents.display_spinner("Initializing RAG pipeline..."):
-            
             os.environ["OPENAI_API_KEY"] = get_env_var(constants.OPENAI_API_KEY)
             rag_pipeline = RAGPipeline(
                 geminiApiKey=get_env_var(constants.GEMINI_API_KEY),
@@ -35,7 +34,7 @@ def get_env_var(var_name: str):
 
 @staticmethod
 def handleWarning(message: str):
-     UIComponents.display_warning(message=message)
+    UIComponents.display_warning(message=message)
 
 @staticmethod 
 def process_doc_success(message: str):
@@ -43,4 +42,4 @@ def process_doc_success(message: str):
 
 @staticmethod
 def handleError(message: str):
-     UIComponents.display_error(message=message)
+    UIComponents.display_error(message=message)

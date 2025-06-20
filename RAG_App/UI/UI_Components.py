@@ -1,7 +1,7 @@
 import streamlit as st
 from typing import List, Tuple, Dict, Any, Callable
 import pandas as pd
-import infrastructure.Common.RAG_Constants as constants
+import infrastructure.common.rag_constants as constants
 
 class UIComponents:
     """Base UI components for the RAG application"""

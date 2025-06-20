@@ -9,9 +9,9 @@ import pandas as pd
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.insert(0, ROOT)
 
-from infrastructure.Common.rag_pipeline import RAGPipeline
+from infrastructure.common.rag_pipeline import RAGPipeline
 from config import ConfigManager
-import infrastructure.Common.RAG_Constants as constants
+import infrastructure.common.rag_constants as constants
 
 # Path to the test document and output file
 TEST_FILE_PATH = r"E:\Manvith\Coding\AI\RAG\infrastructure\TestFile\DCA2104 Unit-08_V1.1.pdf"

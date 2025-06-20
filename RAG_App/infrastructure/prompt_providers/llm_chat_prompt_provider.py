@@ -1,5 +1,5 @@
-from .Base_Prompt_Provider import BasePromptProvider
-import infrastructure.PromptTemplates.llm_chat_prompt_templates as prompt_templates
+from .base_prompt_provider import BasePromptProvider
+import infrastructure.prompt_templates.llm_chat_prompt_templates as prompt_templates
 
 class LLM_Chat_Prompt_Provider(BasePromptProvider):
     def get_system_prompt(self):

@@ -1,7 +1,7 @@
 import os
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 from typing import List, Dict, Any, Callable
-from UI.UI_Components import UIComponents
+from UI.ui_components import UIComponents
 import time
 
 class FlashcardDisplay:

@@ -1,7 +1,7 @@
 import time
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_openai.embeddings import OpenAIEmbeddings
-from infrastructure.Chunkers.base_chunker import BaseChunker
+from infrastructure.chunkers.base_chunker import BaseChunker
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 
 class SemanticChunkerWithLangChain(BaseChunker):

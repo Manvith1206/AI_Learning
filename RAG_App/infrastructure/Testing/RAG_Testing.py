@@ -1,11 +1,11 @@
-import infrastructure.Common.RAG_Constants as constants
-from infrastructure.Common.RAG_Constants import (
+import infrastructure.common.rag_constants as constants
+from infrastructure.common.rag_constants import (
     ChunkerType, EmbedderType,
     RetrieverType, RerankerType,
     EvaluatorType, LLMServiceType
 )
 from UI.pages.main_page import MainPage
-from infrastructure.Testing.config_generator import generate_configurations
+from infrastructure.testing.config_generator import generate_configurations
 generate_configurations()
 configs = []
 
@@ -46,7 +46,7 @@ TEST_FILE_PATH = r"C:\Users\ibc-dev\Manvith\AI\RAG_App\infrastructure\Testing\Te
 RESULTS_CSV_PATH = r"C:\Users\ibc-dev\Manvith\AI\RAG_App\infrastructure\Testing\rag_evaluation_results.csv"
 import csv
 import os
-import Utils.Utils as Utils
+import Utils.utils as Utils
 from config import ConfigManager
 
 def test_rag_combinations():

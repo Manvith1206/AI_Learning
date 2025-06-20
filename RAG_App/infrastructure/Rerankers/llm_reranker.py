@@ -1,8 +1,8 @@
 from .base_reranker import BaseReranker
 import re
 import time
-import infrastructure.Common.RAG_Constants as constants
-from infrastructure.LLM_Chat_Services.base_llm_service import BaseLLMService
+import infrastructure.common.rag_constants as constants
+from infrastructure.llm_chat_services.base_llm_service import BaseLLMService
 
 class LLMReranker(BaseReranker):
     def __init__(self, llm_client: BaseLLMService, model="gemini-2.0-flash", top_k_for_reranking: int = 5):

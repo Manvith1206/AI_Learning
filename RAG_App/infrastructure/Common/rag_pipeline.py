@@ -2,9 +2,9 @@ import os
 from typing import Dict, List
 import uuid
 
-from infrastructure.Evaluators.simple_evaluator  import SimpleEvaluator
-from infrastructure.Evaluators.ragas_evaluator import RagasEvaluator
-from infrastructure.Evaluators.custom_evaluator import (
+from infrastructure.evaluators.simple_evaluator  import SimpleEvaluator
+from infrastructure.evaluators.ragas_evaluator import RagasEvaluator
+from infrastructure.evaluators.custom_evaluator import (
     CustomEvaluator,
     FaithfulnessMetric,
     ContextPrecisionMetric,
@@ -14,21 +14,21 @@ from infrastructure.Evaluators.custom_evaluator import (
 from config import ConfigManager
 import re
 
-from infrastructure.Common.RAG_Constants import (
+from infrastructure.common.rag_constants import (
     ChunkerType, EmbedderType,
     RetrieverType, RerankerType,
     EvaluatorType, LLMServiceType
 )
-import infrastructure.Common.RAG_Constants as constants
-from infrastructure.LLM_Chat_Services.cohere_service import CohereChat
-from infrastructure.Common.query_classifier_llm import QueryClassifier
+import infrastructure.common.rag_constants as constants
+from infrastructure.llm_chat_services.cohere_service import CohereChat
+from infrastructure.common.query_classifier_llm import QueryClassifier
 
 import traceback
 import json # Added for parsing LLM response for flashcards
-from infrastructure.Evaluators.deep_eval_evaluator import DeepEval
-import Utils.Exceptions as Exceptions
-from infrastructure.PromptProviders.LLM_Chat_Prompt_Provider import LLM_Chat_Prompt_Provider
-from infrastructure.PromptProviders.flashcards_generation_prompt_provider import FlashCardsGeneration_Prompt_Provider
+from infrastructure.evaluators.deep_eval_evaluator import DeepEval
+import Utils.exceptions as Exceptions
+from infrastructure.prompt_providers.llm_chat_prompt_provider import LLM_Chat_Prompt_Provider
+from infrastructure.prompt_providers.flashcards_generation_prompt_provider import FlashCardsGeneration_Prompt_Provider
 
 class RAGPipeline:
     def __init__(self, 
@@ -96,11 +96,11 @@ class RAGPipeline:
     
     # build invidual components
     def _build_chunker(self):
-        from infrastructure.Chunkers.recursive_chunker import RecursiveChunker
-        from infrastructure.Chunkers.sentence_chunker import SentenceChunker
-        from infrastructure.Chunkers.semantic_chunker import SemanticChunker
-        from infrastructure.Chunkers.page_chunker import PageChunker
-        from infrastructure.Chunkers.semantic_chunker_with_langchain import SemanticChunkerWithLangChain
+        from infrastructure.chunkers.recursive_chunker import RecursiveChunker
+        from infrastructure.chunkers.sentence_chunker import SentenceChunker
+        from infrastructure.chunkers.semantic_chunker import SemanticChunker
+        from infrastructure.chunkers.page_chunker import PageChunker
+        from infrastructure.chunkers.semantic_chunker_with_langchain import SemanticChunkerWithLangChain
 
         cfg = self.config_manager.get_config(constants.CONFIG_CHUNKER)
         type = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -119,9 +119,9 @@ class RAGPipeline:
             return RecursiveChunker()
 
     def _build_embedder(self):
-        from infrastructure.Embedders.tfidf_embedder import TFIDFEmbedder
-        from infrastructure.Embedders.gemini_embedder import GeminiEmbedder
-        from infrastructure.Embedders.mistral_embedder import MistralEmbedder
+        from infrastructure.embedders.tfidf_embedder import TFIDFEmbedder
+        from infrastructure.embedders.gemini_embedder import GeminiEmbedder
+        from infrastructure.embedders.mistral_embedder import MistralEmbedder
 
         cfg = self.config_manager.get_config(constants.CONFIG_EMBEDDER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -132,11 +132,11 @@ class RAGPipeline:
         elif t == EmbedderType.GEMINI.value:
             return GeminiEmbedder(api_key=self.geminiApiKey, model_name=model_name)
         elif t == EmbedderType.COHERE.value:
-            from infrastructure.Embedders.cohere_embedder import CohereEmbedder
+            from infrastructure.embedders.cohere_embedder import CohereEmbedder
             return CohereEmbedder(api_key=self.cohereApiKey,
                                   model=model_name)
         elif t == EmbedderType.VOYAGE.value:
-            from infrastructure.Embedders.voyage_embedder import VoyageEmbedder
+            from infrastructure.embedders.voyage_embedder import VoyageEmbedder
             return VoyageEmbedder(api_key=self.voyageApiKey,
                                   model=model_name)
         elif t == EmbedderType.MISTRAL.value:
@@ -147,9 +147,9 @@ class RAGPipeline:
             return TFIDFEmbedder()
 
     def _build_vector_store(self):
-        from infrastructure.Vector_Stores.pinecone_vector_store import PineConeVectorStore
-        from infrastructure.Vector_Stores.FAISS_Vector_Store import FAISS_Vector_Store
-        from infrastructure.Vector_Stores.sklearn_vector_store import SklearnVectorStore
+        from infrastructure.vector_stores.pinecone_vector_store import PineConeVectorStore
+        from infrastructure.vector_stores.FAISS_Vector_Store import FAISS_Vector_Store
+        from infrastructure.vector_stores.sklearn_vector_store import SklearnVectorStore
 
         cfg = self.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
         params = cfg.get(constants.CONFIG_PARAM, {})
@@ -160,7 +160,7 @@ class RAGPipeline:
         elif type == constants.VectorStore.PINE_CONE.value:
             return PineConeVectorStore(api_key=api_key, index_name=constants.PINE_CONE_INDEX_NAME)
         elif type == constants.VectorStore.CHROMA.value:
-            from infrastructure.Vector_Stores.chroma_vector_store import ChromaVectorStore
+            from infrastructure.vector_stores.chroma_vector_store import ChromaVectorStore
             return ChromaVectorStore(**params, collectionName=constants.CHROMA_COLLECTION_NAME)
         elif type == constants.VectorStore.FAISS.value:
             return FAISS_Vector_Store()
@@ -168,9 +168,9 @@ class RAGPipeline:
             return SklearnVectorStore(metric=constants.CONFIG_METRIC_COSINE)
 
     def _build_retriever(self):
-        from infrastructure.Retrieval_Methods.similarity_retriever import SimilarityRetriever
-        from infrastructure.Retrieval_Methods.sentence_window_retreiver import SentenceWindowRetriever
-        from infrastructure.Retrieval_Methods.similarity_retriever import SimilarityRetriever
+        from infrastructure.retrieval_methods.similarity_retriever import SimilarityRetriever
+        from infrastructure.retrieval_methods.sentence_window_retreiver import SentenceWindowRetriever
+        from infrastructure.retrieval_methods.similarity_retriever import SimilarityRetriever
 
         cfg = self.config_manager.get_config(constants.CONFIG_RETRIEVER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -179,7 +179,7 @@ class RAGPipeline:
         if t == RetrieverType.SIMILARITY.value:
             return SimilarityRetriever(**params)
         elif t == RetrieverType.HYBRID.value:
-            from infrastructure.Retrieval_Methods.hybrid_retriever import HybridRetriever
+            from infrastructure.retrieval_methods.hybrid_retriever import HybridRetriever
             return HybridRetriever(**params)
         elif t == RetrieverType.SENTENCE_WINDOW.value:
             return SentenceWindowRetriever(**params)
@@ -188,7 +188,7 @@ class RAGPipeline:
 
     def _build_llm_service(self):
         
-        from infrastructure.LLM_Chat_Services.gemini_service import GeminiService
+        from infrastructure.llm_chat_services.gemini_service import GeminiService
 
         cfg = self.config_manager.get_config(constants.CONFIG_LLM)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
@@ -201,7 +201,7 @@ class RAGPipeline:
         if t == LLMServiceType.GEMINI.value:
             return GeminiService(client, model_name=model_name)
         elif t == LLMServiceType.CLAUDE.value:
-            from infrastructure.LLM_Chat_Services.claude_service import ClaudeService
+            from infrastructure.llm_chat_services.claude_service import ClaudeService
             import anthropic
             client = anthropic.Anthropic(api_key=self.claudeApiKey)
             return ClaudeService(client, model_name=model_name)
@@ -215,28 +215,28 @@ class RAGPipeline:
         model = params.get(constants.CONFIG_MODEL)
         top_k = params.get(constants.CONFIG_TOP_K_FOR_RERANKING_PARAM)
         if t == RerankerType.LLM.value:
-            from infrastructure.Rerankers.llm_reranker import LLMReranker
+            from infrastructure.rerankers.llm_reranker import LLMReranker
 
             return LLMReranker(self.llm_service,**params)
         elif t == RerankerType.COHERE.value:
-            from infrastructure.Rerankers.cohere_re_ranker import CohereReranker
+            from infrastructure.rerankers.cohere_re_ranker import CohereReranker
 
             return CohereReranker(self.cohereApiKey, **params)
         elif t == RerankerType.JINA.value:
-            from infrastructure.Rerankers.jina_reranker import JinaReranker
+            from infrastructure.rerankers.jina_reranker import JinaReranker
 
             return JinaReranker(**params, api_key=self.jinaApiKey)
         elif t == RerankerType.COSINE.value:
-            from infrastructure.Rerankers.cosine_reranker import CosineReranker
+            from infrastructure.rerankers.cosine_reranker import CosineReranker
 
             return CosineReranker(self.embedder, top_k)
         else:
-            from infrastructure.Rerankers.cosine_reranker import CosineReranker
+            from infrastructure.rerankers.cosine_reranker import CosineReranker
 
             return CosineReranker(self.embedder, top_k_for_reranking=top_k)
 
     def _build_evaluator(self):
-        from infrastructure.Evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
+        from infrastructure.evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
         cfg = self.config_manager.get_config(constants.CONFIG_EVALUATOR)
         evaluator_type = cfg.get(constants.CONFIG_TYPE_PARAM)
 

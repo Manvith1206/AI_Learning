@@ -5,12 +5,12 @@ from ragas import evaluate
 from datasets import Dataset
 import os
 import openai
-import infrastructure.Common.RAG_Constants as constants
+import infrastructure.common.rag_constants as constants
 from ragas.dataset_schema import MultiTurnSample
 from ragas.llms import LangchainLLMWrapper
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from UI.UI_Components import UIComponents
+from UI.ui_components import UIComponents
 
 from ragas.llms import LangchainLLMWrapper
 

@@ -1,6 +1,6 @@
 from mistralai import Mistral
 from .base_embedder import BaseEmbedder
-import infrastructure.Common.RAG_Constants as constants
+import infrastructure.common.rag_constants as constants
 import tiktoken
 import random, time, logging
 
