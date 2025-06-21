@@ -53,6 +53,7 @@ class Flashcard:
 
         if st.session_state.show_answer:
             st.markdown(f"**A:** {self.card['answer']}")
+            
 if __name__ == "__main__":
     flashcard = Flashcard(flashcards)
     flashcard.initialze_session_state()

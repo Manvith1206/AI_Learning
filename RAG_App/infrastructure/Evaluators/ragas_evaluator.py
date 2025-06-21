@@ -10,7 +10,6 @@ from ragas.dataset_schema import MultiTurnSample
 from ragas.llms import LangchainLLMWrapper
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from UI.ui_components import UIComponents
 
 from ragas.llms import LangchainLLMWrapper
 
@@ -60,13 +59,12 @@ class RagasEvaluator(BaseEvaluator):
             temperature=0.0,
         )
         
-        with UIComponents.display_spinner("Running RAG evaluation..."):
-            result = evaluate(
-                data,
-                metrics=self.metrics,
-                raise_exceptions=True,
-                llm = chatLLM
-            )
+        result = evaluate(
+            data,
+            metrics=self.metrics,
+            raise_exceptions=True,
+            llm = chatLLM
+        )
 
         metrics_dict = {}
         metrics_dict[constants.FAITHFULNESS] = round((result[constants.FAITHFULNESS][0]), 2)
@@ -76,6 +74,7 @@ class RagasEvaluator(BaseEvaluator):
         end_time = time.time()
         self.time_taken = end_time - start_time
         return metrics_dict
+    
     def get_cost_and_time_taken(self):
         """
         Get the cost and time taken for the evaluation

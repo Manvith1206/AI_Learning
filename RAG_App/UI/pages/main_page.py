@@ -108,9 +108,6 @@ class MainPage:
         # Render page title
         UIComponents.create_title("RAG Modular Application")
         
-        # Render sidebar
-        # self.sidebar.render_sidebar()
-        
         # Create main tabs
         tabs = UIComponents.create_tabs(["Chat", "Evaluation", "FlashCards", "Debug", "Upload File"])
         
@@ -158,6 +155,7 @@ class MainPage:
         # Debug tab
         with tabs[3]:
             self.render_debug_tab()
+        # Upload File Section
         with tabs[4]:
             self.render_upload_file_section()
     
@@ -176,7 +174,8 @@ class MainPage:
         if UIComponents.create_button("Test All Configurations", key="TEST_ALL_CONFIGS"):
             test_rag_combinations()
 
-    def load_pre_processed_docs_or_process_the_doc(self, uploaded_file):
+    from streamlit.runtime.uploaded_file_manager import UploadedFile
+    def load_pre_processed_docs_or_process_the_doc(self, uploaded_file: UploadedFile):
         """
         Process the uploaded document by retrieving a pre-processed version from cache if available,
         or by extracting text and processing the document to generate a new vector store if not.
@@ -213,9 +212,9 @@ class MainPage:
             vector_store_config = pipeline.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
             
             processing_params = {
-                "chunker": chunker_config,
-                "embedder": embedder_config,
-                "vector_store": vector_store_config
+                constants.CONFIG_CHUNKER: chunker_config,
+                constants.CONFIG_EMBEDDER: embedder_config,
+                constants.CONFIG_VECTOR_STORE: vector_store_config
             }
 
             file_bytes = uploaded_file.getvalue()
@@ -240,7 +239,6 @@ class MainPage:
                     try:
                         texts = pipeline.extractText(uploaded_file)
                         if texts:
-                            
 
                             # This returns the vector_store, but the embedder is now fitted inside the pipeline instance
                             processed_vector_store = pipeline.process_document(uploaded_file, texts)

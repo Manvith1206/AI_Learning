@@ -27,8 +27,6 @@ class ClaudeService(BaseLLMService):
         self.cost = self.get_cost_based_on_model(total_tokens)
         end_time = time.time()
         self.time_taken = end_time - start_time
-
-        
         
     def get_cost_and_time_taken(self):
         """

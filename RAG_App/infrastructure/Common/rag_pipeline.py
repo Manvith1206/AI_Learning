@@ -4,23 +4,10 @@ import uuid
 
 from infrastructure.evaluators.simple_evaluator  import SimpleEvaluator
 from infrastructure.evaluators.ragas_evaluator import RagasEvaluator
-from infrastructure.evaluators.custom_evaluator import (
-    CustomEvaluator,
-    FaithfulnessMetric,
-    ContextPrecisionMetric,
-    ContextRecallMetric,
-    AnswerRelevancyMetric
-)
-from config import ConfigManager
-import re
 
-from infrastructure.common.rag_constants import (
-    ChunkerType, EmbedderType,
-    RetrieverType, RerankerType,
-    EvaluatorType, LLMServiceType
-)
+from config import ConfigManager
+
 import infrastructure.common.rag_constants as constants
-from infrastructure.llm_chat_services.cohere_service import CohereChat
 from infrastructure.common.query_classifier_llm import QueryClassifier
 
 import traceback
@@ -62,236 +49,10 @@ class RAGPipeline:
         
         self.query_classifier = None
         self.flashcard_prompt_provider = FlashCardsGeneration_Prompt_Provider()
-        self.setup_components()
 
-    # setup components
-    def setup_components(self):
-        # Build all core components via factory methods
-        self.embedder = self._build_embedder()
-        self.chunker = self._build_chunker()
-        if self.vector_store is None:
-            self.vector_store = self._build_vector_store()
-        self.retriever = self._build_retriever()
-        self.llm_service = self._build_llm_service()
-        self.reranker = self._build_reranker()
-        self.evaluator = self._build_evaluator()
-        self.query_classifier = QueryClassifier(self.llm_service)
-        
-        print("Setup Components")
-
-    def get_chunker_cost_and_time(self):
-        return self.chunker.get_cost_and_time_taken()
-    def get_embedder_cost_and_time(self):
-        return self.embedder.get_cost_and_time_taken()
-    def get_vector_store_cost_and_time(self):
-        return self.vector_store.get_cost_and_time_taken()
-    def get_retriever_cost_and_time(self):
-        return self.retriever.get_cost_and_time_taken()
-    def get_llm_service_cost_and_time(self):
-        return self.llm_service.get_cost_and_time_taken()
-    def get_reranker_cost_and_time(self):
-        return self.reranker.get_cost_and_time_taken()
-    def get_evaluator_cost_and_time(self):
-        return self.evaluator.get_cost_and_time_taken()
-    
-    # build invidual components
-    def _build_chunker(self):
-        from infrastructure.chunkers.recursive_chunker import RecursiveChunker
-        from infrastructure.chunkers.sentence_chunker import SentenceChunker
-        from infrastructure.chunkers.semantic_chunker import SemanticChunker
-        from infrastructure.chunkers.page_chunker import PageChunker
-        from infrastructure.chunkers.semantic_chunker_with_langchain import SemanticChunkerWithLangChain
-
-        cfg = self.config_manager.get_config(constants.CONFIG_CHUNKER)
-        type = cfg.get(constants.CONFIG_TYPE_PARAM)
-        params = cfg.get(constants.CONFIG_PARAM, {})
-        if type == ChunkerType.RECURSIVE.value:
-            return RecursiveChunker(**params)
-        elif type == ChunkerType.SENTENCE.value:
-            return SentenceChunker(**params)
-        elif type == ChunkerType.SEMANTIC.value:
-            return SemanticChunker(**params)
-        elif type == ChunkerType.PAGE.value:
-            return PageChunker()
-        elif type == ChunkerType.SEMANTIC_WITH_LANGCHAIN.value:
-            return SemanticChunkerWithLangChain(self.embedder)
-        else:
-            return RecursiveChunker()
-
-    def _build_embedder(self):
-        from infrastructure.embedders.tfidf_embedder import TFIDFEmbedder
-        from infrastructure.embedders.gemini_embedder import GeminiEmbedder
-        from infrastructure.embedders.mistral_embedder import MistralEmbedder
-
-        cfg = self.config_manager.get_config(constants.CONFIG_EMBEDDER)
-        t = cfg.get(constants.CONFIG_TYPE_PARAM)
-        params = cfg.get(constants.CONFIG_PARAM, {})
-        model_name = params.get(constants.CONFIG_MODEL)
-        if t == EmbedderType.TFIDF.value:
-            return TFIDFEmbedder()
-        elif t == EmbedderType.GEMINI.value:
-            return GeminiEmbedder(api_key=self.geminiApiKey, model_name=model_name)
-        elif t == EmbedderType.COHERE.value:
-            from infrastructure.embedders.cohere_embedder import CohereEmbedder
-            return CohereEmbedder(api_key=self.cohereApiKey,
-                                  model=model_name)
-        elif t == EmbedderType.VOYAGE.value:
-            from infrastructure.embedders.voyage_embedder import VoyageEmbedder
-            return VoyageEmbedder(api_key=self.voyageApiKey,
-                                  model=model_name)
-        elif t == EmbedderType.MISTRAL.value:
-            return MistralEmbedder(api_key=self.mistralApiKey,
-                                  model=model_name,
-                                  )
-        else:
-            return TFIDFEmbedder()
-
-    def _build_vector_store(self):
-        from infrastructure.vector_stores.pinecone_vector_store import PineConeVectorStore
-        from infrastructure.vector_stores.FAISS_Vector_Store import FAISS_Vector_Store
-        from infrastructure.vector_stores.sklearn_vector_store import SklearnVectorStore
-
-        cfg = self.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
-        params = cfg.get(constants.CONFIG_PARAM, {})
-        type = cfg.get(constants.CONFIG_TYPE_PARAM)
-        api_key = self.pineconeApiKey
-        if type == constants.VectorStore.SCIKIT_LEARN.value:
-            return SklearnVectorStore(**params)
-        elif type == constants.VectorStore.PINE_CONE.value:
-            return PineConeVectorStore(api_key=api_key, index_name=constants.PINE_CONE_INDEX_NAME)
-        elif type == constants.VectorStore.CHROMA.value:
-            from infrastructure.vector_stores.chroma_vector_store import ChromaVectorStore
-            return ChromaVectorStore(**params, collectionName=constants.CHROMA_COLLECTION_NAME)
-        elif type == constants.VectorStore.FAISS.value:
-            return FAISS_Vector_Store()
-        else:
-            return SklearnVectorStore(metric=constants.CONFIG_METRIC_COSINE)
-
-    def _build_retriever(self):
-        from infrastructure.retrieval_methods.similarity_retriever import SimilarityRetriever
-        from infrastructure.retrieval_methods.sentence_window_retreiver import SentenceWindowRetriever
-        from infrastructure.retrieval_methods.similarity_retriever import SimilarityRetriever
-
-        cfg = self.config_manager.get_config(constants.CONFIG_RETRIEVER)
-        t = cfg.get(constants.CONFIG_TYPE_PARAM)
-        params = cfg.get(constants.CONFIG_PARAM, {})
-        self.top_k = params.get(constants.CONFIG_TOP_K_PARAM, getattr(self, 'top_k', 5))
-        if t == RetrieverType.SIMILARITY.value:
-            return SimilarityRetriever(**params)
-        elif t == RetrieverType.HYBRID.value:
-            from infrastructure.retrieval_methods.hybrid_retriever import HybridRetriever
-            return HybridRetriever(**params)
-        elif t == RetrieverType.SENTENCE_WINDOW.value:
-            return SentenceWindowRetriever(**params)
-        else:
-            return SimilarityRetriever()
-
-    def _build_llm_service(self):
-        
-        from infrastructure.llm_chat_services.gemini_service import GeminiService
-
-        cfg = self.config_manager.get_config(constants.CONFIG_LLM)
-        t = cfg.get(constants.CONFIG_TYPE_PARAM)
-        from google import genai
-        print("GeminiAPIkey", self.geminiApiKey)
-        client = genai.Client(api_key=self.geminiApiKey)
-        params = cfg.get(constants.CONFIG_PARAM)
-        model_name = params.get(constants.CONFIG_MODEL)
-
-        if t == LLMServiceType.GEMINI.value:
-            return GeminiService(client, model_name=model_name)
-        elif t == LLMServiceType.CLAUDE.value:
-            from infrastructure.llm_chat_services.claude_service import ClaudeService
-            import anthropic
-            client = anthropic.Anthropic(api_key=self.claudeApiKey)
-            return ClaudeService(client, model_name=model_name)
-        else:
-            return GeminiService(client, model_name=model_name)
-
-    def _build_reranker(self):
-        cfg = self.config_manager.get_config(constants.CONFIG_RERANKER)
-        t = cfg.get(constants.CONFIG_TYPE_PARAM)
-        params = cfg.get(constants.CONFIG_PARAM)
-        model = params.get(constants.CONFIG_MODEL)
-        top_k = params.get(constants.CONFIG_TOP_K_FOR_RERANKING_PARAM)
-        if t == RerankerType.LLM.value:
-            from infrastructure.rerankers.llm_reranker import LLMReranker
-
-            return LLMReranker(self.llm_service,**params)
-        elif t == RerankerType.COHERE.value:
-            from infrastructure.rerankers.cohere_re_ranker import CohereReranker
-
-            return CohereReranker(self.cohereApiKey, **params)
-        elif t == RerankerType.JINA.value:
-            from infrastructure.rerankers.jina_reranker import JinaReranker
-
-            return JinaReranker(**params, api_key=self.jinaApiKey)
-        elif t == RerankerType.COSINE.value:
-            from infrastructure.rerankers.cosine_reranker import CosineReranker
-
-            return CosineReranker(self.embedder, top_k)
-        else:
-            from infrastructure.rerankers.cosine_reranker import CosineReranker
-
-            return CosineReranker(self.embedder, top_k_for_reranking=top_k)
-
-    def _build_evaluator(self):
-        from infrastructure.evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
-        cfg = self.config_manager.get_config(constants.CONFIG_EVALUATOR)
-        evaluator_type = cfg.get(constants.CONFIG_TYPE_PARAM)
-
-        if evaluator_type == EvaluatorType.RAGAS.value:
-            return RagasEvaluator(**cfg.get(constants.CONFIG_PARAM, {}))
-        elif evaluator_type == EvaluatorType.CUSTOM.value:
-            try:
-                gemini_api_key = self.geminiApiKey
-                if not gemini_api_key:
-                    self.error_callback(f"Gemini API key ({constants.GEMINI_API_KEY}) not found in st.secrets for Custom Evaluator.")
-                    self.warning_callback("Falling back to SimpleEvaluator.")
-                    return SimpleEvaluator()
-                
-                llm_service_for_custom_eval = LLM_Evaluation_Service(client=self.llm_service, 
-                                                                     model_name=self.llm_service.model_name,
-                                                                     embedder=self.embedder)
-                
-                metrics_for_custom_eval = [
-                    FaithfulnessMetric(llm_service=llm_service_for_custom_eval),
-                    ContextPrecisionMetric(llm_service=llm_service_for_custom_eval),
-                    ContextRecallMetric(llm_service=llm_service_for_custom_eval),
-                    AnswerRelevancyMetric(llm_service=llm_service_for_custom_eval)
-                ]
-                return CustomEvaluator(metrics=metrics_for_custom_eval)
-            except Exception as e:
-                self.error_callback(f"Failed to initialize Custom Evaluator: {e}")
-                self.error_callback("Falling back to SimpleEvaluator due to an error in Custom Evaluator setup.")
-                return SimpleEvaluator()
-        elif evaluator_type == EvaluatorType.SIMPLE.value:
-            return SimpleEvaluator()
-        elif evaluator_type == EvaluatorType.DEEP_EVAL.value:
-            return DeepEval(**cfg.get(constants.CONFIG_PARAM, {}), api_key=self.geminiApiKey)
-        else:
-            return SimpleEvaluator()
-
-    # update components
-    def update_component(self, component_name, config):
-        self.config_manager.update_config(component_name, config)
-        if component_name in [
-            constants.CONFIG_CHUNKER,
-            constants.CONFIG_EMBEDDER,
-            constants.CONFIG_VECTOR_STORE,
-            constants.CONFIG_LLM,
-            constants.CONFIG_RERANKER
-        ]:
-            # heavy components: rebuild whole pipeline
-            self.setup_components()
-        elif component_name == constants.CONFIG_RETRIEVER:
-            # hot-swap retriever only
-            self.retriever = self._build_retriever()
-        elif component_name == constants.CONFIG_EVALUATOR:
-            # hot-swap evaluator only
-            self.evaluator = self._build_evaluator()
-        # else: unknown component, ignore
-
+class DocumentProcessing:
+    def __init__(self, error_callback):
+        self.error_callback = error_callback
     def extractText(self, file, temp_dir=constants.TEMP_DOCS_DIR):
         try:
             from infrastructure.document_loaders.pdf_loader import PDFLoader
@@ -364,7 +125,8 @@ class RAGPipeline:
             full_traceback = ''.join(traceback.format_exception(type(e), e, e.__traceback__))
             self.error_callback(f"Error processing document: {e}, Traceback: {full_traceback}")
             return None
-    
+        
+class QueryProcessing:
     def greetUser(self, query_text):
         if self.query_classifier.is_greeting(query_text):
             return {
@@ -479,6 +241,7 @@ class RAGPipeline:
             self.error_callback(f"Error during query: {e}, Traceback: {traceback.print_exc()}")
             return None
         
+class QueryEvaluation:
     def evaluate(self, question=None, answer=None, contexts=None, ground_truths=None):
         """Evaluate the RAG system using the configured evaluator
         
@@ -508,6 +271,7 @@ class RAGPipeline:
         except Exception as e:
             raise Exceptions.EvaluationError("Error During Evaluation")
 
+class FlashCardGeneration:
     def generate_flashcards_from_text(self, text_content: str, num_flashcards: int = 5) -> List[Dict[str, str]]:
         """Generates flashcards from the given text content using the LLM service."""
         if not text_content.strip():

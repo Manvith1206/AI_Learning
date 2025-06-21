@@ -191,34 +191,35 @@ class Sidebar:
         ground_truth = UIComponents.create_text_area(constants.GROUND_TRUTH_DISPLAY_NAME, value=constants.GROUND_TRUTH_DEFAULT_VALUE, key="ground_truth_input")
         if UIComponents.create_button("Evaluate Last Query", key="evaluate_last_query"):
             # Initialize pipeline when needed
-            pipeline = Utils.utils.get_pipeline()
-            if hasattr(pipeline, constants.LAST_QUERY):
-                try:
-                    metrics = pipeline.evaluate(ground_truths=ground_truth)
-                    
-                    # Display metrics in a nice format
-                    UIComponents.write("**Evaluation Metrics:**")
-                    
-                    metrics_df = pd.DataFrame({
-                        "Metric": list(metrics.keys()),
-                        "Score": list(metrics.values())
-                    })
-                    UIComponents.display_dataframe(metrics_df)
-                    overallScore = 0
-                    for score in list(metrics.values()):
-                        overallScore += score
-                    
-                    overallScore = overallScore / metrics_df.count()
-                    UIComponents.write("Overall Score: " + str(overallScore))
-                    # Show a bar chart of metrics
-                    UIComponents.display_bar_chart(metrics_df.set_index("Metric"))
+            with UIComponents.display_spinner(constants.LOADING_DISPLAY_MESSAGE_FOR_RUNNING_EVALUATION):
+                pipeline = Utils.utils.get_pipeline()
+                if hasattr(pipeline, constants.LAST_QUERY):
+                    try:
+                        metrics = pipeline.evaluate(ground_truths=ground_truth)
+                        
+                        # Display metrics in a nice format
+                        UIComponents.write("**Evaluation Metrics:**")
+                        
+                        metrics_df = pd.DataFrame({
+                            "Metric": list(metrics.keys()),
+                            "Score": list(metrics.values())
+                        })
+                        UIComponents.display_dataframe(metrics_df)
+                        overallScore = 0
+                        for score in list(metrics.values()):
+                            overallScore += score
+                        
+                        overallScore = overallScore / metrics_df.count()
+                        UIComponents.write("Overall Score: " + str(overallScore))
+                        # Show a bar chart of metrics
+                        UIComponents.display_bar_chart(metrics_df.set_index("Metric"))
 
-                    # Store metrics in session state
-                    UIComponents.set_session_state_variable("last_evaluation", metrics)
-                except Exception as e:
-                    UIComponents.display_error(f"Error during evaluation: {str(e)}")
-            else:
-                UIComponents.display_warning("No query to evaluate. Ask a question first.")
+                        # Store metrics in session state
+                        UIComponents.set_session_state_variable("last_evaluation", metrics)
+                    except Exception as e:
+                        UIComponents.display_error(f"Error during evaluation: {str(e)}")
+                else:
+                    UIComponents.display_warning("No query to evaluate. Ask a question first.")
 
     def render_upload_file_section(self):
         """Render file upload section in sidebar with caching."""

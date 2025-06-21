@@ -51,6 +51,7 @@ CONFIG_CHAT_RESPONSE = "chat_response"
 # constants
 LOADING_DISPLAY_MESSAGE_FOR_INITIALZING_PAGE = "Initializing Page"
 LOADING_DISPLAY_MESSAGE_FOR_MAIN_PAGE = "Initialing Main Page"
+LOADING_DISPLAY_MESSAGE_FOR_RUNNING_EVALUATION = "Running RAG Evaluation"
 
 COSINE_SIMILARITY_RERANK_EXPLAINATION = "Chunks sorted by cosine similarity scores (highest to lowest)."
 NO_EXPLAINATION_NEEDED_MESSAGE = "No explanation needed."

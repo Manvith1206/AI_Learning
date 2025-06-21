@@ -17,12 +17,10 @@ from infrastructure.common.rag_constants import (
     CohereRerankingModels, JINA_RERANKER_MODELS
 )
 from infrastructure.evaluators.ragas_evaluator import RagasEvaluator
-from UI.ui_components import UIComponents
 # Path to the test document and output file
 TEST_FILE_PATH = "E:/Manvith/Coding/AI/RAG/infrastructure/Testing/TestFile/DCA2104 Unit-08_V1.1.pdf"
 RESULTS_CSV_PATH = os.path.join(ROOT, "rag_evaluation_results_iterative.csv") # Changed output file name
 
-UIComponents.get_session_state_variable("Extractedtexts", None)
 # if "Extractedtexts" not in st.session_state:
 #     st.session_state.Extractedtexts = None
 

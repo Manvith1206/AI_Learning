@@ -2,6 +2,7 @@ import streamlit as st
 from typing import List, Tuple, Dict, Any, Callable
 import pandas as pd
 import infrastructure.common.rag_constants as constants
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 class UIComponents:
     """Base UI components for the RAG application"""
@@ -161,7 +162,7 @@ class UIComponents:
         return st.button(label, key=key)
     
     @staticmethod
-    def create_file_uploader(label: str, file_types: List[str], accept_multiple_files: bool = False):
+    def create_file_uploader(label: str, file_types: List[str], accept_multiple_files: bool = False) -> UploadedFile:
         """Create a file uploader with specified file types"""
         return st.file_uploader(label, type=file_types, accept_multiple_files=accept_multiple_files)
     
@@ -236,11 +237,6 @@ class UIComponents:
     def create_number_input(label: str, min_value: int, max_value: int, value: int = None):
         """Create a number input field"""
         return st.number_input(label, min_value=min_value, max_value=max_value, value=value)
-    
-    @staticmethod
-    def get_secrets(value: str):
-        """Create a secrets input field"""
-        return st.secrets[value]
 
     @staticmethod
     def rerun():

@@ -5,7 +5,7 @@ from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 import infrastructure.common.rag_constants as constants
 from deepeval.models.llms import gemini_model
-from UI.ui_components import UIComponents
+
 class DeepEval(BaseEvaluator):
     def __init__(self, api_key, metrics=None):
         model = gemini_model.GeminiModel(model_name=constants.GeminiLLMModel.GEMINI_FLASH.value, api_key=api_key)

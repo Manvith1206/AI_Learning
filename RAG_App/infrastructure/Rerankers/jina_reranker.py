@@ -5,7 +5,6 @@ from .base_reranker import BaseReranker
 import requests
 import time
 import infrastructure.common.rag_constants as constants
-from UI.ui_components import UIComponents
 class JinaReranker(BaseReranker):
     """
     A reranker using JINA AI's reranker models from Hugging Face.
