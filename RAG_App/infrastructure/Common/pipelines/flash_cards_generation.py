@@ -1,10 +1,16 @@
 import json
 from typing import List, Dict
 import traceback
+from infrastructure.llm_chat_services.base_llm_service import BaseLLMService
+from infrastructure.prompt_providers.flashcards_generation_prompt_provider import FlashCardsGeneration_Prompt_Provider
 
 class FlashCardGeneration:
-    def __init__(self):
-        pass
+    def __init__(self, warning_callback, error_callback, llm_service: BaseLLMService):
+        self.flashcard_prompt_provider = FlashCardsGeneration_Prompt_Provider()
+        self.warning_callback = warning_callback
+        self.error_callback = error_callback
+        self.llm_service = llm_service
+
     def generate_flashcards_from_text(self, text_content: str, num_flashcards: int = 5) -> List[Dict[str, str]]:
         """Generates flashcards from the given text content using the LLM service."""
         if not text_content.strip():

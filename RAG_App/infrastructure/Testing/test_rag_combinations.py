@@ -272,15 +272,15 @@ def run_tests():
     texts = pipeline.extractText(DummyFile(TEST_FILE_PATH))
     # Test each combination
     for chunker_name, chunker_config in chunker_configs:
-        pipeline.update_component(constants.CONFIG_CHUNKER, chunker_config)
+        pipeline.component_manager.update_component(constants.CONFIG_CHUNKER, chunker_config)
         for embedder_name, embedder_config in embedder_configs:
-            pipeline.update_component(constants.CONFIG_EMBEDDER, embedder_config)
+            pipeline.component_manager.update_component(constants.CONFIG_EMBEDDER, embedder_config)
             for vs_name, vs_config in vector_store_configs:
-                pipeline.update_component(constants.CONFIG_VECTOR_STORE, vs_config)
+                pipeline.component_manager.update_component(constants.CONFIG_VECTOR_STORE, vs_config)
                 for retriever_name, retriever_config in retriever_configs:
-                    pipeline.update_component(constants.CONFIG_RETRIEVER, retriever_config)
+                    pipeline.component_manager.update_component(constants.CONFIG_RETRIEVER, retriever_config)
                     for reranker_name, reranker_config in reranker_configs:
-                        pipeline.update_component(constants.CONFIG_RERANKER, reranker_config)
+                        pipeline.component_manager.update_component(constants.CONFIG_RERANKER, reranker_config)
                         for llm_service_name, llm_service_config in llm_service_configs:
                             counter += 1
                             print(f"/nTesting combination {counter}/{total_combinations}:")
@@ -291,7 +291,7 @@ def run_tests():
                             print(f"Reranker: {reranker_name}")
                             
                             # Update components with the specific configurations
-                            pipeline.update_component(constants.CONFIG_LLM, llm_service_config)
+                            pipeline.component_manager.update_component(constants.CONFIG_LLM, llm_service_config)
                             # Test the combination
                             result = test_rag_combination(
                                 config_manager,

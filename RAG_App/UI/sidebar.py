@@ -72,13 +72,13 @@ class Sidebar:
         """Get metrics for all pipeline steps"""
         pipeline = Utils.utils.get_pipeline()
         return {
-            constants.CONFIG_CHUNKER: pipeline.get_chunker_cost_and_time(),
-            constants.CONFIG_EMBEDDER: pipeline.get_embedder_cost_and_time(),
-            constants.CONFIG_RETRIEVER: pipeline.get_retriever_cost_and_time(),
-            constants.CONFIG_RERANKER: pipeline.get_reranker_cost_and_time(),
-            constants.CONFIG_EVALUATOR: pipeline.get_evaluator_cost_and_time(),
-            constants.CONFIG_VECTOR_STORE: pipeline.get_vector_store_cost_and_time(),
-            constants.CONFIG_LLM: pipeline.get_llm_service_cost_and_time()
+            constants.CONFIG_CHUNKER: pipeline.component_manager.get_chunker_cost_and_time(),
+            constants.CONFIG_EMBEDDER: pipeline.component_manager.get_embedder_cost_and_time(),
+            constants.CONFIG_RETRIEVER: pipeline.component_manager.get_retriever_cost_and_time(),
+            constants.CONFIG_RERANKER: pipeline.component_manager.get_reranker_cost_and_time(),
+            constants.CONFIG_EVALUATOR: pipeline.component_manager.get_evaluator_cost_and_time(),
+            constants.CONFIG_VECTOR_STORE: pipeline.component_manager.get_vector_store_cost_and_time(),
+            constants.CONFIG_LLM: pipeline.component_manager.get_llm_service_cost_and_time()
         }
     
     def display_pipeline_step_metrics(self, key: str, metrics: tuple):
@@ -175,7 +175,7 @@ class Sidebar:
         
         with UIComponents.display_spinner("Applying Evaluation Params"):
             if UIComponents.create_button("Apply Evaluation Params", key="apply_evaluation"):
-                Utils.utils.get_pipeline().update_component(constants.CONFIG_EVALUATOR, evaluator_config)
+                Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_EVALUATOR, evaluator_config)
                 UIComponents.display_success("Evaluation configuration updated.")
 
     def get_ui_options(self, option_type, config_name: str):
@@ -195,7 +195,7 @@ class Sidebar:
                 pipeline = Utils.utils.get_pipeline()
                 if hasattr(pipeline, constants.LAST_QUERY):
                     try:
-                        metrics = pipeline.evaluate(ground_truths=ground_truth)
+                        metrics = pipeline.query_evaluation.evaluate(ground_truths=ground_truth)
                         
                         # Display metrics in a nice format
                         UIComponents.write("**Evaluation Metrics:**")
@@ -386,7 +386,7 @@ class Sidebar:
         }
         
         if UIComponents.create_button("Apply Chat Response Config", key="apply_chat_response"):
-            Utils.utils.get_pipeline().update_component(constants.CONFIG_LLM, chat_response_config)
+            Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_LLM, chat_response_config)
             UIComponents.display_success("Chat response configuration updated.")
 
     def render_test_all_configs_section(self):
@@ -535,15 +535,15 @@ class Sidebar:
     
     def apply_text_processing_config(self, chunker_params, vector_store, embedder_params):
         """Apply text processing configuration to the pipeline"""
-        Utils.utils.get_pipeline().update_component(constants.CONFIG_CHUNKER, chunker_params)
-        Utils.utils.get_pipeline().update_component(constants.CONFIG_EMBEDDER, embedder_params)
-        Utils.utils.get_pipeline().update_component(constants.CONFIG_VECTOR_STORE, vector_store)
+        Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_CHUNKER, chunker_params)
+        Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_EMBEDDER, embedder_params)
+        Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_VECTOR_STORE, vector_store)
         
         UIComponents.display_success("Text processing configuration updated.")
     
     def apply_Retrieval_and_Reranker_config(self, retriever_config, re_ranker_config):
         """Apply text processing configuration to the pipeline"""
-        Utils.utils.get_pipeline().update_component(constants.CONFIG_RETRIEVER, retriever_config)
-        Utils.utils.get_pipeline().update_component(constants.CONFIG_RERANKER, re_ranker_config)
+        Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_RETRIEVER, retriever_config)
+        Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_RERANKER, re_ranker_config)
         
         UIComponents.display_success("Retrieval and Reranking configuration updated.")

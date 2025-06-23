@@ -9,15 +9,16 @@ from infrastructure.retrieval_methods.base_retriever import BaseRetriever
 from infrastructure.rerankers.base_reranker import BaseReranker
 
 class QueryProcessing:
-    def __init__(self, query_classifier: QueryClassifier, llm_service: BaseLLMService, vector_store: BaseVectorStore, embedder: BaseEmbedder,
-                 retriever: BaseRetriever, reranker: BaseReranker):
-        self.query_classifier = query_classifier
+    def __init__(self, llm_service: BaseLLMService, vector_store: BaseVectorStore, embedder: BaseEmbedder,
+                 retriever: BaseRetriever, reranker: BaseReranker, error_callback):
+        self.query_classifier = QueryClassifier()
         self.llm_service = llm_service
         self.vector_store = vector_store
         self.embedder = embedder
         self.retriever = retriever
         self.reranker = reranker
-
+        self.error_callback = error_callback
+        
     def greetUser(self, query_text):
         if self.query_classifier.is_greeting(query_text):
             return {
@@ -35,13 +36,10 @@ class QueryProcessing:
                 constants.RERANK_EXPLANATION: ""
             }
         
-    def get_context_docs(self, query_text, top_k=None):
+    def get_context_docs(self, query_text):
         
         if not hasattr(self.vector_store, 'documents') or not self.vector_store.documents:
                 raise ValueError("No documents processed. Please upload and process a document before querying.")
-        # Use configured top_k if not specified
-        if top_k is None:
-            top_k = self.top_k
         
         # Generate query embedding
         query_embedding = self.embedder.transform([query_text])
@@ -65,8 +63,7 @@ class QueryProcessing:
             raise ValueError(constants.UNABLE_TO_RETRIEVE_MESSAGE)
         
         # Rerank documents
-        reranked_docs, explanation = self.reranker.rerank(query_text, retrieved_docs, top_k=top_k)
-        
+        reranked_docs, explanation = self.reranker.rerank(query_text, retrieved_docs)
         
         context_docs = None
         if reranked_docs:

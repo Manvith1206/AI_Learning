@@ -77,7 +77,7 @@ class MainPage:
         try:
             with UIComponents.display_spinner("Generating flashcards..."):
                 UIComponents.display_info("Generating flashcards... This may take a moment.")
-                generated_flashcards = self.pipeline.generate_flashcards_from_text(
+                generated_flashcards = self.pipeline.flashcards_generation.generate_flashcards_from_text(
                     full_text_content, 
                     num_flashcards=constants.NUM_OF_FLASHCARDS
                 )
@@ -237,11 +237,11 @@ class MainPage:
             else:
                 with UIComponents.display_spinner(f"Processing document '{uploaded_file.name}'... This may take a moment."):
                     try:
-                        texts = pipeline.extractText(uploaded_file)
+                        texts = pipeline.document_processing.extractText(uploaded_file)
                         if texts:
 
                             # This returns the vector_store, but the embedder is now fitted inside the pipeline instance
-                            processed_vector_store = pipeline.process_document(uploaded_file, texts)
+                            processed_vector_store = pipeline.document_processing.process_document(uploaded_file, texts)
                             
                             if processed_vector_store:
                                 # Cache both the vector_store and the fitted embedder
@@ -293,11 +293,11 @@ class MainPage:
             UIComponents.display_error("RAG Pipeline not available for metrics.")
             return {}
         return {
-            constants.CONFIG_CHUNKER: self.pipeline.get_chunker_cost_and_time(),
-            constants.CONFIG_EMBEDDER: self.pipeline.get_embedder_cost_and_time(),
-            constants.CONFIG_RETRIEVER: self.pipeline.get_retriever_cost_and_time(),
-            constants.CONFIG_RERANKER: self.pipeline.get_reranker_cost_and_time(),
-            constants.CONFIG_EVALUATOR: self.pipeline.get_evaluator_cost_and_time(),
-            constants.CONFIG_VECTOR_STORE: self.pipeline.get_vector_store_cost_and_time(),
-            constants.CONFIG_LLM: self.pipeline.get_llm_service_cost_and_time()
+            constants.CONFIG_CHUNKER: self.pipeline.component_manager.get_chunker_cost_and_time(),
+            constants.CONFIG_EMBEDDER: self.pipeline.component_manager.get_embedder_cost_and_time(),
+            constants.CONFIG_RETRIEVER: self.pipeline.component_manager.get_retriever_cost_and_time(),
+            constants.CONFIG_RERANKER: self.pipeline.component_manager.get_reranker_cost_and_time(),
+            constants.CONFIG_EVALUATOR: self.pipeline.component_manager.get_evaluator_cost_and_time(),
+            constants.CONFIG_VECTOR_STORE: self.pipeline.component_manager.get_vector_store_cost_and_time(),
+            constants.CONFIG_LLM: self.pipeline.component_manager.get_llm_service_cost_and_time()
         }

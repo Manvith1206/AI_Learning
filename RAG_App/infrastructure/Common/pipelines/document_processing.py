@@ -5,6 +5,7 @@ import os
 from infrastructure.chunkers.base_chunker import BaseChunker
 from infrastructure.embedders.base_embedder import BaseEmbedder
 from infrastructure.vector_stores.base_vector_store import BaseVectorStore
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 class DocumentProcessing:
     def __init__(self, error_callback, process_doc_callback, vector_store: BaseVectorStore, embedder: BaseEmbedder, chunker: BaseChunker):
@@ -14,7 +15,7 @@ class DocumentProcessing:
         self.embedder = embedder
         self.chunker = chunker
 
-    def extractText(self, file, temp_dir=constants.TEMP_DOCS_DIR):
+    def extractText(self, file: UploadedFile, temp_dir=constants.TEMP_DOCS_DIR):
         try:
             from infrastructure.document_loaders.pdf_loader import PDFLoader
             from infrastructure.document_loaders.docx_loader import DOCXLoader

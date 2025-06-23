@@ -171,11 +171,11 @@ def evaluate_rag_combination(
         pipeline = RAGPipeline(cm)
         
         # Update components with the specific configurations
-        pipeline.update_component(constants.CONFIG_CHUNKER, chunker_config)
-        pipeline.update_component(constants.CONFIG_EMBEDDER, embedder_config)
-        pipeline.update_component(constants.CONFIG_VECTOR_STORE, vector_store_config)
-        pipeline.update_component(constants.CONFIG_RETRIEVER, retriever_config)
-        pipeline.update_component(constants.CONFIG_RERANKER, reranker_config)
+        pipeline.component_manager.update_component(constants.CONFIG_CHUNKER, chunker_config)
+        pipeline.component_manager.update_component(constants.CONFIG_EMBEDDER, embedder_config)
+        pipeline.component_manager.update_component(constants.CONFIG_VECTOR_STORE, vector_store_config)
+        pipeline.component_manager.update_component(constants.CONFIG_RETRIEVER, retriever_config)
+        pipeline.component_manager.update_component(constants.CONFIG_RERANKER, reranker_config)
         
         # Process document
         start_time = time.time()

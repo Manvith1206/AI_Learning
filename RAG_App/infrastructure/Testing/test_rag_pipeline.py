@@ -93,14 +93,14 @@ def test_all_combinations():
                         print("Retriever: " + reranker_type, "Params: " + str(reranker_params))
                         cm = ConfigManager()
                         pipeline = RAGPipeline(cm)
-                        pipeline.update_component(constants.CONFIG_CHUNKER, {constants.CONFIG_TYPE_PARAM: chunker_type, constants.CONFIG_PARAM: chunker_params})
+                        pipeline.component_manager.update_component(constants.CONFIG_CHUNKER, {constants.CONFIG_TYPE_PARAM: chunker_type, constants.CONFIG_PARAM: chunker_params})
                         pipeline.update_component(constants.CONFIG_EMBEDDER, {constants.CONFIG_TYPE_PARAM: embedder_type, constants.CONFIG_PARAM: embedder_params})
                         vs_cfg = {constants.CONFIG_TYPE_PARAM: vs_type}
                         if vs_type == constants.CONFIG_VECTOR_STORE_SKLEARN:
                             vs_cfg[constants.CONFIG_VECTOR_STORE_METRIC] = constants.CONFIG_METRIC_COSINE
-                        pipeline.update_component(constants.CONFIG_VECTOR_STORE, vs_cfg)
-                        pipeline.update_component(constants.CONFIG_RETRIEVER, {constants.CONFIG_TYPE_PARAM: retriever_type, constants.CONFIG_PARAM: retriever_params, constants.CONFIG_TOP_K_PARAM: 5})
-                        pipeline.update_component(constants.CONFIG_RERANKER, {constants.CONFIG_TYPE_PARAM: reranker_type, constants.CONFIG_PARAM: reranker_params})
+                        pipeline.component_manager.update_component(constants.CONFIG_VECTOR_STORE, vs_cfg)
+                        pipeline.component_manager.update_component(constants.CONFIG_RETRIEVER, {constants.CONFIG_TYPE_PARAM: retriever_type, constants.CONFIG_PARAM: retriever_params, constants.CONFIG_TOP_K_PARAM: 5})
+                        pipeline.component_manager.update_component(constants.CONFIG_RERANKER, {constants.CONFIG_TYPE_PARAM: reranker_type, constants.CONFIG_PARAM: reranker_params})
                         try:
                             docs, chunks = pipeline.process_document(DummyFile(TEST_FILE_PATH))
                             status = "success" if docs and chunks else "no_output"

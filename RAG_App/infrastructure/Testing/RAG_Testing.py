@@ -83,13 +83,13 @@ def test_rag_combinations():
     # Accessing the content
     for item in data:
         for config in configs:
-            ragPipeline.update_component(constants.CONFIG_CHUNKER, config[constants.CONFIG_CHUNKER])
-            ragPipeline.update_component(constants.CONFIG_EMBEDDER, config[constants.CONFIG_EMBEDDER])
-            ragPipeline.update_component(constants.CONFIG_VECTOR_STORE, config[constants.CONFIG_VECTOR_STORE])
-            ragPipeline.update_component(constants.CONFIG_RETRIEVER, config[constants.CONFIG_RETRIEVER])
-            ragPipeline.update_component(constants.CONFIG_RERANKER, config[constants.CONFIG_RERANKER])
-            ragPipeline.update_component(constants.CONFIG_LLM, config[constants.CONFIG_LLM])
-            ragPipeline.update_component(constants.CONFIG_EVALUATOR, config[constants.CONFIG_EVALUATOR])
+            ragPipeline.component_manager.update_component(constants.CONFIG_CHUNKER, config[constants.CONFIG_CHUNKER])
+            ragPipeline.component_manager.update_component(constants.CONFIG_EMBEDDER, config[constants.CONFIG_EMBEDDER])
+            ragPipeline.component_manager.update_component(constants.CONFIG_VECTOR_STORE, config[constants.CONFIG_VECTOR_STORE])
+            ragPipeline.component_manager.update_component(constants.CONFIG_RETRIEVER, config[constants.CONFIG_RETRIEVER])
+            ragPipeline.component_manager.update_component(constants.CONFIG_RERANKER, config[constants.CONFIG_RERANKER])
+            ragPipeline.component_manager.update_component(constants.CONFIG_LLM, config[constants.CONFIG_LLM])
+            ragPipeline.component_manager.update_component(constants.CONFIG_EVALUATOR, config[constants.CONFIG_EVALUATOR])
             mainPage.load_pre_processed_docs_or_process_the_doc(DummyFile(TEST_FILE_PATH))
             
             response = ragPipeline.query(item["Question"], "")
@@ -129,12 +129,12 @@ def test_rag_combinations():
                     contexts=[contexts], 
                     ground_truths=item["Ground_Truth"]
                 )
-            chunker_cost, chunker_time = ragPipeline.get_chunker_cost_and_time()
-            embedder_cost, embedder_time = ragPipeline.get_embedder_cost_and_time()
-            vector_store_cost, vector_store_time = ragPipeline.get_vector_store_cost_and_time()
-            reranker_cost, reranker_time = ragPipeline.get_reranker_cost_and_time()
-            retriever_cost, retriever_time = ragPipeline.get_retriever_cost_and_time()
-            llm_service_cost, llm_service_time = ragPipeline.get_llm_service_cost_and_time()
+            chunker_cost, chunker_time = ragPipeline.component_manager.get_chunker_cost_and_time()
+            embedder_cost, embedder_time = ragPipeline.component_manager.get_embedder_cost_and_time()
+            vector_store_cost, vector_store_time = ragPipeline.component_manager.get_vector_store_cost_and_time()
+            reranker_cost, reranker_time = ragPipeline.component_manager.get_reranker_cost_and_time()
+            retriever_cost, retriever_time = ragPipeline.component_manager.get_retriever_cost_and_time()
+            llm_service_cost, llm_service_time = ragPipeline.component_manager.get_llm_service_cost_and_time()
            
 
             faithfulness = result[constants.FAITHFULNESS]

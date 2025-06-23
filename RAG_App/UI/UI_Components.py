@@ -190,7 +190,7 @@ class UIComponents:
             with st.spinner("🤔 Thinking..."):
                 history_text = "\n".join([f"{h['role'].capitalize()}: {h['content']}" for h in UIComponents.get_session_state_messages()])
 
-                response = pipeline.query(prompt, history_text=history_text)
+                response = pipeline.query_processing.query(prompt, history_text=history_text)
                 empty_placeholder = UIComponents.create_empty_placeholder()
                 full_response = ""
                 is_rerank_explaination_rendered = False

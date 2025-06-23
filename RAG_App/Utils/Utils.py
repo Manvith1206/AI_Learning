@@ -22,7 +22,8 @@ def get_pipeline() -> RAGPipeline:
                 config_manager=UIComponents.get_session_state_variable('pipeline_config'),
                 warning_callback=handleWarning, 
                 error_callback=handleError,
-                process_doc_callback=process_doc_success)
+                process_doc_callback=process_doc_success,
+                vector_store=None)
             
             UIComponents.set_session_state_variable(var_name='pipeline', value=rag_pipeline)
             UIComponents.set_session_state_variable(var_name="pipeline_created",value=True)

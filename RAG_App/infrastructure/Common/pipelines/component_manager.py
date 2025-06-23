@@ -15,6 +15,7 @@ from infrastructure.evaluators.ragas_evaluator import RagasEvaluator
 from infrastructure.evaluators.deep_eval_evaluator import DeepEval
 from config import ConfigManager
 from typing import Any
+from models import ComponentConfigDetails, ComponentConfigDetail
 
 class ComponentManager:
     def __init__(self, 
@@ -27,7 +28,8 @@ class ComponentManager:
                 jinaApiKey, 
                 claudeApiKey,
                 error_callback,
-                warning_callback):
+                warning_callback,
+                vector_store):
         
         self.warning_callback = warning_callback
         self.error_callback = error_callback
@@ -41,8 +43,9 @@ class ComponentManager:
         self.pineconeApiKey = pineconeApiKey
         self.jinaApiKey = jinaApiKey
         self.claudeApiKey = claudeApiKey
-
-        # setup components
+        self.vector_store = vector_store
+        
+    # setup components
     def setup_components(self):
         # Build all core components via factory methods
         self.embedder = self._build_embedder()
@@ -55,7 +58,27 @@ class ComponentManager:
         self.evaluator = self._build_evaluator()
         self.query_classifier = QueryClassifier(self.llm_service)
         
+        chunker_component = ComponentConfigDetail(config_name=constants.CONFIG_CHUNKER, component=self.chunker)
+        embedder_component = ComponentConfigDetail(config_name=constants.CONFIG_EMBEDDER, component=self.embedder)
+        vector_store_component = ComponentConfigDetail(config_name=constants.CONFIG_VECTOR_STORE, component=self.vector_store)
+        retriever_component = ComponentConfigDetail(config_name=constants.CONFIG_RETRIEVER, component=self.retriever)
+        reranker_component = ComponentConfigDetail(config_name=constants.CONFIG_RERANKER, component=self.reranker)
+        evaluator_component = ComponentConfigDetail(config_name=constants.CONFIG_EVALUATOR, component=self.evaluator)
+        llm_service_component = ComponentConfigDetail(config_name=constants.CONFIG_LLM, component=self.llm_service)
+
+        component_config_details = {}
+        
+        component_config_details[constants.CONFIG_CHUNKER] = self.chunker
+        component_config_details[constants.CONFIG_EMBEDDER] = self.embedder
+        component_config_details[constants.CONFIG_VECTOR_STORE] = self.vector_store
+        component_config_details[constants.CONFIG_RETRIEVER] = self.retriever
+        component_config_details[constants.CONFIG_RERANKER] = self.reranker
+        component_config_details[constants.CONFIG_EVALUATOR] = self.evaluator
+        component_config_details[constants.CONFIG_LLM] = self.llm_service 
+
+        component_config_details = ComponentConfigDetails(component_config_details)
         print("Setup Components")
+        return component_config_details
 
     def get_chunker_cost_and_time(self):
         return self.chunker.get_cost_and_time_taken()

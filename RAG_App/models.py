@@ -56,3 +56,12 @@ class EvaluationResult:
     ground_truth: str = ""
     retrieved_documents: List[DocumentChunk] = field(default_factory=list)
     timestamp: datetime = field(default_factory=datetime.now)
+
+@dataclass
+class ComponentConfigDetail:
+    config_name: str
+    component: Any
+
+@dataclass
+class ComponentConfigDetails:
+    components: Dict[str, Any]
