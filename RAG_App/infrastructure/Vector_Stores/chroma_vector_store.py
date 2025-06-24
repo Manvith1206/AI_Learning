@@ -2,85 +2,88 @@ from .base_vector_store import BaseVectorStore
 import chromadb
 import numpy as np
 import infrastructure.common.rag_constants as constants
+import uuid
+import time
+from langchain_core.documents import Document as LangchainDocument
 
 class ChromaVectorStore(BaseVectorStore):
-    def __init__(self, collectionName):
-        self.client = chromadb.PersistentClient()
+    def __init__(self, collectionName, path="./chroma_db"):
+        self.client = chromadb.PersistentClient(path=path)
         self.collectionName = collectionName
-    
-    def update_index(self, index):
-        self.collection = index
-        
-    def add_embeddings(self, embeddings, documents):
-        """
-        Add embeddings to the vector store.
-        
-        Args:
-            embeddings: The embeddings to add.
-            documents: The documents associated with the embeddings.
-        """
-        # Implement logic to add embeddings to Chroma vector store
-        self.embeddings = embeddings
-        self.documents = documents
+        self.collection = self.client.get_or_create_collection(self.collectionName)
+        self.documents = []
+        self.time_taken = 0
+        self.cost = 0
+        self._load_all_documents()
 
-        # for i in range(0, self.client.list_collections().count()):
-        #     if self.client.list_collections()[i].name == self.collectionName:
-        #         self.client.delete_collection(collectionName)
+    def _load_all_documents(self):
+        """Loads all documents from the ChromaDB collection on initialization."""
+        existing_docs = self.collection.get(include=["documents", "metadatas"])
+        if existing_docs and existing_docs['ids']:
+            self.documents = [
+                LangchainDocument(
+                    page_content=doc,
+                    metadata=meta
+                )
+                for doc, meta in zip(existing_docs['documents'], existing_docs['metadatas'])
+            ]
+
+    def add_embeddings(self, embeddings, documents):
+        start_time = time.time()
+        
+        self.documents.extend(documents)
 
         if hasattr(embeddings, "toarray"):
-            emb_arr = self.embeddings.toarray().astype(np.float32)
+            emb_arr = embeddings.toarray().astype(np.float32).tolist()
         else:
-            emb_arr = np.array(self.embeddings, dtype=np.float32)
+            emb_arr = np.array(embeddings, dtype=np.float32).tolist()
 
-        collection = self.client.get_or_create_collection(self.collectionName)
-        self.collection = collection
-        ids = [f"doc_{i}" for i in range(len(self.documents))]  # Auto-generate IDs
-        collection.upsert(
+        ids = [str(uuid.uuid4()) for _ in documents]
+        
+        metadatas = [doc.metadata if hasattr(doc, 'metadata') else {} for doc in documents]
+
+        self.collection.add(
             ids=ids,
             embeddings=emb_arr,
-            documents=self.documents
+            documents=[doc.page_content for doc in documents],
+            metadatas=metadatas
         )
         
-    
-        pass
+        end_time = time.time()
+        self.time_taken = end_time - start_time
+
     def search(self, query_embedding, top_k=5):
-        """
-        Search for most similar documents in Chroma vector store.   
-        """
         if hasattr(query_embedding, "toarray"):
-            emb_arr = query_embedding.toarray().astype(np.float32)
+            emb_list = query_embedding.toarray().astype(np.float32).tolist()
         else:
-            emb_arr = np.array(query_embedding, dtype=np.float32)
+            emb_list = np.array(query_embedding, dtype=np.float32).tolist()
 
-        results = self.collection.query(query_embeddings=emb_arr, 
-                                        n_results=top_k)
+        results = self.collection.query(
+            query_embeddings=emb_list, 
+            n_results=top_k,
+            include=["metadatas", "distances", "documents"]
+        )
         
-        ids = results["ids"]
-        docs = results["documents"][0]
-        distances = np.array(results['distances'][0]).flatten()
-        normalized = (distances - distances.min()) / (distances.max() - distances.min())
-
-        similarity_scores = 1 - normalized  # if distance is in [0, 1]
-        
-        for id, doc, score in zip(ids, docs, similarity_scores):
-            print(f"Format ID: {id}, Document: {doc}, Score: {score}")
-        formatted_results = [
-            {constants.ID: id_, constants.Document: {constants.PAGE_CONTENT: doc}, constants.Score: float(score)}
-            for id_, doc, score in zip(ids, docs, similarity_scores)
-        ]
-        print("Formatted Results", formatted_results)
-
+        formatted_results = []
+        if results and results.get('ids') and results['ids'][0]:
+            for i in range(len(results['ids'][0])):
+                score = results['distances'][0][i]
+                doc = LangchainDocument(
+                    page_content=results['documents'][0][i],
+                    metadata=results['metadatas'][0][i]
+                )
+                formatted_results.append({
+                    constants.ID: results['ids'][0][i],
+                    constants.Document: doc,
+                    constants.Score: 1.0 - score if score is not None else 0.0
+                })
         return formatted_results
 
     def format_documents(self, documents):
-        formatted_documents = []
-        for doc in documents:
-            # Assuming each document is a dictionary with 'id' and 'text' keys
-            formatted_doc = doc[constants.PAGE_CONTENT]
-
-            formatted_documents.append(formatted_doc)
-
-        return formatted_documents
+        return [doc.page_content for doc in documents]
     
     def get_cost_and_time_taken(self):
+        return self.cost, self.time_taken
+    
+    def update_index(self, index):
         pass
