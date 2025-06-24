@@ -13,3 +13,12 @@ class BaseVectorStore(ABC):
     @abstractmethod
     def get_cost_and_time_taken(self):
         pass
+    @abstractmethod
+    def update_index(self, index):
+        pass
+    @abstractmethod
+    def get_index(self):
+        pass
+    @abstractmethod
+    def get_all_documents(self):
+        pass

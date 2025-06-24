@@ -225,7 +225,7 @@ class MainPage:
             if cached_vector_store:
                 with UIComponents.display_spinner("Loading processed document from cache..."):
                     pipeline.vector_store = cached_vector_store
-                    
+                    pipeline.update_query_processing(cached_vector_store)
 
                     UIComponents.set_session_state_variable("vector_store", pipeline.vector_store)
                     documents = pipeline.vector_store.documents
@@ -241,22 +241,25 @@ class MainPage:
                         if texts:
 
                             # This returns the vector_store, but the embedder is now fitted inside the pipeline instance
-                            processed_vector_store = pipeline.document_processing.process_document(uploaded_file, texts)
-                            
+                            processed_vector_store = pipeline.process_document(uploaded_file, texts)
+
                             if processed_vector_store:
-                                # Cache both the vector_store and the fitted embedder
-                                data_to_cache = processed_vector_store
+                                # Cache both the vector_store and the fitted 
+                                data_to_cache = None
                                 
-                                cache_manager.save_to_cache(cache_key, data_to_cache)
+                                if processed_vector_store.get_index() is not None:
+                                    data_to_cache = processed_vector_store.get_index()
                                 
-                                # The pipeline's vector_store is already updated by process_document
-                                UIComponents.set_session_state_variable("vector_store", processed_vector_store)
-                                documents = processed_vector_store.documents
-                                UIComponents.set_session_state_variable("documents", documents)
-                                if documents:
-                                    UIComponents.set_session_state_variable("processed_document_texts", [doc.get('page_content', '') for doc in documents])
+                                    cache_manager.save_to_cache(cache_key, data_to_cache)
                                 
-                                UIComponents.display_success(f"Document '{uploaded_file.name}' processed and saved to cache.")
+                                    # The pipeline's vector_store is already updated by process_document
+                                    UIComponents.set_session_state_variable("vector_store", processed_vector_store)
+                                    documents = processed_vector_store.documents
+                                    UIComponents.set_session_state_variable("documents", documents)
+                                    if documents:
+                                        UIComponents.set_session_state_variable("processed_document_texts", [doc.get('page_content', '') for doc in documents])
+                                    
+                                    UIComponents.display_success(f"Document '{uploaded_file.name}' processed and saved to cache.")
                             else:
                                 UIComponents.display_error("Failed to process the document.")
                         else:

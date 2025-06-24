@@ -11,8 +11,8 @@ from infrastructure.rerankers.base_reranker import BaseReranker
 class QueryProcessing:
     def __init__(self, llm_service: BaseLLMService, vector_store: BaseVectorStore, embedder: BaseEmbedder,
                  retriever: BaseRetriever, reranker: BaseReranker, error_callback):
-        self.query_classifier = QueryClassifier()
         self.llm_service = llm_service
+        self.query_classifier = QueryClassifier(self.llm_service)
         self.vector_store = vector_store
         self.embedder = embedder
         self.retriever = retriever

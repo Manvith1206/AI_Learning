@@ -17,6 +17,44 @@ class PineConeVectorStore(BaseVectorStore):
         self.time_taken = 0
         self.cost = 0
 
+    def update_index(self, index):
+        self.index = index
+
+    def get_index(self):
+        if self.index:
+            return self.index
+        else:
+            return None
+        
+    def get_all_documents(self, index, batch_size=100):
+        """
+        Retrieve all documents from a Pinecone index
+        """
+        all_documents = []
+        
+        # Get all vector IDs first
+        list_response = self.index.list()
+        
+        # Process in batches
+        all_vector_ids = [vector['id'] for vector in list_response.get('vectors', [])]
+        
+        for i in range(0, len(all_vector_ids), batch_size):
+            batch_ids = all_vector_ids[i:i + batch_size]
+            
+            # Fetch the batch of documents
+            fetch_response = index.fetch(ids=batch_ids)
+            
+            # Extract documents
+            for doc_id, doc_data in fetch_response['vectors'].items():
+                document = {
+                    constants.ID: doc_id,
+                    constants.METADATA: doc_data.get('metadata', {}),
+                    constants.PAGE_CONTENT: doc_data.get('values', [])
+                }
+                all_documents.append(document)
+        
+        return all_documents
+    
     def add_embeddings(self, embeddings, documents):
         start_time = time.time()
         self.documents = documents

@@ -18,12 +18,16 @@ class FAISS_Vector_Store(BaseVectorStore):
         self.time_taken = 0
         self.cost = 0
 
+    def update_index(self, index: faiss.IndexFlatIP):
+        self.index = index
+        
     def add_embeddings(self, embeddings, documents):
         start_time = time.time()
         # Unify embeddings: list, numpy array, or sparse -> dense np.float32
         self.documents = documents
         # Generate and store document IDs
         self.ids = []
+        
         for document in documents:
             if isinstance(document, dict):
                 doc_id = document.get("id", str(uuid.uuid4()))
@@ -70,7 +74,6 @@ class FAISS_Vector_Store(BaseVectorStore):
         
         # For FAISS, search returns distances and indices
         distances, indices = self.index.search(query_embedding, k=min(top_k, len(self.documents)))
-        
         # FAISS returns 2D arrays: distances[0] and indices[0] give the first row
         results = []
         for i in range(len(indices[0])):
@@ -84,8 +87,9 @@ class FAISS_Vector_Store(BaseVectorStore):
                     constants.ID: self.ids[idx]
                 })
         
+        self.index.docstore
+        
         return results
-
 
     def format_documents(self, documents):
         

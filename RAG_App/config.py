@@ -11,19 +11,20 @@ class ConfigManager:
     def __init__(self, config=None):
         self.config = config or   {
     "chunker": {
-      "type": "semantic_with_langchain",
+      "type": "recursive",
       "params": {
-        
+        "chunk_size": 150,
+        "chunk_overlap": 70
       }
     },
     "embedder": {
       "type": "cohere",
       "params": {
-        "model": "embed-multilingual-v3.0"
+        "model": "embed-v4.0"
       }
     },
     "vector_store": {
-      "type": "faiss",
+      "type": "pine-cone",
       "params": {}
     },
     "retriever": {

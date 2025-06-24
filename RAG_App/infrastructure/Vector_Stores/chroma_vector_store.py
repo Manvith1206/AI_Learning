@@ -7,6 +7,9 @@ class ChromaVectorStore(BaseVectorStore):
     def __init__(self, collectionName):
         self.client = chromadb.PersistentClient()
         self.collectionName = collectionName
+    
+    def update_index(self, index):
+        self.collection = index
         
     def add_embeddings(self, embeddings, documents):
         """

@@ -57,14 +57,6 @@ class ComponentManager:
         self.reranker = self._build_reranker()
         self.evaluator = self._build_evaluator()
         self.query_classifier = QueryClassifier(self.llm_service)
-        
-        chunker_component = ComponentConfigDetail(config_name=constants.CONFIG_CHUNKER, component=self.chunker)
-        embedder_component = ComponentConfigDetail(config_name=constants.CONFIG_EMBEDDER, component=self.embedder)
-        vector_store_component = ComponentConfigDetail(config_name=constants.CONFIG_VECTOR_STORE, component=self.vector_store)
-        retriever_component = ComponentConfigDetail(config_name=constants.CONFIG_RETRIEVER, component=self.retriever)
-        reranker_component = ComponentConfigDetail(config_name=constants.CONFIG_RERANKER, component=self.reranker)
-        evaluator_component = ComponentConfigDetail(config_name=constants.CONFIG_EVALUATOR, component=self.evaluator)
-        llm_service_component = ComponentConfigDetail(config_name=constants.CONFIG_LLM, component=self.llm_service)
 
         component_config_details = {}
         
@@ -152,7 +144,7 @@ class ComponentManager:
                                   model=model_name)
         elif config_type == EmbedderType.MISTRAL.value:
             return MistralEmbedder(api_key=self.mistralApiKey,
-                                  model=model_name,
+                                  **params
                                   )
         else:
             return TFIDFEmbedder()
