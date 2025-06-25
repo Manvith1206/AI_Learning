@@ -120,7 +120,6 @@ class ComponentManager:
         return self._build_component(RERANKERS_REGISTRY, self.config.reranker, "reranker", **kwargs)
 
     def _build_evaluator(self):
-        kwargs = {}
         evaluator_type = self.config.evaluator.type
         logger.info(f"Attempting to build evaluator of type: {evaluator_type}")
 
@@ -128,36 +127,37 @@ class ComponentManager:
 
         if not evaluator_class:
             logger.warning(f"Unknown or unsupported evaluator type '{evaluator_type}'. Defaulting to SimpleEvaluator.")
-            evaluator_type = constants.EvaluatorType.SIMPLE.value
-            evaluator_class = EVALUATORS_REGISTRY.get(evaluator_type)
+            evaluator_class = EVALUATORS_REGISTRY.get(constants.EvaluatorType.SIMPLE.value)
+            return evaluator_class()
 
         try:
+            kwargs = {}
             if evaluator_type == constants.EvaluatorType.CUSTOM.value:
                 kwargs['gemini_api_key'] = self._get_api_key(constants.GEMINI_API_KEY)
+            
             elif evaluator_type == constants.EvaluatorType.DEEP_EVAL.value:
                 kwargs['gemini_api_key'] = self._get_api_key(constants.GEMINI_API_KEY)
+            
             elif evaluator_type == constants.EvaluatorType.RAGAS.value:
-                try:
-                    kwargs['openai_api_key'] = self._get_api_key(constants.OPENAI_API_KEY)
-                except MissingConfigurationError:
-                    kwargs['openai_api_key'] = None
-                try:
-                    kwargs['gemini_api_key'] = self._get_api_key(constants.GEMINI_API_KEY)
-                except MissingConfigurationError:
-                    kwargs['gemini_api_key'] = None
-                
-                if not kwargs.get('openai_api_key') and not kwargs.get('gemini_api_key'):
-                    raise MissingConfigurationError("RagasEvaluator requires either an OpenAI or Gemini API key.")
+                # RagasEvaluator can use either key; its constructor will validate.
+                kwargs['openai_api_key'] = os.getenv(constants.OPENAI_API_KEY)
+                kwargs['gemini_api_key'] = os.getenv(constants.GEMINI_API_KEY)
 
             params = {**self.config.evaluator.params, **kwargs}
             logger.info(f"Building evaluator '{evaluator_type}' with params: {list(params.keys())}")
             return evaluator_class(**params)
             
-        except MissingConfigurationError as e:
-            logger.warning(f"API key missing for '{evaluator_type}' evaluator: {e}. Falling back to SimpleEvaluator.")
+        except (MissingConfigurationError, ValueError) as e:
+            logger.warning(
+                f"Configuration error for '{evaluator_type}' evaluator: {e}. "
+                "Falling back to SimpleEvaluator."
+            )
             evaluator_class = EVALUATORS_REGISTRY.get(constants.EvaluatorType.SIMPLE.value)
             return evaluator_class()
         except Exception as e:
-            logger.error(f"Failed to build evaluator '{evaluator_type}': {e}. Falling back to SimpleEvaluator.")
+            logger.error(
+                f"Failed to build evaluator '{evaluator_type}': {e}. "
+                "Falling back to SimpleEvaluator."
+            )
             evaluator_class = EVALUATORS_REGISTRY.get(constants.EvaluatorType.SIMPLE.value)
             return evaluator_class()

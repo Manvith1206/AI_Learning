@@ -33,13 +33,6 @@ class UIComponents:
             return st.tabs(tab_names)
     
     @staticmethod
-    def create_sidebar():
-        """Create tabs in the sidebar"""
-        with st.sidebar:
-            pass  # Empty sidebar
-        return st.sidebar
-    
-    @staticmethod
     def display_chat_message_with_role(role: str, message: str):
         """Display a message with a specific role in the chat"""
         with st.chat_message(role):

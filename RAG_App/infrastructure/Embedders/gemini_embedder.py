@@ -1,87 +1,119 @@
 import time
+import logging
+from typing import List, Tuple
+import google.generativeai as genai
 from .base_embedder import BaseEmbedder
-from google import genai
+from ..common.component_registry import EMBEDDERS_REGISTRY
 import infrastructure.common.rag_constants as constants
-from infrastructure.common.component_registry import register, EMBEDDERS_REGISTRY
 
-@register(EMBEDDERS_REGISTRY, constants.EmbedderType.GEMINI.value)
+logger = logging.getLogger(__name__)
+
+@EMBEDDERS_REGISTRY.register(constants.EmbedderType.GEMINI.value)
 class GeminiEmbedder(BaseEmbedder):
-    def __init__(self, api_key=None, model_name = constants.GeminiEmbedModels.GEMINI_EMBED_001_MODEL.value):
-        api_key = api_key
-        self.client = genai.Client(api_key=api_key)
+    """
+    An embedder that uses the Google Gemini API to generate text embeddings.
+    """
+    def __init__(self, api_key: str, model_name: str = constants.GeminiEmbedModels.GEMINI_EMBED_001_MODEL.value):
+        """
+        Initializes the GeminiEmbedder.
+
+        Args:
+            api_key (str): The Google API key.
+            model_name (str): The Gemini embedding model to use.
+        """
+        if not api_key:
+            raise ValueError("Google API key is required.")
+        
+        genai.configure(api_key=api_key)
         self.model = model_name
-        self.embeddings = []
-        self.time_taken = 0
-        self.cost = 0
-    
-    def batch_chunks(self, chunks, batch_size=80):
-        """Yield successive batches of size batch_size."""
-        
-        for i in range(0, len(chunks), batch_size):
-            yield chunks[i:i + batch_size]
+        self._cost = 0.0
+        self._time_taken = 0.0
+        # As per Google's documentation, the batch size limit is 100.
+        self.batch_size = 100
 
-    def embed_documents(self, texts):
-        start_time = time.time() 
-        all_new_embeddings_values = []  
+    def _batch_chunks(self, texts: List[str]) -> List[List[str]]:
+        """Yields successive batches of a specified size."""
+        for i in range(0, len(texts), self.batch_size):
+            yield texts[i:i + self.batch_size]
 
-        # Iterate over batches of texts.
-        for text_batch in self.batch_chunks(texts, batch_size=80): 
-            if not text_batch:
-                continue
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """
+        Generates embeddings for a list of documents using the Gemini API.
 
+        Args:
+            texts (List[str]): A list of documents to embed.
+
+        Returns:
+            List[List[float]]: A list of embeddings.
+        """
+        start_time = time.time()
+        if not texts:
+            self._time_taken = time.time() - start_time
+            self._cost = 0.0
+            return []
+
+        all_embeddings = []
+        total_chars = 0
+
+        for batch in self._batch_chunks(texts):
             try:
-                resp = self.client.models.embed_content(
+                response = genai.embed_content(
                     model=self.model,
-                    contents=text_batch
+                    content=batch,
+                    task_type="RETRIEVAL_DOCUMENT"
                 )
-                
+                all_embeddings.extend(response['embedding'])
+                total_chars += sum(len(text) for text in batch)
             except Exception as e:
-                print(f"Error embedding batch: {e}")
-                continue 
-                
-            current_batch_extracted_values = []
-            if hasattr(resp, 'embeddings') and isinstance(resp.embeddings, list) and resp.embeddings:
-                for embedding_structure in resp.embeddings:
-                    current_batch_extracted_values = embedding_structure.embeddings
+                logger.error(f"Error embedding batch with Gemini: {e}")
+                all_embeddings.extend([[]] * len(batch))
 
-            all_new_embeddings_values.extend(current_batch_extracted_values)
+        self._cost = self._get_cost(total_chars)
+        self._time_taken = time.time() - start_time
+        return all_embeddings
+
+    def embed_query(self, query: str) -> List[float]:
+        """
+        Generates an embedding for a single query using the Gemini API.
+
+        Args:
+            query (str): The query string to embed.
+
+        Returns:
+            List[float]: The embedding for the query.
+        """
+        start_time = time.time()
+        if not query:
+            self._time_taken = time.time() - start_time
+            self._cost = 0.0
+            return []
+
+        try:
+            response = genai.embed_content(
+                model=self.model,
+                content=query,
+                task_type="RETRIEVAL_QUERY"
+            )
+            embedding = response['embedding']
+            self._cost = self._get_cost(len(query))
+        except Exception as e:
+            logger.error(f"Error embedding query with Gemini: {e}")
+            embedding = []
+            self._cost = 0.0
         
-        self.embeddings = all_new_embeddings_values
-        end_time = time.time()
-        self.time_taken = end_time - start_time
+        self._time_taken = time.time() - start_time
+        return embedding
 
-        return self.embeddings
+    def get_cost_and_time_taken(self) -> Tuple[float, float]:
+        """
+        Returns the cost and time taken for the last embedding operation.
+        """
+        return self._cost, self._time_taken
     
-    def transform(self, texts):
-        start_time = time.time() 
-        all_new_embeddings_values = [] 
-
-        for text_batch in self.batch_chunks(texts, batch_size=80): 
-            if not text_batch:  # Skip if the batch is empty
-                continue
-
-            try:
-                resp = self.client.models.embed_content(
-                    model=self.model,
-                    contents=text_batch
-                )
-            except Exception as e:
-                print(f"Error embedding batch: {e}") 
-                continue 
-                
-            # Extract numerical embedding values from the response of the current batch
-            current_batch_extracted_values = []
-            if hasattr(resp, 'embeddings') and isinstance(resp.embeddings, list) and resp.embeddings:
-                for embedding_structure in resp.embeddings:
-                    current_batch_extracted_values = embedding_structure.embeddings
-
-            all_new_embeddings_values.extend(current_batch_extracted_values)
-        
-        # self.embeddings should now store all the generated embeddings for the input texts
-        self.embeddings = all_new_embeddings_values
-        end_time = time.time()
-        self.time_taken = end_time - start_time
-        return self.embeddings
-    
-    def get_cost_and_time_taken(self):
-        return self.cost, self.time_taken
+    def _get_cost(self, num_chars: int) -> float:
+        """
+        Calculates the cost based on the number of characters.
+        Gemini embedding models are currently free of charge. This is a placeholder.
+        Pricing: $0.10 / 1M characters
+        """
+        return (num_chars / 1_000_000) * 0.10

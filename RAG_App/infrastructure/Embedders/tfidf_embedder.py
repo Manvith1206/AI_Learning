@@ -1,33 +1,82 @@
 import time
+import logging
+from typing import List, Tuple
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.exceptions import NotFittedError
 from .base_embedder import BaseEmbedder
-from infrastructure.common.component_registry import register, EMBEDDERS_REGISTRY
+from ..common.component_registry import EMBEDDERS_REGISTRY
 import infrastructure.common.rag_constants as constants
 
-@register(EMBEDDERS_REGISTRY, constants.EmbedderType.TFIDF.value)
+logger = logging.getLogger(__name__)
+
+@EMBEDDERS_REGISTRY.register(constants.EmbedderType.TFIDF.value)
 class TFIDFEmbedder(BaseEmbedder):
+    """A local, non-API-based embedder using TF-IDF vectorization."""
+
     def __init__(self):
+        """Initializes the TFIDFEmbedder."""
         self.vectorizer = TfidfVectorizer()
-        self.vectors = None
-        self.time_taken = 0
-        self.cost = 0
-    def embed_documents(self, texts):
+        self._time_taken = 0.0
+        self._cost = 0.0  # Cost is always zero for local embedders
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """
+        Fits the TF-IDF vectorizer to the documents and transforms them into embeddings.
+
+        Args:
+            texts (List[str]): A list of documents to fit and transform.
+
+        Returns:
+            List[List[float]]: A list of dense TF-IDF embeddings.
+        """
         start_time = time.time()
-        self.vectors = self.vectorizer.fit_transform(texts)
-        end_time = time.time()
-        self.time_taken = end_time - start_time
-        return self.vectors
-    def transform(self, texts):
-        # Ensure fit() has been called
-        start_time = time.time()
-        
-        if self.vectors is None:
-            raise ValueError("TF-IDF Embedder not fitted. Please process documents (fit) before querying.")
-        vectors = self.vectorizer.transform(texts)
-        end_time = time.time()
-        self.time_taken += end_time - start_time
-        
+        if not texts:
+            self._time_taken = time.time() - start_time
+            return []
+
+        try:
+            vectors = self.vectorizer.fit_transform(texts).toarray().tolist()
+        except Exception as e:
+            logger.error(f"Error fitting and transforming documents with TF-IDF: {e}")
+            vectors = [[] for _ in texts]
+
+        self._time_taken = time.time() - start_time
         return vectors
-    def get_cost_and_time_taken(self):
-        return self.cost, self.time_taken
+
+    def embed_query(self, query: str) -> List[float]:
+        """
+        Transforms a single query into an embedding using the fitted TF-IDF vectorizer.
+
+        Args:
+            query (str): The query string to embed.
+
+        Returns:
+            List[float]: The dense TF-IDF embedding for the query.
+        
+        Raises:
+            NotFittedError: If the vectorizer has not been fitted yet.
+        """
+        start_time = time.time()
+        if not query:
+            self._time_taken = time.time() - start_time
+            return []
+
+        try:
+            # The first element of the transform result is the embedding for the query
+            vector = self.vectorizer.transform([query]).toarray().tolist()[0]
+        except NotFittedError as e:
+            logger.error("TF-IDF model is not fitted. Call embed_documents first.")
+            raise NotFittedError("TF-IDF model is not fitted. Call embed_documents first.") from e
+        except Exception as e:
+            logger.error(f"Error transforming query with TF-IDF: {e}")
+            vector = []
+
+        self._time_taken = time.time() - start_time
+        return vector
+
+    def get_cost_and_time_taken(self) -> Tuple[float, float]:
+        """
+        Returns the cost and time taken for the last embedding operation.
+        Cost is always 0 for this local embedder.
+        """
+        return self._cost, self._time_taken

@@ -1,77 +1,114 @@
 import time
+import logging
+from typing import List, Tuple
 import voyageai
 from .base_embedder import BaseEmbedder
+from ..common.component_registry import EMBEDDERS_REGISTRY
 import infrastructure.common.rag_constants as constants
-from infrastructure.common.component_registry import register, EMBEDDERS_REGISTRY
 
-@register(EMBEDDERS_REGISTRY, constants.EmbedderType.VOYAGE.value)
+logger = logging.getLogger(__name__)
+
+@EMBEDDERS_REGISTRY.register(constants.EmbedderType.VOYAGE.value)
 class VoyageEmbedder(BaseEmbedder):
-    def __init__(self, api_key, model):
+    """An embedder that uses the Voyage AI API to generate text embeddings."""
+
+    def __init__(self, api_key: str, model: str = constants.VoyageEmbedModels.VOYAGE_EMBED_DEFAULT_MODEL.value, batch_size: int = 128):
         """
-        api_key: your COHERE_API_KEY (or set via env var COHERE_API_KEY)
-        model:   the Cohere embed model to use
-        """ 
-        key = api_key
-        self.client = voyageai.Client(api_key=key)
+        Initializes the VoyageEmbedder.
+
+        Args:
+            api_key (str): The Voyage AI API key.
+            model (str): The Voyage embedding model to use.
+            batch_size (int): The number of documents to process in a single batch.
+        """
+        if not api_key:
+            raise ValueError("Voyage AI API key is required.")
+        
+        self.client = voyageai.Client(api_key=api_key)
         self.model = model
-        self.embeddings = [] # Initialize as empty list for batching
-        self.time_taken = 0
-        self.cost = 0
-        
-    def batch_chunks(self, chunks, batch_size=80):
-        """Yield successive batches of size batch_size."""
-        for i in range(0, len(chunks), batch_size):
-            yield chunks[i:i + batch_size]
-        
-    def embed_documents(self, texts):
+        # Voyage has a batch size limit of 128
+        self.batch_size = min(batch_size, 128)
+        self._time_taken = 0.0
+        self._cost = 0.0
+
+    def _batch_chunks(self, texts: List[str]) -> List[List[str]]:
+        """Yields successive batches of a specified size."""
+        for i in range(0, len(texts), self.batch_size):
+            yield texts[i:i + self.batch_size]
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """
-        For Voyage embeddings we don't need a separate fit step;
-        we just embed the texts and cache if desired.
-        """ 
+        Generates embeddings for a list of documents using the Voyage AI API.
+
+        Args:
+            texts (List[str]): A list of documents to embed.
+
+        Returns:
+            List[List[float]]: A list of embeddings.
+        """
         start_time = time.time()
-        self.texts = texts
+        if not texts:
+            self._time_taken = time.time() - start_time
+            self._cost = 0.0
+            return []
+
         all_embeddings = []
         total_tokens = 0
-        for batch in self.batch_chunks(texts, batch_size=80): # Adjust batch_size as needed for Voyage
-            emb = self.client.embed(texts=batch, model=self.model)
-            all_embeddings.extend(emb.embeddings)
-            total_tokens += emb.total_tokens
 
-        self.embeddings = all_embeddings
-        end_time = time.time()
-        self.cost = self.get_cost_based_on_model(total_tokens)
-        self.time_taken = end_time - start_time
+        for batch in self._batch_chunks(texts):
+            try:
+                response = self.client.embed(texts=batch, model=self.model, input_type="document")
+                all_embeddings.extend(response.embeddings)
+                total_tokens += response.total_tokens
+            except Exception as e:
+                logger.error(f"Error embedding batch with Voyage AI: {e}")
+                all_embeddings.extend([[]] * len(batch))
 
-        return self.embeddings
-    
-
-    def transform(self, texts):
-        """
-        Embed new Texts on demand
-        """ 
-        start_time = time.time()
-
-        all_embeddings = []
-        current_cost_value = 0
-        for batch in self.batch_chunks(texts, batch_size=80): # Adjust batch_size as needed for Voyage
-            resp = self.client.embed(texts=batch, model=self.model)
-            current_cost_value += self.get_cost_based_on_model(resp.total_tokens)
-            all_embeddings.extend(resp.embeddings)
-        end_time = time.time()
-        self.time_taken += end_time - start_time
-        self.cost = current_cost_value
+        self._cost = self._get_cost(total_tokens)
+        self._time_taken = time.time() - start_time
         return all_embeddings
-    def get_cost_and_time_taken(self):
-        return self.cost, self.time_taken
-    
-    def get_cost_based_on_model(self, tokens):
-        if self.model == constants.VoyageEmbedModels.VOYAGE_EMBED_DEFAULT_MODEL.value:
-            return (tokens / 1000000) * 0.18
-        elif self.model == constants.VoyageEmbedModels.VOYAGE_CODE_2_EMBED_MODEL.value:
-            return (tokens / 1000000) * 0.12
-        elif self.model == constants.CLAUDE_MODELS.CLAUDE_SONNET_THREE_5.value:
-            return (tokens / 1000000) * 3
-        elif self.model == constants.CLAUDE_MODELS.CLAUDE_OPUS_THREE.value:
-            return (tokens / 1000000) * 15
-        else:
-            return 0
+
+    def embed_query(self, query: str) -> List[float]:
+        """
+        Generates an embedding for a single query using the Voyage AI API.
+
+        Args:
+            query (str): The query string to embed.
+
+        Returns:
+            List[float]: The embedding for the query.
+        """
+        start_time = time.time()
+        if not query:
+            self._time_taken = time.time() - start_time
+            self._cost = 0.0
+            return []
+
+        try:
+            response = self.client.embed(texts=[query], model=self.model, input_type="query")
+            embedding = response.embeddings[0]
+            self._cost = self._get_cost(response.total_tokens)
+        except Exception as e:
+            logger.error(f"Error embedding query with Voyage AI: {e}")
+            embedding = []
+            self._cost = 0.0
+
+        self._time_taken = time.time() - start_time
+        return embedding
+
+    def get_cost_and_time_taken(self) -> Tuple[float, float]:
+        """
+        Returns the cost and time taken for the last embedding operation.
+        """
+        return self._cost, self._time_taken
+
+    def _get_cost(self, tokens: int) -> float:
+        """
+        Calculates the cost based on the number of tokens for the specific model.
+        Pricing is per 1,000,000 tokens.
+        - voyage-2, voyage-large-2: $0.10
+        - voyage-code-2: $0.10
+        """
+        # As of late 2023, most common models are priced similarly.
+        # Using a single rate for simplicity.
+        return (tokens / 1_000_000) * 0.10

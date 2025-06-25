@@ -1,40 +1,62 @@
-from langchain.text_splitter import TokenTextSplitter
-from .base_chunker import BaseChunker
-from infrastructure.common.rag_constants import Constants
-from infrastructure.common.component_registry import register, CHUNKERS_REGISTRY
 import time
+from typing import List, Tuple
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from .base_chunker import BaseChunker
+import infrastructure.common.rag_constants as constants
+from infrastructure.common.component_registry import CHUNKERS_REGISTRY
 
-@register(CHUNKERS_REGISTRY, Constants.ChunkerType.RECURSIVE.value)
+@CHUNKERS_REGISTRY.register(constants.ChunkerType.RECURSIVE.value)
 class RecursiveChunker(BaseChunker):
-    def __init__(self, chunk_size=600, chunk_overlap=200):
+    """
+    A chunker that uses a recursive character text splitter from LangChain.
+    It splits text based on a hierarchy of separators and measures chunk size by token count.
+    """
+    def __init__(self, chunk_size: int = 600, chunk_overlap: int = 200):
+        """
+        Initializes the RecursiveChunker.
+
+        Args:
+            chunk_size (int): The maximum size of each chunk in tokens.
+            chunk_overlap (int): The number of tokens to overlap between chunks.
+        """
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
-        self.time_taken = 0
-        self.cost = 0
+        self._time_taken = 0.0
+        self._cost = 0.0
 
-    # Define a length function that counts tokens
-    def token_length_function(self, text: str):
-        return len(self.encoding.encode(text))
+    def split_text(self, text: str) -> List[str]:
+        """
+        Splits the text using a token-based recursive character splitter.
 
-    def split_text(self, text):
+        Args:
+            text (str): The text to be split.
+
+        Returns:
+            List[str]: A list of text chunks.
+        """
         start_time = time.time()
         if not text:
+            self._time_taken = time.time() - start_time
             return []
-        
-        text_splitter = TokenTextSplitter(
-            chunk_size=self.chunk_size,  # Max tokens per chunk
-            chunk_overlap=self.chunk_overlap,  # Tokens to overlap
-            encoding_name=Constants.ENCODING_NAME_FOR_TOKEN_COUNT # Tokenizer for OpenAI models
+
+        # Uses a text splitter that is aware of token counts
+        text_splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+            encoding_name=constants.ENCODING_NAME_FOR_TOKEN_COUNT,
+            chunk_size=self.chunk_size,
+            chunk_overlap=self.chunk_overlap,
         )
         
-        chunks = text_splitter.split_text(text=text)
+        chunks = text_splitter.split_text(text)
         
-        end_time = time.time()
-        self.time_taken = end_time - start_time
+        self._time_taken = time.time() - start_time
         return chunks
 
-    def get_cost_and_time_taken(self):
+    def get_cost_and_time_taken(self) -> Tuple[float, float]:
         """
         Returns the time taken and cost for the last split operation.
+        For this chunker, the cost is always zero.
+
+        Returns:
+            Tuple[float, float]: A tuple containing the cost (0.0) and the time taken in seconds.
         """
-        return self.cost, self.time_taken
+        return self._cost, self._time_taken

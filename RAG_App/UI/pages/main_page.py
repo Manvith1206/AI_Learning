@@ -8,7 +8,7 @@ from UI.flashcard_display import FlashcardDisplay
 from models import Flashcard, AppConfig
 from infrastructure.common.rag_pipeline import RAGPipeline
 from infrastructure.common import rag_constants as constants
-from Utils.exceptions import FlashcardGenerationError, PipelineError
+from infrastructure.utils.exceptions import FlashcardGenerationError, PipelineError
 import tempfile
 import os
 
@@ -28,9 +28,7 @@ class MainPage:
     
     def initialize_components(self):
         """Initialize all UI components"""
-        self.chat_interface = ChatInterface(
-            on_message_callback=None,
-        )
+        self.chat_interface = ChatInterface(pipeline=self.pipeline)
         self.sidebar = Sidebar()
         self.flashcard_display = FlashcardDisplay(
             flashcards=[] # Initially empty, will be populated from session state
@@ -85,7 +83,7 @@ class MainPage:
             
     def render(self):
         """Render the main page"""
-        UIComponents.hide_streamlit_style()
+        UIComponents.create_title("RAG-Bot")
         UIComponents.set_page_container_style()
         
         with self.sidebar:
@@ -141,7 +139,7 @@ class MainPage:
                 tmp_file.write(uploaded_file.getvalue())
                 file_path = tmp_file.name
             try:
-                from Utils.text_extractor import TextExtractorFactory
+                from infrastructure.utils.text_extractor import TextExtractorFactory
                 text_extractor = TextExtractorFactory.get_extractor(file_path)
                 if not text_extractor:
                     UIComponents.display_error("Failed to find a suitable text extractor for the uploaded file type.")

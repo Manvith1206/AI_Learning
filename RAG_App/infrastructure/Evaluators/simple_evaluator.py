@@ -1,68 +1,94 @@
-from .base_evaluator import BaseEvaluator
+import time
 import re
-import infrastructure.common.rag_constants as constants
-from infrastructure.common.component_registry import register, EVALUATORS_REGISTRY
+import logging
+from typing import List, Dict, Any, Optional, Tuple
 
-@register(EVALUATORS_REGISTRY, name=constants.EvaluatorType.SIMPLE.value)
+from .base_evaluator import BaseEvaluator
+from ..common.component_registry import EVALUATORS_REGISTRY
+from ..common import rag_constants as constants
+
+logger = logging.getLogger(__name__)
+
+@EVALUATORS_REGISTRY.register(constants.EvaluatorType.SIMPLE.value)
 class SimpleEvaluator(BaseEvaluator):
-    """Simple evaluator that checks basic metrics without external dependencies"""
-    
-    def evaluate(self, question, answer, contexts, ground_truths=None):
-        """
-        Evaluate using simple heuristics
-        
-        Args:
-            question: The query/question asked
-            answer: The generated answer
-            contexts: The contexts used to generate the answer
-            ground_truths: Optional ground truth answers
-            
-        Returns:
-            Dictionary of evaluation metrics
-        """
-        metrics = {}
-        
-        # 1. Context utilization: Check if answer contains key terms from contexts
-        context_terms = set()
-        for context in contexts:
-            # Extract significant terms (non-stopwords)
-            words = re.findall(r'\b\w{4,}\b', context.lower())
-            context_terms.update(words)
-        
-        answer_terms = set(re.findall(r'\b\w{4,}\b', answer.lower()))
-        
-        if context_terms:
-            context_utilization = len(answer_terms.intersection(context_terms)) / len(context_terms)
-            metrics["context_utilization"] = min(1.0, context_utilization * 2)  # Scale up a bit
-        else:
-            metrics["context_utilization"] = 0.0
-        
-        # 2. Answer completeness: Length relative to question
-        answer_words = len(answer.split())
-        question_words = len(question.split())
-        
-        if question_words > 0:
-            # Heuristic: answers should be at least 2x question length but not excessively long
-            completeness = min(1.0, answer_words / (question_words * 2))
-            metrics["answer_completeness"] = completeness
-        else:
-            metrics["answer_completeness"] = 0.0
-        
-        # 3. If ground truth available, do simple term overlap
-        if ground_truths and ground_truths[0]:
-            gt_terms = set(re.findall(r'\b\w{4,}\b', ground_truths[0].lower()))
-            if gt_terms:
-                term_overlap = len(answer_terms.intersection(gt_terms)) / len(gt_terms)
-                metrics["ground_truth_overlap"] = term_overlap  
-        
-        # Overall score (simple average)
-        metrics["overall_score"] = sum(v for v in metrics.values()) / len(metrics)
-        
-        return metrics
+    """
+    A simple, heuristic-based evaluator that operates without external dependencies or LLM calls.
+    It calculates metrics for context utilization, answer completeness, and ground truth overlap.
+    """
 
-    def get_cost_and_time_taken(self):
+    def __init__(self):
+        self._time_taken = 0.0
+        self._cost = 0.0  # Cost is always zero for this evaluator
+
+    def evaluate(
+        self,
+        question: str,
+        answer: str,
+        contexts: List[str],
+        ground_truths: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         """
-        Get the cost and time taken for the evaluation
+        Evaluates the RAG output using simple, regex-based heuristics.
+
+        Args:
+            question: The input query.
+            answer: The generated answer.
+            contexts: The retrieved context documents.
+            ground_truths: Optional list of ground truth answers.
+
+        Returns:
+            A dictionary of calculated metrics.
         """
-        # SimpleEvaluator does not have cost or time metrics
-        return 0, 0
+        self._time_taken = 0.0
+        start_time = time.time()
+        metrics = {}
+
+        try:
+            # 1. Context Utilization
+            context_terms = set(word for ctx in contexts for word in re.findall(r'\b\w{4,}\b', ctx.lower()))
+            answer_terms = set(re.findall(r'\b\w{4,}\b', answer.lower()))
+            
+            if context_terms:
+                utilization = len(answer_terms.intersection(context_terms)) / len(context_terms)
+                metrics["context_utilization"] = min(1.0, utilization * 1.5)  # Scale score
+            else:
+                metrics["context_utilization"] = 0.0
+
+            # 2. Answer Completeness
+            answer_word_count = len(answer.split())
+            question_word_count = len(question.split())
+            if question_word_count > 0:
+                completeness = min(1.0, answer_word_count / (question_word_count * 2.0))
+                metrics["answer_completeness"] = completeness
+            else:
+                metrics["answer_completeness"] = 0.0
+
+            # 3. Ground Truth Overlap
+            if ground_truths and ground_truths[0]:
+                gt_terms = set(re.findall(r'\b\w{4,}\b', ground_truths[0].lower()))
+                if gt_terms:
+                    overlap = len(answer_terms.intersection(gt_terms)) / len(gt_terms)
+                    metrics["ground_truth_overlap"] = overlap
+
+            # 4. Overall Score
+            if metrics:
+                metrics["overall_score"] = sum(metrics.values()) / len(metrics)
+
+        except Exception as e:
+            logger.error(f"Simple evaluation failed: {e}", exc_info=True)
+            # Return zero for all potential metrics in case of failure
+            metrics = {
+                "context_utilization": 0.0,
+                "answer_completeness": 0.0,
+                "ground_truth_overlap": 0.0,
+                "overall_score": 0.0,
+            }
+
+        self._time_taken = time.time() - start_time
+        return {k: round(v, 2) for k, v in metrics.items()}
+
+    def get_cost_and_time_taken(self) -> Tuple[float, float]:
+        """
+        Returns the cost and time taken for the last evaluation. Cost is always 0.
+        """
+        return self._cost, self._time_taken
