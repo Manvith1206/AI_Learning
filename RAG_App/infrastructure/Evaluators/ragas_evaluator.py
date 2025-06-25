@@ -48,14 +48,14 @@ class RagasEvaluator(BaseEvaluator):
         
 
         data = Dataset.from_dict({
-            constants.QUESTION: questions,
-            constants.ANSWER: answers,
-            constants.CONTEXTS: contexts_list,
+            constants.Constants.QUESTION: questions,
+            constants.Constants.ANSWER: answers,
+            constants.Constants.CONTEXTS: contexts_list,
             "ground_truth": ground_truths_list
         })
 
         chatLLM = ChatOpenAI(
-            model="gpt-4o",
+            model=constants.OPEN_AI_MODELS.GPT_FOUR_1.value,
             temperature=0.0,
         )
         
@@ -67,10 +67,10 @@ class RagasEvaluator(BaseEvaluator):
         )
 
         metrics_dict = {}
-        metrics_dict[constants.FAITHFULNESS] = round((result[constants.FAITHFULNESS][0]), 2)
-        metrics_dict[constants.CONTEXT_PRECISION] = round((result[constants.CONTEXT_PRECISION][0]), 2)
-        metrics_dict[constants.CONTEXT_RECALL] = round((result[constants.CONTEXT_RECALL][0]), 2)
-        metrics_dict[constants.ANSWER_RELEVANCY] = round((result[constants.ANSWER_RELEVANCY][0]), 2)
+        metrics_dict[constants.RagasMetricsConstants.FAITHFULNESS] = round((result[constants.RagasMetricsConstants.FAITHFULNESS][0]), 2)
+        metrics_dict[constants.RagasMetricsConstants.CONTEXT_PRECISION] = round((result[constants.RagasMetricsConstants.CONTEXT_PRECISION][0]), 2)
+        metrics_dict[constants.RagasMetricsConstants.CONTEXT_RECALL] = round((result[constants.RagasMetricsConstants.CONTEXT_RECALL][0]), 2)
+        metrics_dict[constants.RagasMetricsConstants.ANSWER_RELEVANCY] = round((result[constants.RagasMetricsConstants.ANSWER_RELEVANCY][0]), 2)
         end_time = time.time()
         self.time_taken = end_time - start_time
         return metrics_dict

@@ -59,32 +59,33 @@ class RAGPipeline:
         )
         components = self.component_manager.setup_components()
         self.components = components
+        self.vector_store = self.components.components[constants.ConfigManagerNames.CONFIG_VECTOR_STORE]
         if self.vector_store:
             print("VSDocs", self.vector_store.documents)
-        print("ChunkerConfig: ", components.components[constants.CONFIG_VECTOR_STORE].documents)
+        print("ChunkerConfig: ", components.components[constants.ConfigManagerNames.CONFIG_VECTOR_STORE].documents)
 
         self.document_processing = DocumentProcessing(
             error_callback=self.error_callback,
             process_doc_callback=self.process_doc_callback,
-            vector_store=components.components[constants.CONFIG_VECTOR_STORE],
-            chunker=components.components[constants.CONFIG_CHUNKER],
-            embedder=components.components[constants.CONFIG_EMBEDDER]
+            vector_store=components.components[constants.ConfigManagerNames.CONFIG_VECTOR_STORE],
+            chunker=components.components[constants.ConfigManagerNames.CONFIG_CHUNKER],
+            embedder=components.components[constants.ConfigManagerNames.CONFIG_EMBEDDER]
         )
 
         self.flashcards_generation = FlashCardGeneration(
             warning_callback=self.warning_callback,
             error_callback=self.error_callback,
-            llm_service=components.components[constants.CONFIG_LLM]
+            llm_service=components.components[constants.ConfigManagerNames.CONFIG_LLM]
         )
 
-        self.query_evaluation = QueryEvaluation(evaluator=components.components[constants.CONFIG_EVALUATOR])
+        self.query_evaluation = QueryEvaluation(evaluator=components.components[constants.ConfigManagerNames.CONFIG_EVALUATOR])
 
         self.query_processing = QueryProcessing(
-            llm_service=components.components[constants.CONFIG_LLM],
+            llm_service=components.components[constants.ConfigManagerNames.CONFIG_LLM],
             vector_store=self.vector_store,
-            embedder=components.components[constants.CONFIG_EMBEDDER],
-            retriever=components.components[constants.CONFIG_RETRIEVER],
-            reranker=components.components[constants.CONFIG_RERANKER],
+            embedder=components.components[constants.ConfigManagerNames.CONFIG_EMBEDDER],
+            retriever=components.components[constants.ConfigManagerNames.CONFIG_RETRIEVER],
+            reranker=components.components[constants.ConfigManagerNames.CONFIG_RERANKER],
             error_callback=self.error_callback
         )
     
@@ -107,11 +108,11 @@ class RAGPipeline:
             
     def update_query_processing(self, vector_store):
         self.query_processing = QueryProcessing(
-                llm_service=self.components.components[constants.CONFIG_LLM],
+                llm_service=self.components.components[constants.ConfigManagerNames.CONFIG_LLM],
                 vector_store=vector_store,
-                embedder=self.components.components[constants.CONFIG_EMBEDDER],
-                retriever=self.components.components[constants.CONFIG_RETRIEVER],
-                reranker=self.components.components[constants.CONFIG_RERANKER],
+                embedder=self.components.components[constants.ConfigManagerNames.CONFIG_EMBEDDER],
+                retriever=self.components.components[constants.ConfigManagerNames.CONFIG_RETRIEVER],
+                reranker=self.components.components[constants.ConfigManagerNames.CONFIG_RERANKER],
                 error_callback=self.error_callback
             )
     

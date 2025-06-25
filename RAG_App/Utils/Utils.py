@@ -8,26 +8,26 @@ import infrastructure.common.rag_constants as constants
 def get_pipeline() -> RAGPipeline:
     """Get or initialize the pipeline"""
 
-    if not UIComponents.get_session_state_variable("pipeline_created", False):
+    if not UIComponents.get_session_state_variable(constants.Constants.PIPELINE_CREATED, False):
         with UIComponents.display_spinner("Initializing RAG pipeline..."):
-            os.environ["OPENAI_API_KEY"] = get_env_var(constants.OPENAI_API_KEY)
+            os.environ["OPENAI_API_KEY"] = get_env_var(constants.APIKeys.OPENAI_API_KEY)
             rag_pipeline = RAGPipeline(
-                geminiApiKey=get_env_var(constants.GEMINI_API_KEY),
-                cohereApiKey=get_env_var(constants.COHERE_API_KEY),
-                voyageApiKey=get_env_var(constants.VOYAGE_API_KEY),
-                mistralApiKey=get_env_var(constants.MISTRAL_API_KEY),
-                pineconeApiKey=get_env_var(constants.PINECONE_API_KEY),
-                jinaApiKey=get_env_var(constants.JINA_RERANKER_API_KEY),
-                claudeApiKey=get_env_var(constants.CLAUDE_API_KEY),
-                config_manager=UIComponents.get_session_state_variable('pipeline_config'),
+                geminiApiKey=get_env_var(constants.APIKeys.GEMINI_API_KEY),
+                cohereApiKey=get_env_var(constants.APIKeys.COHERE_API_KEY),
+                voyageApiKey=get_env_var(constants.APIKeys.VOYAGE_API_KEY),
+                mistralApiKey=get_env_var(constants.APIKeys.MISTRAL_API_KEY),
+                pineconeApiKey=get_env_var(constants.APIKeys.PINECONE_API_KEY),
+                jinaApiKey=get_env_var(constants.APIKeys.JINA_RERANKER_API_KEY),
+                claudeApiKey=get_env_var(constants.APIKeys.CLAUDE_API_KEY),
+                config_manager=UIComponents.get_session_state_variable(constants.Constants.PIPELINE_CONFIG),
                 warning_callback=handleWarning, 
                 error_callback=handleError,
                 process_doc_callback=process_doc_success,
                 vector_store=None)
             
-            UIComponents.set_session_state_variable(var_name='pipeline', value=rag_pipeline)
-            UIComponents.set_session_state_variable(var_name="pipeline_created",value=True)
-    return UIComponents.get_session_state_variable("pipeline", None)
+            UIComponents.set_session_state_variable(var_name=constants.Constants.PIPELINE, value=rag_pipeline)
+            UIComponents.set_session_state_variable(var_name=constants.Constants.PIPELINE_CREATED,value=True)
+    return UIComponents.get_session_state_variable(constants.Constants.PIPELINE, None)
 
 @staticmethod
 def get_env_var(var_name: str):

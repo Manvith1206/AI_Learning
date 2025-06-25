@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 def main():
     """Main function to run the RAG Application."""
     UIComponents.initialize_page()
-    with UIComponents.display_spinner(constants.LOADING_DISPLAY_MESSAGE_FOR_INITIALZING_PAGE):
+    with UIComponents.display_spinner(constants.UIDisplayNameConstants.LOADING_DISPLAY_MESSAGE_FOR_INITIALZING_PAGE):
         config_manager = ConfigManager()
         UIComponents.get_session_state_variable("pipeline_config", config_manager)
 
@@ -20,7 +20,7 @@ def main():
     # For now, we keep the existing structure.
     pipeline = Utils.get_pipeline()
     
-    with UIComponents.display_spinner(constants.LOADING_DISPLAY_MESSAGE_FOR_MAIN_PAGE):
+    with UIComponents.display_spinner(constants.UIDisplayNameConstants.LOADING_DISPLAY_MESSAGE_FOR_MAIN_PAGE):
         main_page = MainPage(pipeline=pipeline, config_manager=config_manager)
         main_page.render()
 

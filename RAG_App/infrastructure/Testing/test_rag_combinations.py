@@ -64,7 +64,7 @@ def test_rag_combination(config_manager, chunker_config, embedder_config,
         response = pipeline.query(query)
 
         # Conditional debugging for Gemini Embeddings
-        if embedder_config and embedder_config.get(constants.CONFIG_TYPE_PARAM) == EmbedderType.GEMINI.value:
+        if embedder_config and embedder_config.get(constants.ConfigManagerNames.CONFIG_TYPE_PARAM) == EmbedderType.GEMINI.value:
             print("/n--- DEBUGGING GEMINI EMBEDDINGS ---")
             print(f"Test Query: {query}")
             print(f"Retrieved Contexts for LLM: {response[constants.CONTEXTS]}")
@@ -118,30 +118,30 @@ def run_tests():
     # Define the combinations to test
     chunker_configs = [
         (ChunkerType.RECURSIVE.value, {
-            constants.CONFIG_TYPE_PARAM: ChunkerType.RECURSIVE.value, 
-            constants.CONFIG_PARAM: {
-                constants.CONFIG_CHUNK_SIZE_PARAM: 150, 
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: ChunkerType.RECURSIVE.value, 
+            constants.ConfigManagerNames.CONFIG_PARAM: {
+                constants.ConfigManagerNames.CONFIG_CHUNK_SIZE_PARAM: 150, 
                 constants.CONFIG_CHUNK_OVERLAP_PARAM: 70
             }
         }),
         # (ChunkerType.SEMANTIC.value, {
-        #     constants.CONFIG_TYPE_PARAM: ChunkerType.SEMANTIC.value, 
-        #     constants.CONFIG_PARAM: {
+        #     constants.ConfigManagerNames.CONFIG_TYPE_PARAM: ChunkerType.SEMANTIC.value, 
+        #     constants.ConfigManagerNames.CONFIG_PARAM: {
         #         constants.CONFIG_MIN_CHUNK_SIZE_DISPLAY_NAME: 150, 
         #         constants.CONFIG_MAX_CHUNK_SIZE_DISPLAY_NAME: 550, 
         #         constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.7, 
-        #         constants.CONFIG_MODEL_NAME: constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI
+        #         constants.ConfigManagerNames.CONFIG_MODEL_NAME: constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI
         #     }
         # }),
         (ChunkerType.SENTENCE.value, {
-            constants.CONFIG_TYPE_PARAM: ChunkerType.SENTENCE.value, 
-            constants.CONFIG_PARAM: {
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: ChunkerType.SENTENCE.value, 
+            constants.ConfigManagerNames.CONFIG_PARAM: {
                 constants.CONFIG_MAX_SENTENCES: 5
             }
         }),
         ChunkerType.SENTENCE.value, {
-            constants.CONFIG_TYPE_PARAM: ChunkerType.SEMANTIC_WITH_LANGCHAIN.value, 
-            constants.CONFIG_PARAM: {
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: ChunkerType.SEMANTIC_WITH_LANGCHAIN.value, 
+            constants.ConfigManagerNames.CONFIG_PARAM: {
                 
             }
         }
@@ -149,58 +149,58 @@ def run_tests():
     
     embedder_configs = [
         (EmbedderType.TFIDF.value, {
-            constants.CONFIG_TYPE_PARAM: EmbedderType.TFIDF.value
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: EmbedderType.TFIDF.value
         }),
         (EmbedderType.GEMINI.value, {
-            constants.CONFIG_TYPE_PARAM: EmbedderType.GEMINI.value, 
-            constants.CONFIG_MODEL: constants.GeminiEmbedModels.GEMINI_TEXT_EMBED_MODEL.value,
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: EmbedderType.GEMINI.value, 
+            constants.ConfigManagerNames.CONFIG_MODEL: constants.GeminiEmbedModels.GEMINI_TEXT_EMBED_MODEL.value,
             constants.CONFIG_BATCH_SIZE: 0
          }),
         (EmbedderType.COHERE.value, {
-            constants.CONFIG_TYPE_PARAM: EmbedderType.COHERE.value, 
-            constants.CONFIG_MODEL: constants.CohereEmbedModels.COHERE_EMBED_MODEL_DEFAULT.value
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: EmbedderType.COHERE.value, 
+            constants.ConfigManagerNames.CONFIG_MODEL: constants.CohereEmbedModels.COHERE_EMBED_MODEL_DEFAULT.value
         }),
         (EmbedderType.VOYAGE.value, {
-            constants.CONFIG_TYPE_PARAM: EmbedderType.VOYAGE.value, 
-            constants.CONFIG_MODEL: constants.VoyageEmbedModels.VOYAGE_EMBED_DEFAULT_MODEL.value
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: EmbedderType.VOYAGE.value, 
+            constants.ConfigManagerNames.CONFIG_MODEL: constants.VoyageEmbedModels.VOYAGE_EMBED_DEFAULT_MODEL.value
         }),
         # (EmbedderType.MISTRAL.value, {
-        #     constants.CONFIG_TYPE_PARAM: EmbedderType.MISTRAL.value, 
-        #     constants.CONFIG_MODEL: constants.MISTRAL_EMBED_MODELS.MISTRAL_EMBED_MODEL_DEFAULT.value
+        #     constants.ConfigManagerNames.CONFIG_TYPE_PARAM: EmbedderType.MISTRAL.value, 
+        #     constants.ConfigManagerNames.CONFIG_MODEL: constants.MISTRAL_EMBED_MODELS.MISTRAL_EMBED_MODEL_DEFAULT.value
         # })
     ]
     
     vector_store_configs = [
         (VectorStore.FAISS.value, {
-            constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_FAISS
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.ConfigManagerNames.CONFIG_VECTOR_STORE_FAISS
         }),
         # (VectorStore.SCIKIT_LEARN.value, {
-        #     constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_SKLEARN,
-        #     constants.CONFIG_VECTOR_STORE_METRIC: constants.CONFIG_METRIC_COSINE
+        #     constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.ConfigManagerNames.CONFIG_VECTOR_STORE_SKLEARN,
+        #     constants.ConfigManagerNames.CONFIG_VECTOR_STORE_METRIC: constants.CONFIG_METRIC_COSINE
         # }),
         # (VectorStore.PINE_CONE.value, {
-        #     constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_PINCONE
+        #     constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.ConfigManagerNames.CONFIG_VECTOR_STORE_PINCONE
         # })
     ]
     
     retriever_configs = [
         (RetrieverType.SIMILARITY.value, {
-            constants.CONFIG_TYPE_PARAM: RetrieverType.SIMILARITY.value, 
-            constants.CONFIG_PARAM: {
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: RetrieverType.SIMILARITY.value, 
+            constants.ConfigManagerNames.CONFIG_PARAM: {
                 constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.0
             },
             constants.CONFIG_TOP_K_PARAM: 3
         }),
         (RetrieverType.HYBRID.value, {
-            constants.CONFIG_TYPE_PARAM: RetrieverType.HYBRID.value, 
-            constants.CONFIG_PARAM: {
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: RetrieverType.HYBRID.value, 
+            constants.ConfigManagerNames.CONFIG_PARAM: {
                 constants.CONFIG_KEYWORD_WEIGHT: 0.45
             },
             constants.CONFIG_TOP_K_PARAM: 3
         }),
         # (RetrieverType.SENTENCE_WINDOW.value, {
-        #     constants.CONFIG_TYPE_PARAM: RetrieverType.SENTENCE_WINDOW.value, 
-        #     constants.CONFIG_PARAM: {
+        #     constants.ConfigManagerNames.CONFIG_TYPE_PARAM: RetrieverType.SENTENCE_WINDOW.value, 
+        #     constants.ConfigManagerNames.CONFIG_PARAM: {
         #         constants.CONFIG_WINDOW_SIZE: 3
         #     },
         #     constants.CONFIG_TOP_K_PARAM: 3
@@ -211,23 +211,23 @@ def run_tests():
     reranker_configs = [
          
         (RerankerType.LLM.value, {
-            constants.CONFIG_TYPE_PARAM: RerankerType.LLM.value, 
-            constants.CONFIG_PARAM: GeminiLLMModel.GEMINI_FLASH.value
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: RerankerType.LLM.value, 
+            constants.ConfigManagerNames.CONFIG_PARAM: GeminiLLMModel.GEMINI_FLASH.value
         }),
         # (RerankerType.JINA.value, {
-        #     constants.CONFIG_TYPE_PARAM: RerankerType.JINA.value, 
-        #     constants.CONFIG_PARAM: JINA_RERANKER_MODELS.JINA_RERANKER_MULTILINGUAL.value
+        #     constants.ConfigManagerNames.CONFIG_TYPE_PARAM: RerankerType.JINA.value, 
+        #     constants.ConfigManagerNames.CONFIG_PARAM: JINA_RERANKER_MODELS.JINA_RERANKER_MULTILINGUAL.value
         # }),
         
         (RerankerType.COHERE.value, {
-            constants.CONFIG_TYPE_PARAM: RerankerType.COHERE.value, 
-            constants.CONFIG_PARAM: CohereRerankingModels.RERANK_DEFAULT_MODEL.value
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: RerankerType.COHERE.value, 
+            constants.ConfigManagerNames.CONFIG_PARAM: CohereRerankingModels.RERANK_DEFAULT_MODEL.value
         }),
     ]
 
     llm_service_configs = [(constants.LLMServiceType.GEMINI.value, {
-        constants.CONFIG_TYPE_PARAM: constants.LLMServiceType.GEMINI.value, 
-        constants.CONFIG_MODEL: constants.GeminiLLMModel.GEMINI_PRO.value
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.LLMServiceType.GEMINI.value, 
+        constants.ConfigManagerNames.CONFIG_MODEL: constants.GeminiLLMModel.GEMINI_PRO.value
     })]
     
     # Create CSV file with headers
@@ -272,15 +272,15 @@ def run_tests():
     texts = pipeline.extractText(DummyFile(TEST_FILE_PATH))
     # Test each combination
     for chunker_name, chunker_config in chunker_configs:
-        pipeline.component_manager.update_component(constants.CONFIG_CHUNKER, chunker_config)
+        pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_CHUNKER, chunker_config)
         for embedder_name, embedder_config in embedder_configs:
-            pipeline.component_manager.update_component(constants.CONFIG_EMBEDDER, embedder_config)
+            pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_EMBEDDER, embedder_config)
             for vs_name, vs_config in vector_store_configs:
-                pipeline.component_manager.update_component(constants.CONFIG_VECTOR_STORE, vs_config)
+                pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_VECTOR_STORE, vs_config)
                 for retriever_name, retriever_config in retriever_configs:
-                    pipeline.component_manager.update_component(constants.CONFIG_RETRIEVER, retriever_config)
+                    pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_RETRIEVER, retriever_config)
                     for reranker_name, reranker_config in reranker_configs:
-                        pipeline.component_manager.update_component(constants.CONFIG_RERANKER, reranker_config)
+                        pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_RERANKER, reranker_config)
                         for llm_service_name, llm_service_config in llm_service_configs:
                             counter += 1
                             print(f"/nTesting combination {counter}/{total_combinations}:")
@@ -291,7 +291,7 @@ def run_tests():
                             print(f"Reranker: {reranker_name}")
                             
                             # Update components with the specific configurations
-                            pipeline.component_manager.update_component(constants.CONFIG_LLM, llm_service_config)
+                            pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_LLM, llm_service_config)
                             # Test the combination
                             result = test_rag_combination(
                                 config_manager,

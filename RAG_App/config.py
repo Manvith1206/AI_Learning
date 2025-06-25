@@ -18,19 +18,19 @@ class ConfigManager:
       }
     },
     "embedder": {
-      "type": "cohere",
+      "type": "Voyage",
       "params": {
-        "model": "embed-v4.0"
+        "model": "voyage-3-lite"
       }
     },
     "vector_store": {
-      "type": "pine-cone",
+      "type": "faiss",
       "params": {}
     },
     "retriever": {
-      "type": "hybrid",
+      "type": "similarity",
       "params": {
-        "keyword_weight": 0.5,
+        "similarity_threshold": 0.0,
         "top_k": 20
       }
     },

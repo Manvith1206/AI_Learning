@@ -46,17 +46,17 @@ class DummyFile:
 
 # Parameter grids for automated testing of types with params
 CHUNKER_PARAM_GRID = [
-    (constants.ChunkerType.RECURSIVE.value, {constants.CONFIG_CHUNK_SIZE_PARAM: 600, constants.CONFIG_CHUNK_OVERLAP_PARAM: 200}),
-    (constants.ChunkerType.SEMANTIC.value, {constants.CONFIG_MIN_CHUNK_SIZE_DISPLAY_NAME: 600, constants.CONFIG_MAX_CHUNK_SIZE_DISPLAY_NAME: 1000, constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.65, constants.CONFIG_MODEL_NAME: constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI})
+    (constants.ChunkerType.RECURSIVE.value, {constants.ConfigManagerNames.CONFIG_CHUNK_SIZE_PARAM: 600, constants.CONFIG_CHUNK_OVERLAP_PARAM: 200}),
+    (constants.ChunkerType.SEMANTIC.value, {constants.CONFIG_MIN_CHUNK_SIZE_DISPLAY_NAME: 600, constants.CONFIG_MAX_CHUNK_SIZE_DISPLAY_NAME: 1000, constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.65, constants.ConfigManagerNames.CONFIG_MODEL_NAME: constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI})
 ]
 
-EMBEDDER_PARAM_GRID = [(constants.EmbedderType.GEMINI.value, {constants.CONFIG_MODEL: m.value}) for m in constants.GeminiEmbedModels] \
-  + [(constants.EmbedderType.COHERE.value, {constants.CONFIG_MODEL: m.value}) for m in constants.CohereEmbedModels] \
-  + [(constants.EmbedderType.VOYAGE.value, {constants.CONFIG_MODEL: m.value}) for m in constants.VoyageEmbedModels]
+EMBEDDER_PARAM_GRID = [(constants.EmbedderType.GEMINI.value, {constants.ConfigManagerNames.CONFIG_MODEL: m.value}) for m in constants.GeminiEmbedModels] \
+  + [(constants.EmbedderType.COHERE.value, {constants.ConfigManagerNames.CONFIG_MODEL: m.value}) for m in constants.CohereEmbedModels] \
+  + [(constants.EmbedderType.VOYAGE.value, {constants.ConfigManagerNames.CONFIG_MODEL: m.value}) for m in constants.VoyageEmbedModels]
 
 VECTOR_STORE_PARAM_GRID = [
-    (constants.CONFIG_VECTOR_STORE_SKLEARN, {constants.CONFIG_VECTOR_STORE_METRIC: constants.CONFIG_METRIC_COSINE}),
-    (constants.CONFIG_VECTOR_STORE_FAISS, {}),
+    (constants.ConfigManagerNames.CONFIG_VECTOR_STORE_SKLEARN, {constants.ConfigManagerNames.CONFIG_VECTOR_STORE_METRIC: constants.CONFIG_METRIC_COSINE}),
+    (constants.ConfigManagerNames.CONFIG_VECTOR_STORE_FAISS, {}),
 ]
 
 RETRIEVER_PARAM_GRID = [
@@ -66,8 +66,8 @@ RETRIEVER_PARAM_GRID = [
 
 RERANKER_PARAM_GRID = [
     (constants.RerankerType.COSINE.value, {}),
-] + [(constants.RerankerType.LLM.value, {constants.CONFIG_PARAM: constants.GeminiLLMModel.GEMINI_FLASH.value})] \
-  + [(constants.RerankerType.COHERE.value, {constants.CONFIG_PARAM: constants.CohereRerankingModels.RERANK_DEFAULT_MODEL.value})]
+] + [(constants.RerankerType.LLM.value, {constants.ConfigManagerNames.CONFIG_PARAM: constants.GeminiLLMModel.GEMINI_FLASH.value})] \
+  + [(constants.RerankerType.COHERE.value, {constants.ConfigManagerNames.CONFIG_PARAM: constants.CohereRerankingModels.RERANK_DEFAULT_MODEL.value})]
 
 EVALUATOR_PARAM_GRID = [
     (constants.EvaluatorType.RAGAS.value, {}),
@@ -93,14 +93,14 @@ def test_all_combinations():
                         print("Retriever: " + reranker_type, "Params: " + str(reranker_params))
                         cm = ConfigManager()
                         pipeline = RAGPipeline(cm)
-                        pipeline.component_manager.update_component(constants.CONFIG_CHUNKER, {constants.CONFIG_TYPE_PARAM: chunker_type, constants.CONFIG_PARAM: chunker_params})
-                        pipeline.update_component(constants.CONFIG_EMBEDDER, {constants.CONFIG_TYPE_PARAM: embedder_type, constants.CONFIG_PARAM: embedder_params})
-                        vs_cfg = {constants.CONFIG_TYPE_PARAM: vs_type}
-                        if vs_type == constants.CONFIG_VECTOR_STORE_SKLEARN:
-                            vs_cfg[constants.CONFIG_VECTOR_STORE_METRIC] = constants.CONFIG_METRIC_COSINE
-                        pipeline.component_manager.update_component(constants.CONFIG_VECTOR_STORE, vs_cfg)
-                        pipeline.component_manager.update_component(constants.CONFIG_RETRIEVER, {constants.CONFIG_TYPE_PARAM: retriever_type, constants.CONFIG_PARAM: retriever_params, constants.CONFIG_TOP_K_PARAM: 5})
-                        pipeline.component_manager.update_component(constants.CONFIG_RERANKER, {constants.CONFIG_TYPE_PARAM: reranker_type, constants.CONFIG_PARAM: reranker_params})
+                        pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_CHUNKER, {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: chunker_type, constants.ConfigManagerNames.CONFIG_PARAM: chunker_params})
+                        pipeline.update_component(constants.ConfigManagerNames.CONFIG_EMBEDDER, {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: embedder_type, constants.ConfigManagerNames.CONFIG_PARAM: embedder_params})
+                        vs_cfg = {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: vs_type}
+                        if vs_type == constants.ConfigManagerNames.CONFIG_VECTOR_STORE_SKLEARN:
+                            vs_cfg[constants.ConfigManagerNames.CONFIG_VECTOR_STORE_METRIC] = constants.CONFIG_METRIC_COSINE
+                        pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_VECTOR_STORE, vs_cfg)
+                        pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_RETRIEVER, {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: retriever_type, constants.ConfigManagerNames.CONFIG_PARAM: retriever_params, constants.CONFIG_TOP_K_PARAM: 5})
+                        pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_RERANKER, {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: reranker_type, constants.ConfigManagerNames.CONFIG_PARAM: reranker_params})
                         try:
                             docs, chunks = pipeline.process_document(DummyFile(TEST_FILE_PATH))
                             status = "success" if docs and chunks else "no_output"

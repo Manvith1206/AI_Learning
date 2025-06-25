@@ -5,8 +5,6 @@ from infrastructure.common.rag_constants import (
     EvaluatorType, LLMServiceType
 )
 from UI.pages.main_page import MainPage
-from infrastructure.testing.config_generator import generate_configurations
-generate_configurations()
 configs = []
 
 class DummyFile:
@@ -83,13 +81,13 @@ def test_rag_combinations():
     # Accessing the content
     for item in data:
         for config in configs:
-            ragPipeline.component_manager.update_component(constants.CONFIG_CHUNKER, config[constants.CONFIG_CHUNKER])
-            ragPipeline.component_manager.update_component(constants.CONFIG_EMBEDDER, config[constants.CONFIG_EMBEDDER])
-            ragPipeline.component_manager.update_component(constants.CONFIG_VECTOR_STORE, config[constants.CONFIG_VECTOR_STORE])
-            ragPipeline.component_manager.update_component(constants.CONFIG_RETRIEVER, config[constants.CONFIG_RETRIEVER])
-            ragPipeline.component_manager.update_component(constants.CONFIG_RERANKER, config[constants.CONFIG_RERANKER])
-            ragPipeline.component_manager.update_component(constants.CONFIG_LLM, config[constants.CONFIG_LLM])
-            ragPipeline.component_manager.update_component(constants.CONFIG_EVALUATOR, config[constants.CONFIG_EVALUATOR])
+            ragPipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_CHUNKER, config[constants.ConfigManagerNames.CONFIG_CHUNKER])
+            ragPipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_EMBEDDER, config[constants.ConfigManagerNames.CONFIG_EMBEDDER])
+            ragPipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_VECTOR_STORE, config[constants.ConfigManagerNames.CONFIG_VECTOR_STORE])
+            ragPipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_RETRIEVER, config[constants.ConfigManagerNames.CONFIG_RETRIEVER])
+            ragPipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_RERANKER, config[constants.ConfigManagerNames.CONFIG_RERANKER])
+            ragPipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_LLM, config[constants.ConfigManagerNames.CONFIG_LLM])
+            ragPipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_EVALUATOR, config[constants.ConfigManagerNames.CONFIG_EVALUATOR])
             mainPage.load_pre_processed_docs_or_process_the_doc(DummyFile(TEST_FILE_PATH))
             
             response = ragPipeline.query(item["Question"], "")
@@ -142,12 +140,12 @@ def test_rag_combinations():
             context_precision = result[constants.CONTEXT_PRECISION]
             answer_relavancy = result[constants.ANSWER_RELEVANCY]
 
-            chunker_name = f"{config[constants.CONFIG_CHUNKER][constants.CONFIG_TYPE_PARAM]}_{config[constants.CONFIG_CHUNKER][constants.CONFIG_PARAM]}\nCost: {chunker_cost}"
-            retriever_name = f"{config[constants.CONFIG_RETRIEVER][constants.CONFIG_TYPE_PARAM]}_{config[constants.CONFIG_RETRIEVER][constants.CONFIG_PARAM]}\nCost: {retriever_cost}"
-            reranker_name = f"{config[constants.CONFIG_RERANKER][constants.CONFIG_TYPE_PARAM]}_{config[constants.CONFIG_RERANKER][constants.CONFIG_PARAM]}\nCost: {reranker_cost}"
-            vs_name = f"{config[constants.CONFIG_VECTOR_STORE][constants.CONFIG_TYPE_PARAM]}_{config[constants.CONFIG_VECTOR_STORE][constants.CONFIG_PARAM]}\nCost: {vector_store_cost}"
-            llm_service_name = f"{config[constants.CONFIG_LLM][constants.CONFIG_TYPE_PARAM]}_{config[constants.CONFIG_LLM][constants.CONFIG_PARAM]}\nCost: {llm_service_cost}"
-            embedder_name = f"{config[constants.CONFIG_EMBEDDER][constants.CONFIG_TYPE_PARAM]}_{config[constants.CONFIG_EMBEDDER][constants.CONFIG_PARAM]}\nCost: {embedder_cost}"
+            chunker_name = f"{config[constants.ConfigManagerNames.CONFIG_CHUNKER][constants.ConfigManagerNames.CONFIG_TYPE_PARAM]}_{config[constants.ConfigManagerNames.CONFIG_CHUNKER][constants.ConfigManagerNames.CONFIG_PARAM]}\nCost: {chunker_cost}"
+            retriever_name = f"{config[constants.ConfigManagerNames.CONFIG_RETRIEVER][constants.ConfigManagerNames.CONFIG_TYPE_PARAM]}_{config[constants.ConfigManagerNames.CONFIG_RETRIEVER][constants.ConfigManagerNames.CONFIG_PARAM]}\nCost: {retriever_cost}"
+            reranker_name = f"{config[constants.ConfigManagerNames.CONFIG_RERANKER][constants.ConfigManagerNames.CONFIG_TYPE_PARAM]}_{config[constants.ConfigManagerNames.CONFIG_RERANKER][constants.ConfigManagerNames.CONFIG_PARAM]}\nCost: {reranker_cost}"
+            vs_name = f"{config[constants.ConfigManagerNames.CONFIG_VECTOR_STORE][constants.ConfigManagerNames.CONFIG_TYPE_PARAM]}_{config[constants.ConfigManagerNames.CONFIG_VECTOR_STORE][constants.ConfigManagerNames.CONFIG_PARAM]}\nCost: {vector_store_cost}"
+            llm_service_name = f"{config[constants.ConfigManagerNames.CONFIG_LLM][constants.ConfigManagerNames.CONFIG_TYPE_PARAM]}_{config[constants.ConfigManagerNames.CONFIG_LLM][constants.ConfigManagerNames.CONFIG_PARAM]}\nCost: {llm_service_cost}"
+            embedder_name = f"{config[constants.ConfigManagerNames.CONFIG_EMBEDDER][constants.ConfigManagerNames.CONFIG_TYPE_PARAM]}_{config[constants.ConfigManagerNames.CONFIG_EMBEDDER][constants.ConfigManagerNames.CONFIG_PARAM]}\nCost: {embedder_cost}"
             
             with open(RESULTS_CSV_PATH, 'a', newline='', encoding='utf-8') as f:
                 writer = csv.writer(f)

@@ -45,8 +45,8 @@ class LLM_Evaluation_Service():
         """Calculates semantic similarity between two texts (e.g., using embeddings and cosine similarity)."""
         try:
             
-            text1_vec = self.embedder.transform([text1])  # shape (1, dim)
-            text2_vecs = self.embedder.transform(text2)  # shape (n, dim)
+            text1_vec = self.embedder.embed_documents([text1])  # shape (1, dim)
+            text2_vecs = self.embedder.embed_documents(text2)  # shape (n, dim)
 
             sims = cosine_similarity(text1_vec, text2_vecs).flatten()
             print("Similarity: ", float(sims))

@@ -5,6 +5,7 @@ import json
 from typing import List, Dict, Any, Optional, Literal
 from infrastructure.prompt_providers.query_classifier_prompt_provider import Query_Classifier_Prompt_Provider
 from infrastructure.llm_chat_services.base_llm_service import BaseLLMService
+import infrastructure.common.rag_constants as constants
 
 class QueryClassifier:
     """
@@ -47,11 +48,11 @@ class QueryClassifier:
         if not self.llm_service:
             # Fallback to basic classification if LLM service is not available
             if self._basic_is_greeting(query_text):
-                return {"type": "greeting", "confidence": 0.9}
+                return {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.Constants.GREETING, constants.Constants.CONFIDENCE: 0.9}
             elif context_docs and self._basic_is_irrelevant(query_text, context_docs):
-                return {"type": "irrelevant", "confidence": 0.7}
+                return {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.Constants.IRRELEVANT, constants.Constants.CONFIDENCE: 0.7}
             else:
-                return {"type": "relevant", "confidence": 0.8}
+                return {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.Constants.RELEVANT, constants.Constants.CONFIDENCE: 0.8}
         
         # Define the function schema for the LLM
         function_schema = self.llm_service.get_function_schema()
@@ -75,9 +76,9 @@ class QueryClassifier:
             if isinstance(function_args, str):
                 function_args = json.loads(function_args)
             return {
-                "type": function_args.get("query_type", "relevant"),
-                "confidence": function_args.get("confidence", 0.5),
-                "explanation": function_args.get("explanation", "")
+                constants.ConfigManagerNames.CONFIG_TYPE_PARAM: function_args.get(constants.Constants.QUERY_TYPE, constants.Constants.RELEVANT),
+                constants.Constants.CONFIDENCE: function_args.get(constants.Constants.CONFIDENCE, 0.5),
+                constants.Constants.EXPLANATION: function_args.get(constants.Constants.EXPLANATION, "")
             }
             
         except Exception as e:
@@ -117,11 +118,11 @@ class QueryClassifier:
             Dict[str, Any]: Classification result
         """
         if self._basic_is_greeting(query_text):
-            return {"type": "greeting", "confidence": 0.8, "explanation": "Query appears to be a greeting"}
+            return {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.Constants.GREETING, constants.Constants.CONFIDENCE: 0.8, constants.Constants.EXPLANATION: "Query appears to be a greeting"}
         elif context_docs and self._basic_is_irrelevant(query_text, context_docs):
-            return {"type": "irrelevant", "confidence": 0.6, "explanation": "Query appears unrelated to context"}
+            return {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.Constants.IRRELEVANT, constants.Constants.CONFIDENCE: 0.6, constants.Constants.EXPLANATION: "Query appears unrelated to context"}
         else:
-            return {"type": "relevant", "confidence": 0.7, "explanation": "Query appears to be a relevant question"}
+            return {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.Constants.RELEVANT, constants.Constants.CONFIDENCE: 0.7, constants.Constants.EXPLANATION: "Query appears to be a relevant question"}
     
     def _basic_is_greeting(self, query_text: str):
         """
@@ -198,7 +199,7 @@ class QueryClassifier:
             bool: True if the query is a greeting, False otherwise
         """
         result = self.classify_query(query_text)
-        return result["type"] == "greeting"
+        return result[constants.ConfigManagerNames.CONFIG_TYPE_PARAM] == constants.Constants.GREETING
     
     def is_irrelevant(self, query_text: str, context_docs: List[str]):
         """
@@ -212,7 +213,7 @@ class QueryClassifier:
             bool: True if the query is irrelevant, False otherwise
         """
         result = self.classify_query(query_text, context_docs)
-        return result["type"] == "irrelevant"
+        return result[constants.ConfigManagerNames.CONFIG_TYPE_PARAM] == constants.Constants.IRRELEVANT
     
     def get_greeting_response(self) -> str:
         """
@@ -221,9 +222,9 @@ class QueryClassifier:
         Returns:
             str: A greeting response
         """
-        return """Hello! I'm your document assistant. I can help answer questions about the documents you've uploaded. 
-        
-How can I help you today? If you have any specific questions about your documents, feel free to ask!"""
+        return """
+        Hello! I'm your document assistant. I can help answer questions about the documents you've uploaded. 
+        How can I help you today? If you have any specific questions about your documents, feel free to ask!"""
     
     def get_irrelevant_question_response(self):
         """
@@ -232,6 +233,7 @@ How can I help you today? If you have any specific questions about your document
         Returns:
             str: A response for irrelevant questions
         """
-        return """I'm sorry, but your question appears to be unrelated to the documents I have access to. 
-
-I'm designed to help answer questions specifically about the content in your uploaded documents. Could you please ask a question related to the documents, or upload additional documents if you're looking for information on a different topic?"""
+        return """
+        I'm sorry, but your question appears to be unrelated to the documents I have access to.
+        I'm designed to help answer questions specifically about the content in your uploaded documents. 
+        Could you please ask a question related to the documents, or upload additional documents if you're looking for information on a different topic?"""

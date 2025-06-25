@@ -15,7 +15,7 @@ from infrastructure.evaluators.ragas_evaluator import RagasEvaluator
 from infrastructure.evaluators.deep_eval_evaluator import DeepEval
 from config import ConfigManager
 from typing import Any
-from models import ComponentConfigDetails, ComponentConfigDetail
+from models import ComponentConfigDetails
 
 class ComponentManager:
     def __init__(self, 
@@ -60,13 +60,13 @@ class ComponentManager:
 
         component_config_details = {}
         
-        component_config_details[constants.CONFIG_CHUNKER] = self.chunker
-        component_config_details[constants.CONFIG_EMBEDDER] = self.embedder
-        component_config_details[constants.CONFIG_VECTOR_STORE] = self.vector_store
-        component_config_details[constants.CONFIG_RETRIEVER] = self.retriever
-        component_config_details[constants.CONFIG_RERANKER] = self.reranker
-        component_config_details[constants.CONFIG_EVALUATOR] = self.evaluator
-        component_config_details[constants.CONFIG_LLM] = self.llm_service 
+        component_config_details[constants.ConfigManagerNames.CONFIG_CHUNKER] = self.chunker
+        component_config_details[constants.ConfigManagerNames.CONFIG_EMBEDDER] = self.embedder
+        component_config_details[constants.ConfigManagerNames.CONFIG_VECTOR_STORE] = self.vector_store
+        component_config_details[constants.ConfigManagerNames.CONFIG_RETRIEVER] = self.retriever
+        component_config_details[constants.ConfigManagerNames.CONFIG_RERANKER] = self.reranker
+        component_config_details[constants.ConfigManagerNames.CONFIG_EVALUATOR] = self.evaluator
+        component_config_details[constants.ConfigManagerNames.CONFIG_LLM] = self.llm_service 
 
         component_config_details = ComponentConfigDetails(component_config_details)
         print("Setup Components")
@@ -103,9 +103,9 @@ class ComponentManager:
         from infrastructure.chunkers.page_chunker import PageChunker
         from infrastructure.chunkers.semantic_chunker_with_langchain import SemanticChunkerWithLangChain
 
-        config = self.get_config_from_config_manager_based_on_config(constants.CONFIG_CHUNKER)
-        config_type = self.get_config_param_from_config(config, constants.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.CONFIG_PARAM, {})
+        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_CHUNKER)
+        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
+        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
 
         if config_type == ChunkerType.RECURSIVE.value:
             return RecursiveChunker(**params)
@@ -125,10 +125,10 @@ class ComponentManager:
         from infrastructure.embedders.gemini_embedder import GeminiEmbedder
         from infrastructure.embedders.mistral_embedder import MistralEmbedder
 
-        config = self.get_config_from_config_manager_based_on_config(constants.CONFIG_EMBEDDER)
-        config_type = self.get_config_param_from_config(config, constants.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.CONFIG_PARAM, {})
-        model_name =  self.get_config_param_from_config(params, constants.CONFIG_MODEL, {})
+        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_EMBEDDER)
+        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
+        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
+        model_name =  self.get_config_param_from_config(params, constants.ConfigManagerNames.CONFIG_MODEL, {})
 
         if config_type == EmbedderType.TFIDF.value:
             return TFIDFEmbedder()
@@ -154,32 +154,32 @@ class ComponentManager:
         from infrastructure.vector_stores.FAISS_Vector_Store import FAISS_Vector_Store
         from infrastructure.vector_stores.sklearn_vector_store import SklearnVectorStore
 
-        config = self.get_config_from_config_manager_based_on_config(constants.CONFIG_VECTOR_STORE)
-        config_type = self.get_config_param_from_config(config, constants.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.CONFIG_PARAM, {})
+        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_VECTOR_STORE)
+        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
+        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
         
         if config_type == constants.VectorStore.SCIKIT_LEARN.value:
             return SklearnVectorStore(**params)
         elif config_type == constants.VectorStore.PINE_CONE.value:
-            return PineConeVectorStore(api_key=self.pineconeApiKey, index_name=constants.PINE_CONE_INDEX_NAME)
+            return PineConeVectorStore(api_key=self.pineconeApiKey, index_name=constants.PineConeStorageConstants.PINE_CONE_INDEX_NAME)
         elif config_type == constants.VectorStore.CHROMA.value:
             from infrastructure.vector_stores.chroma_vector_store import ChromaVectorStore
-            return ChromaVectorStore(**params, collectionName=constants.CHROMA_COLLECTION_NAME)
+            return ChromaVectorStore(**params, collectionName=constants.ChromaStorageConstants.CHROMA_COLLECTION_NAME)
         elif config_type == constants.VectorStore.FAISS.value:
             return FAISS_Vector_Store()
         else:
-            return SklearnVectorStore(metric=constants.CONFIG_METRIC_COSINE)
+            return SklearnVectorStore(metric=constants.ConfigManagerNames.CONFIG_METRIC_COSINE)
 
     def _build_retriever(self):
         from infrastructure.retrieval_methods.similarity_retriever import SimilarityRetriever
         from infrastructure.retrieval_methods.sentence_window_retreiver import SentenceWindowRetriever
         from infrastructure.retrieval_methods.similarity_retriever import SimilarityRetriever
 
-        config = self.get_config_from_config_manager_based_on_config(constants.CONFIG_RETRIEVER)
-        config_type = self.get_config_param_from_config(config, constants.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.CONFIG_PARAM, {})
+        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_RETRIEVER)
+        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
+        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
 
-        self.top_k = self.get_config_param_from_config(params, constants.CONFIG_TOP_K_PARAM, 0)
+        self.top_k = self.get_config_param_from_config(params, constants.ConfigManagerNames.CONFIG_TOP_K_PARAM, 0)
         if config_type == RetrieverType.SIMILARITY.value:
             return SimilarityRetriever(**params)
         elif config_type == RetrieverType.HYBRID.value:
@@ -195,11 +195,11 @@ class ComponentManager:
         from infrastructure.llm_chat_services.gemini_service import GeminiService
         from google import genai
 
-        config = self.get_config_from_config_manager_based_on_config(constants.CONFIG_LLM)
-        config_type = self.get_config_param_from_config(config, constants.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.CONFIG_PARAM, {})
+        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_LLM)
+        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
+        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
 
-        model_name = self.get_config_param_from_config(params, constants.CONFIG_MODEL, "")
+        model_name = self.get_config_param_from_config(params, constants.ConfigManagerNames.CONFIG_MODEL, "")
 
         if config_type == LLMServiceType.GEMINI.value:
             client = genai.Client(api_key=self.geminiApiKey)
@@ -214,11 +214,11 @@ class ComponentManager:
 
     def _build_reranker(self):
         
-        config = self.get_config_from_config_manager_based_on_config(constants.CONFIG_RERANKER)
-        config_type = self.get_config_param_from_config(config, constants.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.CONFIG_PARAM, {})
+        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_RERANKER)
+        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
+        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
 
-        top_k = self.get_config_param_from_config(params, constants.CONFIG_TOP_K_FOR_RERANKING_PARAM, 0)
+        top_k = self.get_config_param_from_config(params, constants.ConfigManagerNames.CONFIG_TOP_K_FOR_RERANKING_PARAM, 0)
         if config_type == RerankerType.LLM.value:
             from infrastructure.rerankers.llm_reranker import LLMReranker
 
@@ -242,9 +242,9 @@ class ComponentManager:
 
     def _build_evaluator(self):
         from infrastructure.evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
-        config = self.get_config_from_config_manager_based_on_config(constants.CONFIG_EVALUATOR)
-        config_type = self.get_config_param_from_config(config, constants.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.CONFIG_PARAM, {})
+        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_EVALUATOR)
+        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
+        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
 
 
         if config_type == EvaluatorType.RAGAS.value:
@@ -253,7 +253,7 @@ class ComponentManager:
             try:
                 gemini_api_key = self.geminiApiKey
                 if not gemini_api_key:
-                    self.error_callback(f"Gemini API key ({constants.GEMINI_API_KEY}) not found in st.secrets for Custom Evaluator.")
+                    self.error_callback(f"Gemini API key ({constants.APIKeys.GEMINI_API_KEY}) not found in st.secrets for Custom Evaluator.")
                     self.warning_callback("Falling back to SimpleEvaluator.")
                     return SimpleEvaluator()
                 
@@ -283,18 +283,18 @@ class ComponentManager:
     def update_component(self, component_name, config):
         self.config_manager.update_config(component_name, config)
         if component_name in [
-            constants.CONFIG_CHUNKER,
-            constants.CONFIG_EMBEDDER,
-            constants.CONFIG_VECTOR_STORE,
-            constants.CONFIG_LLM,
-            constants.CONFIG_RERANKER
+            constants.ConfigManagerNames.CONFIG_CHUNKER,
+            constants.ConfigManagerNames.CONFIG_EMBEDDER,
+            constants.ConfigManagerNames.CONFIG_VECTOR_STORE,
+            constants.ConfigManagerNames.CONFIG_LLM,
+            constants.ConfigManagerNames.CONFIG_RERANKER
         ]:
             # heavy components: rebuild whole pipeline
             self.setup_components()
-        elif component_name == constants.CONFIG_RETRIEVER:
+        elif component_name == constants.ConfigManagerNames.CONFIG_RETRIEVER:
             # hot-swap retriever only
             self.retriever = self._build_retriever()
-        elif component_name == constants.CONFIG_EVALUATOR:
+        elif component_name == constants.ConfigManagerNames.CONFIG_EVALUATOR:
             # hot-swap evaluator only
             self.evaluator = self._build_evaluator()
         # else: unknown component, ignore

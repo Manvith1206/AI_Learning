@@ -15,17 +15,17 @@ class DocumentProcessing:
         self.embedder = embedder
         self.chunker = chunker
 
-    def extractText(self, file: UploadedFile, temp_dir=constants.TEMP_DOCS_DIR):
+    def extractText(self, file: UploadedFile, temp_dir=constants.Constants.TEMP_DOCS_DIR):
         try:
             from infrastructure.document_loaders.pdf_loader import PDFLoader
             from infrastructure.document_loaders.docx_loader import DOCXLoader
             from infrastructure.document_loaders.txt_loader import TXTLoader
             from infrastructure.document_loaders.csv_loader import CSVLoader
             loaders = {
-                constants.PDF_EXTENSION: PDFLoader(),
-                constants.DOCX_EXTENSION: DOCXLoader(),
-                constants.TXT_EXTENSION: TXTLoader(),
-                constants.CSV_EXTENSION: CSVLoader(),
+                constants.FileExtensionConstants.PDF_EXTENSION: PDFLoader(),
+                constants.FileExtensionConstants.DOCX_EXTENSION: DOCXLoader(),
+                constants.FileExtensionConstants.TXT_EXTENSION: TXTLoader(),
+                constants.FileExtensionConstants.CSV_EXTENSION: CSVLoader(),
             }
             os.makedirs(temp_dir, exist_ok=True)
             file_ext = os.path.splitext(file.name)[1].lower()
@@ -47,7 +47,7 @@ class DocumentProcessing:
 
             # # Remove extra whitespaces and newlines
             # text = re.sub(r"\s+", " ", text).strip()
-            with open("ExtractedTextFromPdf.txt", "w", encoding="utf-8") as file:
+            with open(constants.Constants.EXTRACTED_TEXT_FILE_PATH, "w", encoding="utf-8") as file:
                 file.write(text)
 
             if not text:
@@ -68,11 +68,11 @@ class DocumentProcessing:
             for chunk in chunks:
                 doc_id = str(uuid.uuid4())
                 documents.append({
-                    constants.ID: doc_id,
-                    constants.PAGE_CONTENT: chunk,
-                    constants.METADATA: {"source": file.name}
+                    constants.Constants.ID: doc_id,
+                    constants.Constants.PAGE_CONTENT: chunk,
+                    constants.Constants.METADATA: {"source": file.name}
                 })
-            texts = [doc[constants.PAGE_CONTENT] for doc in documents]
+            texts = [doc[constants.Constants.PAGE_CONTENT] for doc in documents]
             
             embeddings = self.embedder.embed_documents(texts)
             

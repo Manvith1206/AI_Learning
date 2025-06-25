@@ -22,27 +22,23 @@ class QueryProcessing:
     def greetUser(self, query_text):
         if self.query_classifier.is_greeting(query_text):
             return {
-                constants.ANSWER: self.query_classifier.get_greeting_response(),
-                constants.CONTEXTS: "",
-                constants.RERANK_EXPLANATION: ""
+                constants.Constants.ANSWER: self.query_classifier.get_greeting_response(),
+                constants.Constants.CONTEXTS: "",
+                constants.Constants.RERANK_EXPLANATION: ""
             }
         
     def irrelvant(self, query_text):
         context_docs = self.get_context_docs(query_text)
         if self.query_classifier.is_irrelevant(query_text, context_docs):
             return {
-                constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
-                constants.CONTEXTS: context_docs,
-                constants.RERANK_EXPLANATION: ""
+                constants.Constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
+                constants.Constants.CONTEXTS: context_docs,
+                constants.Constants.RERANK_EXPLANATION: ""
             }
         
     def get_context_docs(self, query_text):
-        
-        if not hasattr(self.vector_store, 'documents') or not self.vector_store.documents:
-                raise ValueError("No documents processed. Please upload and process a document before querying.")
-        
         # Generate query embedding
-        query_embedding = self.embedder.transform([query_text])
+        query_embedding = self.embedder.embed_documents([query_text])
         if isinstance(query_embedding, list) and query_embedding:
             first = query_embedding[0]
             if hasattr(first, "values"):
@@ -60,7 +56,7 @@ class QueryProcessing:
             
         # Use retriever to get relevant documents
         if not retrieved_docs:
-            raise ValueError(constants.UNABLE_TO_RETRIEVE_MESSAGE)
+            raise ValueError(constants.UIDisplayNameConstants.UNABLE_TO_RETRIEVE_MESSAGE)
         
         # Rerank documents
         reranked_docs, explanation = self.reranker.rerank(query_text, retrieved_docs)
@@ -82,9 +78,9 @@ class QueryProcessing:
                 # UIComponents.create_subheader_UI(self.query_classifier.get_greeting_response())
                 # UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_greeting_response())
                 yield {
-                constants.ANSWER: self.query_classifier.get_greeting_response(),
-                constants.CONTEXTS: "",
-                constants.RERANK_EXPLANATION: ""
+                constants.Constants.ANSWER: self.query_classifier.get_greeting_response(),
+                constants.Constants.CONTEXTS: "",
+                constants.Constants.RERANK_EXPLANATION: ""
             }
                 return
             # query_text = self.rewrite_query(query_text)
@@ -95,15 +91,13 @@ class QueryProcessing:
                 # UIComponents.create_subheader_UI(self.query_classifier.get_irrelevant_question_response())
                 # UIComponents.add_message_to_chat("assistant",  self.query_classifier.get_irrelevant_question_response())
                 yield {
-                constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
-                constants.CONTEXTS: context_docs,
-                constants.RERANK_EXPLANATION: ""
+                constants.Constants.ANSWER: self.query_classifier.get_irrelevant_question_response(),
+                constants.Constants.CONTEXTS: context_docs,
+                constants.Constants.RERANK_EXPLANATION: ""
             }
                 return
             # Join contexts
             context = "\n\n".join(context_docs)
-            with open("Contexts.txt", "w", encoding="utf-8") as file:
-                file.write(context)
 
             llm_chat_prompt_provider = LLM_Chat_Prompt_Provider()
             # Generate answer
@@ -113,16 +107,16 @@ class QueryProcessing:
             for delta in self.llm_service.generate_response(answer_prompt):
                 full_response += delta
                 yield {
-                constants.ANSWER: full_response,
-                constants.CONTEXTS: context_docs,
-                constants.RERANK_EXPLANATION: ""
+                constants.Constants.ANSWER: full_response,
+                constants.Constants.CONTEXTS: context_docs,
+                constants.Constants.RERANK_EXPLANATION: ""
             }
 
             # Save the query data for potential evaluation
             self.last_query = {
-                constants.QUESTION: query_text,
-                constants.ANSWER: full_response,
-                constants.CONTEXTS: context_docs_list
+                constants.Constants.QUESTION: query_text,
+                constants.Constants.ANSWER: full_response,
+                constants.Constants.CONTEXTS: context_docs_list
             }
             
         except Exception as e:

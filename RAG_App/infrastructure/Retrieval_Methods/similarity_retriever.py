@@ -30,9 +30,9 @@ class SimilarityRetriever(BaseRetriever):
         else:
             emb_arr = np.array(query_embedding, dtype=np.float32)
         # Get vector store from kwargs
-        vector_store = kwargs.get(constants.CONFIG_VECTOR_STORE)
+        vector_store = kwargs.get(constants.ConfigManagerNames.CONFIG_VECTOR_STORE)
         if not vector_store:
-            raise ValueError(constants.VECTOR_STORE_MUST_BE_PROVIDED_ERROR_MESSAGE)
+            raise ValueError(constants.UIDisplayNameConstants.VECTOR_STORE_MUST_BE_PROVIDED_ERROR_MESSAGE)
             
         # Get search results from vector store
         
@@ -40,12 +40,12 @@ class SimilarityRetriever(BaseRetriever):
         # Filter by similarity threshold if needed
         filtered_results = [
             result for result in results 
-            if result[constants.Score] >= self.similarity_threshold
+            if result[constants.Constants.Score] >= self.similarity_threshold
         ]
         end_time = time.time()
         self.time_taken = end_time - start_time
         final_results = [
-            result[constants.Document][constants.PAGE_CONTENT] for result in filtered_results 
+            result[constants.Constants.Document][constants.Constants.PAGE_CONTENT] for result in filtered_results 
         ]
         return final_results
     

@@ -2,14 +2,27 @@ from .base_vector_store import BaseVectorStore
 import chromadb
 import numpy as np
 import infrastructure.common.rag_constants as constants
+import time
 
 class ChromaVectorStore(BaseVectorStore):
     def __init__(self, collectionName):
         self.client = chromadb.PersistentClient()
         self.collectionName = collectionName
-    
+        self.documents = []
+        self.time_taken = 0
+        self.cost = 0
+
     def update_index(self, index):
-        self.collection = index
+        self.collection = self.client.get_collection(index)
+        existing_docs = self.collection.get(include=["documents", "metadatas"])
+        self.documents.clear()
+        for idx, (doc, meta, ids) in enumerate(zip(existing_docs['documents'], existing_docs['metadatas'], existing_docs['ids']), start=1):
+            (f"ID: {idx}, page_content: {doc}, metadata: {meta}")
+            self.documents.append({
+                constants.Constants.ID: ids,
+                constants.Constants.PAGE_CONTENT: doc,
+                constants.Constants.METADATA: meta
+            })
         
     def add_embeddings(self, embeddings, documents):
         """
@@ -20,6 +33,7 @@ class ChromaVectorStore(BaseVectorStore):
             documents: The documents associated with the embeddings.
         """
         # Implement logic to add embeddings to Chroma vector store
+        start_time = time.time()
         self.embeddings = embeddings
         self.documents = documents
 
@@ -38,11 +52,11 @@ class ChromaVectorStore(BaseVectorStore):
         collection.upsert(
             ids=ids,
             embeddings=emb_arr,
-            documents=self.documents
+            documents=[doc[constants.Constants.PAGE_CONTENT] for doc in self.documents]
         )
-        
-    
-        pass
+        end_time = time.time()
+        self.time_taken = end_time - start_time
+
     def search(self, query_embedding, top_k=5):
         """
         Search for most similar documents in Chroma vector store.   
@@ -65,22 +79,21 @@ class ChromaVectorStore(BaseVectorStore):
         for id, doc, score in zip(ids, docs, similarity_scores):
             print(f"Format ID: {id}, Document: {doc}, Score: {score}")
         formatted_results = [
-            {constants.ID: id_, constants.Document: {constants.PAGE_CONTENT: doc}, constants.Score: float(score)}
+            {constants.Constants.ID: id_, constants.Constants.Document: {constants.Constants.PAGE_CONTENT: doc}, constants.Constants.Score: float(score)}
             for id_, doc, score in zip(ids, docs, similarity_scores)
         ]
         print("Formatted Results", formatted_results)
 
         return formatted_results
 
+    def get_all_documents(self):
+        return self.documents
+    
     def format_documents(self, documents):
-        formatted_documents = []
-        for doc in documents:
-            # Assuming each document is a dictionary with 'id' and 'text' keys
-            formatted_doc = doc[constants.PAGE_CONTENT]
-
-            formatted_documents.append(formatted_doc)
-
-        return formatted_documents
+        return documents
     
     def get_cost_and_time_taken(self):
-        pass
+        return self.cost, self.time_taken
+    
+    def get_index(self):
+        return self.collectionName

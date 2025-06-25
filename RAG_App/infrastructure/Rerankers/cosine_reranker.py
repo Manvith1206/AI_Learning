@@ -1,7 +1,7 @@
 from .base_reranker import BaseReranker
 from sklearn.metrics.pairwise import cosine_similarity
 import time
-from infrastructure.common.rag_constants import COSINE_SIMILARITY_RERANK_EXPLAINATION
+from infrastructure.common.rag_constants import UIDisplayNameConstants  
 
 class CosineReranker(BaseReranker):
     """
@@ -18,7 +18,7 @@ class CosineReranker(BaseReranker):
         # Compute embeddings
         
         query_vec = self.embedder.transform([query])  # shape (1, dim)
-        doc_vecs = self.embedder.transform(documents)  # shape (n, dim)
+        doc_vecs = self.embedder.embed_documents(documents)  # shape (n, dim)
         
         # Compute cosine similarities
         sims = cosine_similarity(doc_vecs, query_vec).flatten()
@@ -28,7 +28,7 @@ class CosineReranker(BaseReranker):
         sorted_docs = [doc for doc, score in paired]
         sorted_docs = sorted_docs[:self.top_k_for_reranking]
         # Explanation
-        explanation = COSINE_SIMILARITY_RERANK_EXPLAINATION
+        explanation = UIDisplayNameConstants.COSINE_SIMILARITY_RERANK_EXPLAINATION
         end_time = time.time()
         self.time_taken = end_time - start_time
         return sorted_docs, explanation

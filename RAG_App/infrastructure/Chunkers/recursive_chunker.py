@@ -1,8 +1,6 @@
 from langchain.text_splitter import TokenTextSplitter
 from .base_chunker import BaseChunker
-import tiktoken
-from langchain_text_splitters.base import Tokenizer
-
+from infrastructure.common.rag_constants import Constants
 import time
 
 class RecursiveChunker(BaseChunker):
@@ -24,7 +22,7 @@ class RecursiveChunker(BaseChunker):
         text_splitter = TokenTextSplitter(
             chunk_size=self.chunk_size,  # Max tokens per chunk
             chunk_overlap=self.chunk_overlap,  # Tokens to overlap
-            encoding_name="cl100k_base"  # Tokenizer for OpenAI models
+            encoding_name=Constants.ENCODING_NAME_FOR_TOKEN_COUNT # Tokenizer for OpenAI models
         )
         
         chunks = text_splitter.split_text(text=text)

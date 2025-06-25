@@ -2,7 +2,6 @@ import time
 import numpy as np
 from sentence_transformers import SentenceTransformer
 import re
-from typing import List, Dict, Any
 from infrastructure.chunkers.base_chunker import BaseChunker
 import infrastructure.common.rag_constants as constants
 max_sentences = 300
@@ -10,7 +9,7 @@ max_sentences = 300
 class SemanticChunker(BaseChunker):
 
     def __init__(self, 
-                 model_name: str = constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI, 
+                 model_name: str = constants.SentenceTransformerModels.SENTENCE_TRANSFORMER_MODEL_ALL_MINI, 
                  similarity_threshold: float = 0.7,
                  min_chunk_size: int = 3,
                  max_chunk_size: int = 20):

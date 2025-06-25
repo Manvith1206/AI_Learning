@@ -33,10 +33,10 @@ class HybridRetriever(BaseRetriever):
         self.doc_mapping = {}
         
         for idx, doc in enumerate(documents):
-            text = self._preprocess_text(doc[constants.PAGE_CONTENT])
+            text = self._preprocess_text(doc[constants.Constants.PAGE_CONTENT])
             tokens = text.split()
             processed_docs.append(tokens)
-            self.doc_mapping[idx] = doc[constants.ID]
+            self.doc_mapping[idx] = doc[constants.Constants.ID]
             
         # Initialize BM25
         self.bm25 = BM25Okapi(processed_docs)
@@ -45,13 +45,13 @@ class HybridRetriever(BaseRetriever):
         start_time = time.time()
         
         # Get vector store and query text from kwargs
-        vector_store = kwargs.get(constants.CONFIG_VECTOR_STORE)
+        vector_store = kwargs.get(constants.ConfigManagerNames.CONFIG_VECTOR_STORE)
         if not vector_store:
-            raise ValueError(constants.VECTOR_STORE_MUST_BE_PROVIDED_ERROR_MESSAGE)
+            raise ValueError(constants.UIDisplayNameConstants.VECTOR_STORE_MUST_BE_PROVIDED_ERROR_MESSAGE)
             
-        query_text = kwargs.get(constants.QUERY_TEXT)
+        query_text = kwargs.get(constants.Constants.QUERY_TEXT)
         if not query_text:
-            raise ValueError(constants.QUERY_TEXT_MUST_BE_PROVIDED_ERROR_MESSAGE)
+            raise ValueError(constants.UIDisplayNameConstants.QUERY_TEXT_MUST_BE_PROVIDED_ERROR_MESSAGE)
         
         # Initialize BM25 if not already done
         if self.bm25 is None:
@@ -75,8 +75,8 @@ class HybridRetriever(BaseRetriever):
         # Combine scores
         combined_results = []
         for result in semantic_results:
-            doc_id = result[constants.ID]
-            semantic_score = result[constants.Score]
+            doc_id = result[constants.Constants.ID]
+            semantic_score = result[constants.Constants.Score]
             keyword_score = normalized_bm25_scores.get(doc_id, 0)
             
             # Weighted combination
@@ -86,21 +86,21 @@ class HybridRetriever(BaseRetriever):
             )
             
             combined_results.append({
-                constants.Document: result[constants.Document],
-                constants.ID: result[constants.ID],
-                constants.Score: combined_score,
-                constants.SEMANTIC_SCORE: semantic_score,
-                constants.KEYWORD_SCORE: keyword_score
+                constants.Constants.Document: result[constants.Constants.Document],
+                constants.Constants.ID: result[constants.Constants.ID],
+                constants.Constants.Score: combined_score,
+                constants.Constants.SEMANTIC_SCORE: semantic_score,
+                constants.Constants.KEYWORD_SCORE: keyword_score
             })
         
         # Sort by combined score and take top_k
-        combined_results.sort(key=lambda x: x[constants.Score], reverse=True)
+        combined_results.sort(key=lambda x: x[constants.Constants.Score], reverse=True)
         end_time = time.time()
         self.time_taken = end_time - start_time
         
         final_results = []
         for result in combined_results[:self.top_k]:
-            final_results.append(result[constants.Document][constants.PAGE_CONTENT])
+            final_results.append(result[constants.Constants.Document][constants.Constants.PAGE_CONTENT])
 
         return final_results
 

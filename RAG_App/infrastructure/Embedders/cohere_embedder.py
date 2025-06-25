@@ -57,7 +57,7 @@ class CohereEmbedder(BaseEmbedder):
 
         all_embeddings = []
         for batch in self.batch_chunks(texts, batch_size=80): # Adjust batch_size as needed for Cohere
-            resp =self.client.embed(texts=batch, model=self.model, input_type="search_document")
+            resp =self.client.embed(texts=batch, model=self.model, input_type=constants.Constants.SEARCH_INPUT_TYPE_FOR_COHERE_EMBED)
             all_embeddings.extend(resp.embeddings)
         return all_embeddings
     

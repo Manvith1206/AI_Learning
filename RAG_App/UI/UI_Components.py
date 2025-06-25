@@ -195,10 +195,10 @@ class UIComponents:
                 full_response = ""
                 is_rerank_explaination_rendered = False
                 for delta in response:
-                    if delta[constants.RERANK_EXPLANATION] and is_rerank_explaination_rendered == False:
-                        UIComponents.create_subheader_UI(f"**Re-ranking Explanation:**\n{delta[constants.RERANK_EXPLANATION]}")
+                    if delta[constants.Constants.RERANK_EXPLANATION] and is_rerank_explaination_rendered == False:
+                        UIComponents.create_subheader_UI(f"**Re-ranking Explanation:**\n{delta[constants.Constants.RERANK_EXPLANATION]}")
                         is_rerank_explaination_rendered = True
-                    full_response = delta[constants.ANSWER]
+                    full_response = delta[constants.Constants.ANSWER]
                     empty_placeholder.markdown(full_response)
                 
                 UIComponents.add_message_to_chat(role, full_response)

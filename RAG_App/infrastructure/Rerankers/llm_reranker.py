@@ -3,7 +3,7 @@ import re
 import time
 import infrastructure.common.rag_constants as constants
 from infrastructure.llm_chat_services.base_llm_service import BaseLLMService
-
+from infrastructure.prompt_providers.llm_reranker_prompt_provider import LLM_Reranker_Prompt_Provider
 class LLMReranker(BaseReranker):
     def __init__(self, llm_client: BaseLLMService, model="gemini-2.0-flash", top_k_for_reranking: int = 5):
         self.llm_client = llm_client
@@ -12,29 +12,9 @@ class LLMReranker(BaseReranker):
         self.cost = 0
         self.top_k_for_reranking = top_k_for_reranking
     def rerank(self, query, documents, **kwargs):
-        
+        llm_reranker_prompt_provider = LLM_Reranker_Prompt_Provider()
         chunk_list = "\n".join([f"{i+1}. {doc}" for i, doc in enumerate(documents)])
-        rerank_prompt = f"""
-            Role: 
-            Assume the role of a research assistant tasked with evaluating the relevance of 
-            document chunks to a user query.
-
-            Task: 
-            You will receive a user query along with a list of retrieved document chunks. 
-            Your objective is to assess the relevance of each chunk to the query.
-            After your evaluation, you will rerank the chunks based on their relevance and provide a formal 
-            explanation of your reasoning for the new ranking.
-
-            Query: {query}
-
-            Chunks:
-            {chunk_list}
-
-            Output Format:
-            Please respond in the following format:
-            Reranked Chunk(s): [list the chunk numbers]
-            Explanation: [your reasoning for reranking the chunks]
-            """
+        rerank_prompt = llm_reranker_prompt_provider.get_final_prompt(query=query, chunk_list=chunk_list)
         start_time = time.time()
         full_response = ""
         for delta in self.llm_client.generate_response(rerank_prompt):
@@ -46,13 +26,13 @@ class LLMReranker(BaseReranker):
         if best_chunks_match:
             indices_str = best_chunks_match.group(1)
             selected_indices = [int(idx.strip())-1 for idx in indices_str.split(",") if idx.strip().isdigit()]
-        explanation = explanation_match.group(1).strip() if explanation_match else constants.NO_EXPLAINATION_NEEDED_MESSAGE
+        explanation = explanation_match.group(1).strip() if explanation_match else constants.UIDisplayNameConstants.NO_EXPLAINATION_NEEDED_MESSAGE
         selected_documents = [documents[i] for i in selected_indices if 0 <= i < len(documents)]
         
         selected_documents = selected_documents[:self.top_k_for_reranking]
         if not selected_documents:
             selected_documents = documents
-            explanation = constants.LLM_DID_NOT_SELECT_INFO_MESSAGE
+            explanation = constants.UIDisplayNameConstants.LLM_DID_NOT_SELECT_INFO_MESSAGE
         end_time = time.time()
         self.time_taken = end_time - start_time
         return selected_documents, explanation

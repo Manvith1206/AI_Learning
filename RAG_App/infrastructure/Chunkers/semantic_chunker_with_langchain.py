@@ -1,13 +1,12 @@
 import time
 from langchain_experimental.text_splitter import SemanticChunker
-from langchain_openai.embeddings import OpenAIEmbeddings
 from infrastructure.chunkers.base_chunker import BaseChunker
-from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
+from infrastructure.common.rag_constants import ThresholdTypeForSemanticChunkinLangChain
 
 class SemanticChunkerWithLangChain(BaseChunker):
     def __init__(self, embed_model):
         self.embed_model = embed_model
-        self.semantic_chunker = SemanticChunker(self.embed_model, breakpoint_threshold_type="percentile")
+        self.semantic_chunker = SemanticChunker(self.embed_model, breakpoint_threshold_type=ThresholdTypeForSemanticChunkinLangChain.PERCENTILE)
         self.time_taken = 0
         self.cost = 0
 

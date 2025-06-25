@@ -46,24 +46,24 @@ class DummyFile:
 # Parameter grids for automated testing
 CHUNKER_PARAM_GRID = [
     (constants.ChunkerType.RECURSIVE.value, {
-        constants.CONFIG_TYPE_PARAM: constants.ChunkerType.RECURSIVE.value, 
-        constants.CONFIG_PARAM: {
-            constants.CONFIG_CHUNK_SIZE_PARAM: 600, 
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.ChunkerType.RECURSIVE.value, 
+        constants.ConfigManagerNames.CONFIG_PARAM: {
+            constants.ConfigManagerNames.CONFIG_CHUNK_SIZE_PARAM: 600, 
             constants.CONFIG_CHUNK_OVERLAP_PARAM: 200
         }
     }),
     (constants.ChunkerType.SEMANTIC.value, {
-        constants.CONFIG_TYPE_PARAM: constants.ChunkerType.SEMANTIC.value, 
-        constants.CONFIG_PARAM: {
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.ChunkerType.SEMANTIC.value, 
+        constants.ConfigManagerNames.CONFIG_PARAM: {
             constants.CONFIG_MIN_CHUNK_SIZE_DISPLAY_NAME: 600, 
             constants.CONFIG_MAX_CHUNK_SIZE_DISPLAY_NAME: 1000, 
             constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.65, 
-            constants.CONFIG_MODEL_NAME: constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI
+            constants.ConfigManagerNames.CONFIG_MODEL_NAME: constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI
         }
     }),
     (constants.ChunkerType.SENTENCE.value, {
-        constants.CONFIG_TYPE_PARAM: constants.ChunkerType.SENTENCE.value, 
-        constants.CONFIG_PARAM: {
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.ChunkerType.SENTENCE.value, 
+        constants.ConfigManagerNames.CONFIG_PARAM: {
             constants.CONFIG_MAX_SENTENCES: 5
         }
     })
@@ -71,61 +71,61 @@ CHUNKER_PARAM_GRID = [
 
 EMBEDDER_PARAM_GRID = [
     (constants.EmbedderType.TFIDF.value, {
-        constants.CONFIG_TYPE_PARAM: constants.EmbedderType.TFIDF.value
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.EmbedderType.TFIDF.value
     }),
     (constants.EmbedderType.GEMINI.value, {
-        constants.CONFIG_TYPE_PARAM: constants.EmbedderType.GEMINI.value, 
-        constants.CONFIG_MODEL: constants.GeminiEmbedModels.GEMINI_EMBED_DEFAULT_MODEL.value,
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.EmbedderType.GEMINI.value, 
+        constants.ConfigManagerNames.CONFIG_MODEL: constants.GeminiEmbedModels.GEMINI_EMBED_DEFAULT_MODEL.value,
         constants.CONFIG_BATCH_SIZE: 0
     }),
     (constants.EmbedderType.COHERE.value, {
-        constants.CONFIG_TYPE_PARAM: constants.EmbedderType.COHERE.value, 
-        constants.CONFIG_MODEL: constants.CohereEmbedModels.COHERE_EMBED_MODEL_DEFAULT.value,
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.EmbedderType.COHERE.value, 
+        constants.ConfigManagerNames.CONFIG_MODEL: constants.CohereEmbedModels.COHERE_EMBED_MODEL_DEFAULT.value,
         constants.CONFIG_BATCH_SIZE: 0
     }),
     (constants.EmbedderType.VOYAGE.value, {
-        constants.CONFIG_TYPE_PARAM: constants.EmbedderType.VOYAGE.value, 
-        constants.CONFIG_MODEL: constants.VoyageEmbedModels.VOYAGE_EMBED_DEFAULT_MODEL.value,
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.EmbedderType.VOYAGE.value, 
+        constants.ConfigManagerNames.CONFIG_MODEL: constants.VoyageEmbedModels.VOYAGE_EMBED_DEFAULT_MODEL.value,
         constants.CONFIG_BATCH_SIZE: 0
     }),
     (constants.EmbedderType.MISTRAL.value, {
-        constants.CONFIG_TYPE_PARAM: constants.EmbedderType.MISTRAL.value, 
-        constants.CONFIG_MODEL: constants.MISTRAL_EMBED_MODELS.MISTRAL_EMBED_DEFAULT_MODEL.value,
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.EmbedderType.MISTRAL.value, 
+        constants.ConfigManagerNames.CONFIG_MODEL: constants.MISTRAL_EMBED_MODELS.MISTRAL_EMBED_DEFAULT_MODEL.value,
         constants.CONFIG_BATCH_SIZE: 10
     })
 ]
 
 VECTOR_STORE_PARAM_GRID = [
     (constants.VectorStore.SCIKIT_LEARN.value, {
-        constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_SKLEARN, 
-        constants.CONFIG_VECTOR_STORE_METRIC: constants.CONFIG_METRIC_COSINE
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.ConfigManagerNames.CONFIG_VECTOR_STORE_SKLEARN, 
+        constants.ConfigManagerNames.CONFIG_VECTOR_STORE_METRIC: constants.CONFIG_METRIC_COSINE
     }),
     (constants.VectorStore.FAISS.value, {
-        constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_FAISS
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.ConfigManagerNames.CONFIG_VECTOR_STORE_FAISS
     }),
     (constants.VectorStore.PINE_CONE.value, {
-        constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_PINCONE
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.ConfigManagerNames.CONFIG_VECTOR_STORE_PINCONE
     })
 ]
 
 RETRIEVER_PARAM_GRID = [
     (constants.RetrieverType.SIMILARITY.value, {
-        constants.CONFIG_TYPE_PARAM: constants.RetrieverType.SIMILARITY.value, 
-        constants.CONFIG_PARAM: {
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.RetrieverType.SIMILARITY.value, 
+        constants.ConfigManagerNames.CONFIG_PARAM: {
             constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: 0.0
         },
         constants.CONFIG_TOP_K_PARAM: 5
     }),
     (constants.RetrieverType.HYBRID.value, {
-        constants.CONFIG_TYPE_PARAM: constants.RetrieverType.HYBRID.value, 
-        constants.CONFIG_PARAM: {
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.RetrieverType.HYBRID.value, 
+        constants.ConfigManagerNames.CONFIG_PARAM: {
             constants.CONFIG_KEYWORD_WEIGHT: 0.3
         },
         constants.CONFIG_TOP_K_PARAM: 5
      }),
     # (constants.RetrieverType.SENTENCE_WINDOW.value, {
-    #     constants.CONFIG_TYPE_PARAM: constants.RetrieverType.SENTENCE_WINDOW.value, 
-    #     constants.CONFIG_PARAM: {
+    #     constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.RetrieverType.SENTENCE_WINDOW.value, 
+    #     constants.ConfigManagerNames.CONFIG_PARAM: {
     #         constants.CONFIG_WINDOW_SIZE: 3
     #     },
     #     constants.CONFIG_TOP_K_PARAM: 5
@@ -134,20 +134,20 @@ RETRIEVER_PARAM_GRID = [
 
 RERANKER_PARAM_GRID = [
     (constants.RerankerType.COSINE.value, {
-        constants.CONFIG_TYPE_PARAM: constants.RerankerType.COSINE.value, 
-        constants.CONFIG_PARAM: {}
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.RerankerType.COSINE.value, 
+        constants.ConfigManagerNames.CONFIG_PARAM: {}
     }),
     (constants.RerankerType.LLM.value, {
-        constants.CONFIG_TYPE_PARAM: constants.RerankerType.LLM.value, 
-        constants.CONFIG_PARAM: constants.GeminiLLMModel.GEMINI_FLASH.value
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.RerankerType.LLM.value, 
+        constants.ConfigManagerNames.CONFIG_PARAM: constants.GeminiLLMModel.GEMINI_FLASH.value
     }),
     (constants.RerankerType.COHERE.value, {
-        constants.CONFIG_TYPE_PARAM: constants.RerankerType.COHERE.value, 
-        constants.CONFIG_PARAM: constants.CohereRerankingModels.RERANK_DEFAULT_MODEL.value
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.RerankerType.COHERE.value, 
+        constants.ConfigManagerNames.CONFIG_PARAM: constants.CohereRerankingModels.RERANK_DEFAULT_MODEL.value
     }),
     (constants.RerankerType.JINA.value, {
-        constants.CONFIG_TYPE_PARAM: constants.RerankerType.JINA.value, 
-        constants.CONFIG_PARAM: constants.JINA_RERANKER_MODELS.JINA_RERANKER_DEFAULT_MODEL.value
+        constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.RerankerType.JINA.value, 
+        constants.ConfigManagerNames.CONFIG_PARAM: constants.JINA_RERANKER_MODELS.JINA_RERANKER_DEFAULT_MODEL.value
     })
 ]
 
@@ -171,11 +171,11 @@ def evaluate_rag_combination(
         pipeline = RAGPipeline(cm)
         
         # Update components with the specific configurations
-        pipeline.component_manager.update_component(constants.CONFIG_CHUNKER, chunker_config)
-        pipeline.component_manager.update_component(constants.CONFIG_EMBEDDER, embedder_config)
-        pipeline.component_manager.update_component(constants.CONFIG_VECTOR_STORE, vector_store_config)
-        pipeline.component_manager.update_component(constants.CONFIG_RETRIEVER, retriever_config)
-        pipeline.component_manager.update_component(constants.CONFIG_RERANKER, reranker_config)
+        pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_CHUNKER, chunker_config)
+        pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_EMBEDDER, embedder_config)
+        pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_VECTOR_STORE, vector_store_config)
+        pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_RETRIEVER, retriever_config)
+        pipeline.component_manager.update_component(constants.ConfigManagerNames.CONFIG_RERANKER, reranker_config)
         
         # Process document
         start_time = time.time()

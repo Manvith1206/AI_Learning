@@ -39,14 +39,14 @@ class DeepEval(BaseEvaluator):
         for test_result in result.test_results:
             for metric_result in test_result.metrics_data:
                 
-                if metric_result.name == constants.DEEP_EVAL_FAITHFULNESS:
-                    metrics_dict[constants.FAITHFULNESS] = round(metric_result.score, 2)
-                elif metric_result.name == constants.DEEP_EVAL_CONTEXT_PRECISION:
-                    metrics_dict[constants.CONTEXT_PRECISION] = round(metric_result.score, 2)
-                elif metric_result.name == constants.DEEP_EVAL_CONTEXT_RECALL:
-                    metrics_dict[constants.CONTEXT_RECALL] = round(metric_result.score, 2)
-                elif metric_result.name == constants.DEEP_EVAL_ANSWER_RELEVANCY:
-                    metrics_dict[constants.ANSWER_RELEVANCY] = round(metric_result.score, 2)
+                if metric_result.name == constants.DeepEvalMetricsConstants.DEEP_EVAL_FAITHFULNESS:
+                    metrics_dict[constants.RagasMetricsConstants.FAITHFULNESS] = round(metric_result.score, 2)
+                elif metric_result.name == constants.DeepEvalMetricsConstants.DEEP_EVAL_CONTEXT_PRECISION:
+                    metrics_dict[constants.RagasMetricsConstants.CONTEXT_PRECISION] = round(metric_result.score, 2)
+                elif metric_result.name == constants.DeepEvalMetricsConstants.DEEP_EVAL_CONTEXT_RECALL:
+                    metrics_dict[constants.RagasMetricsConstants.CONTEXT_RECALL] = round(metric_result.score, 2)
+                elif metric_result.name == constants.DeepEvalMetricsConstants.DEEP_EVAL_ANSWER_RELEVANCY:
+                    metrics_dict[constants.RagasMetricsConstants.ANSWER_RELEVANCY] = round(metric_result.score, 2)
                 curr_cost_value += metric_result.evaluation_cost
         end_time = time.time()  # End timing
         self.time_taken = end_time - start_time

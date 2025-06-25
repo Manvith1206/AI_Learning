@@ -25,19 +25,19 @@ class JinaReranker(BaseReranker):
 
     def rerank(self, query, documents, **kwargs):
         import requests
-        top_k = kwargs.get('top_k', 5)
-        url = 'https://api.jina.ai/v1/rerank'
+        top_k = kwargs.get(constants.ConfigManagerNames.CONFIG_TOP_K_PARAM, 5)
+        url = constants.JinaRerankerConstants.API_ENDPOINT_URL
         headers = {
-            'Content-Type': 'application/json',
-            'Authorization': self.api_key  # Ensure you have set this in your secrets
+            constants.JinaRerankerConstants.CONTENT_TYPE: constants.JinaRerankerConstants.CONTENT_TYPE_VALUE,
+            constants.JinaRerankerConstants.AUTHORIZATION: self.api_key  # Ensure you have set this in your secrets
         }
         start_time = time.time()
         data = {
-            "model": self.model,
-            "query": query,
-            "top_n": self.top_k_for_reranking,
-            "documents": documents,
-            "return_documents": False
+            constants.ConfigManagerNames.CONFIG_MODEL: self.model,
+            constants.JinaRerankerConstants.QUERY: query,
+            constants.JinaRerankerConstants.TOP_N: self.top_k_for_reranking,
+            constants.JinaRerankerConstants.DOCUMENTS: documents,
+            constants.JinaRerankerConstants.RETURN_DOCUMENTS: False
         }
 
         response = requests.post(url, headers=headers, json=data)

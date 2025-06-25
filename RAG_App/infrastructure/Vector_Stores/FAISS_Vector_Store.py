@@ -1,5 +1,6 @@
 from langchain.vectorstores import FAISS, faiss
 import os
+import pickle
 from .base_vector_store import BaseVectorStore
 from langchain_core.documents import Document
 import infrastructure.common.rag_constants as constants
@@ -10,48 +11,55 @@ import time
 
 class FAISS_Vector_Store(BaseVectorStore):
     def __init__(self):
-        self.documents = None
+        self.documents = []
         self.embeddings = None
         self.index = None
         self.db = None
-        self.ids = None
+        self.ids = []
         self.time_taken = 0
         self.cost = 0
+        self.index_path = constants.FaissStorageConstants.FAISS_INDEX_PATH
+        self.doc_path = constants.FaissStorageConstants.FAISS_DOC_PATH
 
-    def update_index(self, index: faiss.IndexFlatIP):
-        self.index = index
+    def update_index(self, index: str):
+        self.index = faiss.read_index(index)
+        with open(self.doc_path, 'rb') as f:
+            data = pickle.load(f)
+            self.documents = data.get('documents', [])
+            self.ids = data.get('ids', [])
         
     def add_embeddings(self, embeddings, documents):
         start_time = time.time()
-        # Unify embeddings: list, numpy array, or sparse -> dense np.float32
-        self.documents = documents
-        # Generate and store document IDs
-        self.ids = []
-        
-        for document in documents:
-            if isinstance(document, dict):
-                doc_id = document.get("id", str(uuid.uuid4()))
-            elif hasattr(document, "metadata") and isinstance(document.metadata, dict) and "id" in document.metadata:
-                doc_id = document.metadata["id"]
-            else:
-                doc_id = str(uuid.uuid4())
-            self.ids.append(doc_id)
+        self.documents.clear()
         if hasattr(embeddings, "toarray"):
             emb_arr = embeddings.toarray().astype(np.float32)
         else:
             emb_arr = np.array(embeddings, dtype=np.float32)
-        # Ensure 2D array
+
         if emb_arr.ndim == 1:
             emb_arr = emb_arr.reshape(1, -1)
-        dimension = emb_arr.shape[1]
-        # Normalize vectors for cosine similarity
+
         faiss.normalize_L2(emb_arr)
-        # Build and populate FAISS index using inner product
-        index = faiss.IndexFlatIP(dimension)
-        index.add(emb_arr)
-        self.index = index
+
+        new_ids = [str(uuid.uuid4()) for _ in documents]
+        self.documents.extend(documents)
+        self.ids.extend(new_ids)
+        
+        if self.index is None:
+            dimension = emb_arr.shape[1]
+            self.index = faiss.IndexFlatIP(dimension)
+        
+        self.index.add(emb_arr)
+        
         end_time = time.time()
-        self.time_taken = end_time - start_time
+        self.time_taken += (end_time - start_time)
+        self.save_index()
+
+    def save_index(self):
+        if self.index is not None:
+            faiss.write_index(self.index, self.index_path)
+            with open(self.doc_path, 'wb') as f:
+                pickle.dump({'documents': self.documents, 'ids': self.ids}, f)
 
     def search(self, query_embedding, top_k=5):
         """Search for most similar documents in FAISS index."""
@@ -82,13 +90,11 @@ class FAISS_Vector_Store(BaseVectorStore):
                 # Convert distance to similarity score
                 similarity_score = 1 / (1 + distances[0][i])
                 results.append({
-                    constants.Document: self.documents[idx],
-                    constants.Score: similarity_score,
-                    constants.ID: self.ids[idx]
+                    constants.Constants.Document: self.documents[idx],
+                    constants.Constants.Score: similarity_score,
+                    constants.Constants.ID: self.ids[idx]
                 })
-        
-        self.index.docstore
-        
+                
         return results
 
     def format_documents(self, documents):
@@ -97,3 +103,8 @@ class FAISS_Vector_Store(BaseVectorStore):
 
     def get_cost_and_time_taken(self):
         return self.cost, self.time_taken
+
+    def get_index(self):
+        return self.index_path
+    def get_all_documents(self):
+        pass

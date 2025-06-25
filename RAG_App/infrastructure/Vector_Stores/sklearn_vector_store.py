@@ -75,9 +75,9 @@ class SklearnVectorStore(BaseVectorStore):
         results = []
         for i, idx in enumerate(indices[0]):
             results.append({
-                constants.Document: self.documents[idx],
-                constants.Score: similarity_scores[i],
-                constants.ID: self.ids[idx]
+                constants.Constants.Document: self.documents[idx],
+                constants.Constants.Score: similarity_scores[i],
+                constants.Constants.ID: self.ids[idx]
             })
         return results
 

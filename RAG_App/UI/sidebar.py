@@ -72,13 +72,13 @@ class Sidebar:
         """Get metrics for all pipeline steps"""
         pipeline = Utils.utils.get_pipeline()
         return {
-            constants.CONFIG_CHUNKER: pipeline.component_manager.get_chunker_cost_and_time(),
-            constants.CONFIG_EMBEDDER: pipeline.component_manager.get_embedder_cost_and_time(),
-            constants.CONFIG_RETRIEVER: pipeline.component_manager.get_retriever_cost_and_time(),
-            constants.CONFIG_RERANKER: pipeline.component_manager.get_reranker_cost_and_time(),
-            constants.CONFIG_EVALUATOR: pipeline.component_manager.get_evaluator_cost_and_time(),
-            constants.CONFIG_VECTOR_STORE: pipeline.component_manager.get_vector_store_cost_and_time(),
-            constants.CONFIG_LLM: pipeline.component_manager.get_llm_service_cost_and_time()
+            constants.ConfigManagerNames.CONFIG_CHUNKER: pipeline.component_manager.get_chunker_cost_and_time(),
+            constants.ConfigManagerNames.CONFIG_EMBEDDER: pipeline.component_manager.get_embedder_cost_and_time(),
+            constants.ConfigManagerNames.CONFIG_RETRIEVER: pipeline.component_manager.get_retriever_cost_and_time(),
+            constants.ConfigManagerNames.CONFIG_RERANKER: pipeline.component_manager.get_reranker_cost_and_time(),
+            constants.ConfigManagerNames.CONFIG_EVALUATOR: pipeline.component_manager.get_evaluator_cost_and_time(),
+            constants.ConfigManagerNames.CONFIG_VECTOR_STORE: pipeline.component_manager.get_vector_store_cost_and_time(),
+            constants.ConfigManagerNames.CONFIG_LLM: pipeline.component_manager.get_llm_service_cost_and_time()
         }
     
     def display_pipeline_step_metrics(self, key: str, metrics: tuple):
@@ -89,7 +89,7 @@ class Sidebar:
             col1.metric("🕒 Time Taken", time_taken)
             col2.metric("💲 Estimated Cost", cost)
             cfg = Utils.utils.get_pipeline().config_manager.get_config(key)
-            name = cfg.get(constants.CONFIG_TYPE_PARAM)
+            name = cfg.get(constants.ConfigManagerNames.CONFIG_TYPE_PARAM)
             col3.markdown(f"RAG Pipeline Step Name: \n{name}")
 
     def render_chat_area(self):
@@ -118,8 +118,8 @@ class Sidebar:
     def render_config_tabs(self):
         """Render configuration tabs in sidebar"""
         config_tabs = UIComponents.create_tabs([
-            constants.TEXT_PROCESSING_DISPLAY_NAME, 
-            constants.RETRIEVAL_DISPLAY_NAME
+            constants.UIDisplayNameConstants.TEXT_PROCESSING_DISPLAY_NAME, 
+            constants.UIDisplayNameConstants.RETRIEVAL_DISPLAY_NAME
         ])
         
         with config_tabs[0]:
@@ -132,10 +132,10 @@ class Sidebar:
 
     def render_text_processing_config(self):
         """Render text processing configuration options"""
-        UIComponents.write(f"**{constants.TEXT_PROCESSING_DISPLAY_NAME}**")
-        options, index = self.get_ui_options(option_type=ChunkerType, config_name=constants.CONFIG_CHUNKER)
+        UIComponents.write(f"**{constants.UIDisplayNameConstants.TEXT_PROCESSING_DISPLAY_NAME}**")
+        options, index = self.get_ui_options(option_type=ChunkerType, config_name=constants.ConfigManagerNames.CONFIG_CHUNKER)
         chunker_type = UIComponents.selectbox(
-            constants.CHUNKER_TYPE_DISPLAY_NAME,
+            constants.UIDisplayNameConstants.CHUNKER_TYPE_DISPLAY_NAME,
             options=options,
             index=index
         )
@@ -150,7 +150,7 @@ class Sidebar:
 
     def render_retrieval_config(self):
         """Render retrieval configuration options"""
-        UIComponents.write(f"**{constants.RETRIEVAL_DISPLAY_NAME}**")
+        UIComponents.write(f"**{constants.UIDisplayNameConstants.RETRIEVAL_DISPLAY_NAME}**")
         
         retriever_config = self.get_retriever_config()
         reranker_config = self.get_reranker_config()
@@ -161,9 +161,9 @@ class Sidebar:
 
     def render_evaluation_config(self):
         """Render evaluation configuration options"""
-        UIComponents.write(f"**{constants.EVALUATION_DISPLAY_NAME}**")
+        UIComponents.write(f"**{constants.UIDisplayNameConstants.EVALUATION_DISPLAY_NAME}**")
         
-        options, index = self.get_ui_options(option_type=constants.EvaluatorType, config_name=constants.CONFIG_EVALUATOR)
+        options, index = self.get_ui_options(option_type=constants.EvaluatorType, config_name=constants.ConfigManagerNames.CONFIG_EVALUATOR)
 
         evaluator_type = UIComponents.selectbox(
             "Evaluator Type",
@@ -171,29 +171,29 @@ class Sidebar:
             index=index
         )
         
-        evaluator_config = {constants.CONFIG_TYPE_PARAM: evaluator_type}
+        evaluator_config = {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: evaluator_type}
         
         with UIComponents.display_spinner("Applying Evaluation Params"):
             if UIComponents.create_button("Apply Evaluation Params", key="apply_evaluation"):
-                Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_EVALUATOR, evaluator_config)
+                Utils.utils.get_pipeline().component_manager.update_component(constants.ConfigManagerNames.CONFIG_EVALUATOR, evaluator_config)
                 UIComponents.display_success("Evaluation configuration updated.")
 
     def get_ui_options(self, option_type, config_name: str):
         options = [e.value for e in option_type]
         st_config = UIComponents.get_session_state_variable("pipeline_config")
         config = UIComponents.get_session_state_variable("pipeline_config").get_config(config_name)
-        index = options.index(config[constants.CONFIG_TYPE_PARAM])
+        index = options.index(config[constants.ConfigManagerNames.CONFIG_TYPE_PARAM])
         return options, index
 
     def render_evaluation_section(self):
         # Evaluation section
         UIComponents.create_subheader_UI("Evaluation")
-        ground_truth = UIComponents.create_text_area(constants.GROUND_TRUTH_DISPLAY_NAME, value=constants.GROUND_TRUTH_DEFAULT_VALUE, key="ground_truth_input")
+        ground_truth = UIComponents.create_text_area(constants.UIDisplayNameConstants.GROUND_TRUTH_DISPLAY_NAME, value=constants.Constants.GROUND_TRUTH_DEFAULT_VALUE, key="ground_truth_input")
         if UIComponents.create_button("Evaluate Last Query", key="evaluate_last_query"):
             # Initialize pipeline when needed
-            with UIComponents.display_spinner(constants.LOADING_DISPLAY_MESSAGE_FOR_RUNNING_EVALUATION):
+            with UIComponents.display_spinner(constants.UIDisplayNameConstants.LOADING_DISPLAY_MESSAGE_FOR_RUNNING_EVALUATION):
                 pipeline = Utils.utils.get_pipeline()
-                if hasattr(pipeline, constants.LAST_QUERY):
+                if hasattr(pipeline, constants.Constants.LAST_QUERY):
                     try:
                         metrics = pipeline.query_evaluation.evaluate(ground_truths=ground_truth)
                         
@@ -234,9 +234,9 @@ class Sidebar:
             cache_manager = CacheManager()
 
             # Get current configuration for caching
-            chunker_config = pipeline.config_manager.get_config(constants.CONFIG_CHUNKER)
-            embedder_config = pipeline.config_manager.get_config(constants.CONFIG_EMBEDDER)
-            vector_store_config = pipeline.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
+            chunker_config = pipeline.config_manager.get_config(constants.ConfigManagerNames.CONFIG_CHUNKER)
+            embedder_config = pipeline.config_manager.get_config(constants.ConfigManagerNames.CONFIG_EMBEDDER)
+            vector_store_config = pipeline.config_manager.get_config(constants.ConfigManagerNames.CONFIG_VECTOR_STORE)
             
             processing_params = {
                 "chunker": chunker_config,
@@ -291,7 +291,7 @@ class Sidebar:
 
     def get_retriever_config(self) -> dict[str, Any]:
 
-        options, index = self.get_ui_options(option_type=constants.RetrieverType, config_name=constants.CONFIG_RETRIEVER)
+        options, index = self.get_ui_options(option_type=constants.RetrieverType, config_name=constants.ConfigManagerNames.CONFIG_RETRIEVER)
 
         retriever_type = UIComponents.selectbox(
             "Retriever Type",
@@ -302,24 +302,24 @@ class Sidebar:
         top_k = UIComponents.display_slider("Top-K-Docs for Retrieval", 1, 20, 5)
         retriever_params = {}
         if retriever_type == RetrieverType.SIMILARITY.value:
-            similarity_threshold = UIComponents.display_slider(constants.SIMILARITY_THRESHOLD_DISPLAY_NAME, 0.0, 1.0, 0.0, 0.01)
-            retriever_params = {constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: similarity_threshold, constants.CONFIG_TOP_K_PARAM: top_k}
+            similarity_threshold = UIComponents.display_slider(constants.UIDisplayNameConstants.SIMILARITY_THRESHOLD_DISPLAY_NAME, 0.0, 1.0, 0.0, 0.01)
+            retriever_params = {constants.ConfigManagerNames.CONFIG_SIMILARITY_THRESHOLD_PARAM: similarity_threshold, constants.ConfigManagerNames.CONFIG_TOP_K_PARAM: top_k}
         elif retriever_type == RetrieverType.HYBRID.value:
-            keyword_weight = UIComponents.display_slider(constants.KEYWORD_WEIGHT_DISPLAY_NAME, 0.0, 1.0, 0.3, 0.05)
-            retriever_params = {constants.CONFIG_KEYWORD_WEIGHT: keyword_weight, constants.CONFIG_TOP_K_PARAM: top_k}
+            keyword_weight = UIComponents.display_slider(constants.UIDisplayNameConstants.KEYWORD_WEIGHT_DISPLAY_NAME, 0.0, 1.0, 0.3, 0.05)
+            retriever_params = {constants.ConfigManagerNames.CONFIG_KEYWORD_WEIGHT: keyword_weight, constants.ConfigManagerNames.CONFIG_TOP_K_PARAM: top_k}
         elif retriever_type == RetrieverType.SENTENCE_WINDOW.value:
-            window_size = UIComponents.display_slider(constants.WINDOW_SIZE_DISPLAY_NAME, max_value=100, min_value=0, step=1)
-            retriever_params = {constants.CONFIG_WINDOW_SIZE: window_size, constants.CONFIG_TOP_K_PARAM: top_k}
+            window_size = UIComponents.display_slider(constants.UIDisplayNameConstants.WINDOW_SIZE_DISPLAY_NAME, max_value=100, min_value=0, step=1)
+            retriever_params = {constants.ConfigManagerNames.CONFIG_WINDOW_SIZE: window_size, constants.ConfigManagerNames.CONFIG_TOP_K_PARAM: top_k}
         
         retriever_config = {
-            constants.CONFIG_TYPE_PARAM: retriever_type,
-            constants.CONFIG_PARAM: retriever_params
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: retriever_type,
+            constants.ConfigManagerNames.CONFIG_PARAM: retriever_params
         }
 
         return retriever_config
     
     def get_reranker_config(self) -> dict[str, Any]:
-        options, index = self.get_ui_options(option_type=constants.RerankerType, config_name=constants.CONFIG_RERANKER)
+        options, index = self.get_ui_options(option_type=constants.RerankerType, config_name=constants.ConfigManagerNames.CONFIG_RERANKER)
 
         re_ranker_type = UIComponents.selectbox(
         "Re-ranker Type",
@@ -329,21 +329,21 @@ class Sidebar:
 
         top_k_for_reranking = UIComponents.display_slider("Top-K-Docs for Re-ranking", 1, 20, 5, step=1)
         re_ranker_params = {
-            constants.CONFIG_TOP_K_FOR_RERANKING_PARAM: top_k_for_reranking
+            constants.ConfigManagerNames.CONFIG_TOP_K_FOR_RERANKING_PARAM: top_k_for_reranking
         }
         
         if re_ranker_type in [RerankerType.LLM.value, RerankerType.COHERE.value, RerankerType.JINA.value]:
             model = UIComponents.selectbox(
-                constants.MODEL_NAME_DISPLAY_NAME,
+                constants.UIDisplayNameConstants.MODEL_NAME_DISPLAY_NAME,
                 options=self.get_reranker_model_options(
                 reranker_type=re_ranker_type),
                 index=0)
             
-            re_ranker_params[constants.CONFIG_MODEL] = model
+            re_ranker_params[constants.ConfigManagerNames.CONFIG_MODEL] = model
         
         reranker_config = {
-            constants.CONFIG_TYPE_PARAM: re_ranker_type,
-            constants.CONFIG_PARAM: re_ranker_params
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: re_ranker_type,
+            constants.ConfigManagerNames.CONFIG_PARAM: re_ranker_params
         }
 
         return reranker_config
@@ -351,11 +351,11 @@ class Sidebar:
     def render_chat_response_config(self):
         """Render chat response configuration"""
         UIComponents.display_divider()
-        UIComponents.write(f"**{constants.CHAT_RESPONSE_CONFIG_DISPLAY_NAME}**")
-        options, index = self.get_ui_options(option_type=constants.LLMServiceType, config_name=constants.CONFIG_LLM)
+        UIComponents.write(f"**{constants.UIDisplayNameConstants.CHAT_RESPONSE_CONFIG_DISPLAY_NAME}**")
+        options, index = self.get_ui_options(option_type=constants.LLMServiceType, config_name=constants.ConfigManagerNames.CONFIG_LLM)
 
         llm_service = UIComponents.selectbox(
-            constants.LLM_CHAT_SERVICE, 
+            constants.UIDisplayNameConstants.LLM_CHAT_SERVICE, 
             options=options, 
             index=index
         )
@@ -364,8 +364,8 @@ class Sidebar:
         llm_model_options = self.get_llm_model_options(llm_service)
 
         options = list(llm_model_options.keys())
-        if UIComponents.get_session_state_variable("pipeline_config").get_config(constants.CONFIG_LLM)[constants.CONFIG_TYPE_PARAM] == llm_service:
-            default_option = UIComponents.get_session_state_variable("pipeline_config").get_config(constants.CONFIG_LLM)[constants.CONFIG_PARAM][constants.CONFIG_MODEL]
+        if UIComponents.get_session_state_variable("pipeline_config").get_config(constants.ConfigManagerNames.CONFIG_LLM)[constants.ConfigManagerNames.CONFIG_TYPE_PARAM] == llm_service:
+            default_option = UIComponents.get_session_state_variable("pipeline_config").get_config(constants.ConfigManagerNames.CONFIG_LLM)[constants.ConfigManagerNames.CONFIG_PARAM][constants.ConfigManagerNames.CONFIG_MODEL]
             default_option = self.get_name_of_llm_model_to_display(llm_service, default_option)
         else:
             default_option = options[0]
@@ -373,20 +373,20 @@ class Sidebar:
         # Get the index
         index = options.index(default_option)
         user_selected_llm_model = UIComponents.selectbox(
-            constants.LLM_CHAT_SERVICE + " Model", 
+            constants.UIDisplayNameConstants.LLM_CHAT_SERVICE + " Model", 
             options=llm_model_options.keys(), 
             index=index
         )
         
         chat_response_config = {
-            constants.CONFIG_TYPE_PARAM: llm_service,
-            constants.CONFIG_PARAM: {
-                constants.CONFIG_MODEL: llm_model_options[user_selected_llm_model]
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: llm_service,
+            constants.ConfigManagerNames.CONFIG_PARAM: {
+                constants.ConfigManagerNames.CONFIG_MODEL: llm_model_options[user_selected_llm_model]
             }
         }
         
         if UIComponents.create_button("Apply Chat Response Config", key="apply_chat_response"):
-            Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_LLM, chat_response_config)
+            Utils.utils.get_pipeline().component_manager.update_component(constants.ConfigManagerNames.CONFIG_LLM, chat_response_config)
             UIComponents.display_success("Chat response configuration updated.")
 
     def render_test_all_configs_section(self):
@@ -401,36 +401,36 @@ class Sidebar:
         """Get parameters for the selected chunker type"""
         chunker_params = {}
         if chunker_type == ChunkerType.RECURSIVE.value:
-            chunk_size = UIComponents.display_slider(constants.CHUNK_SIZE_DISPLAY_NAME, 10, 10000, 150)
-            chunk_overlap = UIComponents.display_slider(constants.CHUNK_OVERLAP_DISPLAY_NAME, 0, 3000, 70)
+            chunk_size = UIComponents.display_slider(constants.UIDisplayNameConstants.CHUNK_SIZE_DISPLAY_NAME, 10, 10000, 150)
+            chunk_overlap = UIComponents.display_slider(constants.UIDisplayNameConstants.CHUNK_OVERLAP_DISPLAY_NAME, 0, 3000, 70)
             chunker_params = {
-                constants.CONFIG_CHUNK_SIZE_PARAM: chunk_size,
-                constants.CONFIG_CHUNK_OVERLAP_PARAM: chunk_overlap
+                constants.ConfigManagerNames.CONFIG_CHUNK_SIZE_PARAM: chunk_size,
+                constants.ConfigManagerNames.CONFIG_CHUNK_OVERLAP_PARAM: chunk_overlap
             }
         elif chunker_type == ChunkerType.SEMANTIC.value:
-            min_chunk_size = UIComponents.create_number_input(constants.MIN_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 600)
-            max_chunk_size = UIComponents.create_number_input(constants.MAX_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 110)
-            similarity_threshold = UIComponents.create_text_area(constants.SIMILARITY_THRESHOLD_DISPLAY_NAME, value=0.65, key="similarity_threshold_input")
+            min_chunk_size = UIComponents.create_number_input(constants.UIDisplayNameConstants.MIN_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 600)
+            max_chunk_size = UIComponents.create_number_input(constants.UIDisplayNameConstants.MAX_CHUNK_SIZE_DISPLAY_NAME, 0, 10000, 110)
+            similarity_threshold = UIComponents.create_text_area(constants.UIDisplayNameConstants.SIMILARITY_THRESHOLD_DISPLAY_NAME, value=0.65, key="similarity_threshold_input")
             print("Similarity Threshold:", similarity_threshold)
             model_name = UIComponents.selectbox(
-                constants.MODEL_NAME_DISPLAY_NAME,
+                constants.UIDisplayNameConstants.MODEL_NAME_DISPLAY_NAME,
                 options=[
-                    constants.SENTENCE_TRANSFORMER_MODEL_ALL_MINI,
-                    constants.SENTENCE_TRANSFORMER_MODEL_PARAPHRASE_MINI
+                    constants.SentenceTransformerModels.SENTENCE_TRANSFORMER_MODEL_ALL_MINI,
+                    constants.SentenceTransformerModels.SENTENCE_TRANSFORMER_MODEL_PARAPHRASE_MINI
                 ]
             )
             chunker_params = {
-                constants.CONFIG_MIN_CHUNK_SIZE_DISPLAY_NAME: min_chunk_size,
-                constants.CONFIG_MAX_CHUNK_SIZE_DISPLAY_NAME: max_chunk_size,
-                constants.CONFIG_SIMILARITY_THRESHOLD_PARAM: float(similarity_threshold),
-                constants.CONFIG_MODEL_NAME: model_name
+                constants.ConfigManagerNames.CONFIG_MIN_CHUNK_SIZE_DISPLAY_NAME: min_chunk_size,
+                constants.ConfigManagerNames.CONFIG_MAX_CHUNK_SIZE_DISPLAY_NAME: max_chunk_size,
+                constants.ConfigManagerNames.CONFIG_SIMILARITY_THRESHOLD_PARAM: float(similarity_threshold),
+                constants.ConfigManagerNames.CONFIG_MODEL_NAME: model_name
             }
         elif chunker_type == ChunkerType.SENTENCE.value:
-            max_sentences = UIComponents.display_slider(constants.MAX_SENTENCES_DISPLAY_NAME, 1, 20, 5)
-            chunker_params = {constants.CONFIG_MAX_SENTENCES: max_sentences}
+            max_sentences = UIComponents.display_slider(constants.UIDisplayNameConstants.MAX_SENTENCES_DISPLAY_NAME, 1, 20, 5)
+            chunker_params = {constants.ConfigManagerNames.CONFIG_MAX_SENTENCES: max_sentences}
         chunker_config = {
-            constants.CONFIG_TYPE_PARAM: chunker_type,
-            constants.CONFIG_PARAM: chunker_params
+            constants.ConfigManagerNames.CONFIG_TYPE_PARAM: chunker_type,
+            constants.ConfigManagerNames.CONFIG_PARAM: chunker_params
         }
         return chunker_config
 
@@ -438,35 +438,35 @@ class Sidebar:
         """Configure vector store settings"""
         UIComponents.display_divider()
 
-        options, index = self.get_ui_options(option_type=constants.VectorStore, config_name=constants.CONFIG_VECTOR_STORE)
+        options, index = self.get_ui_options(option_type=constants.VectorStore, config_name=constants.ConfigManagerNames.CONFIG_VECTOR_STORE)
 
         vector_store = UIComponents.selectbox(
-            constants.VECTOR_STORE_DISPLAY_NAME,
+            constants.UIDisplayNameConstants.VECTOR_STORE_DISPLAY_NAME,
             options=options,
             index=index
         )
         
         if vector_store == constants.VectorStore.SCIKIT_LEARN.value:
             return {
-                constants.CONFIG_TYPE_PARAM: constants.VectorStore.SCIKIT_LEARN.value,
-                constants.CONFIG_PARAM: {
-                    constants.CONFIG_VECTOR_STORE_METRIC: constants.CONFIG_METRIC_COSINE
+                constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.VectorStore.SCIKIT_LEARN.value,
+                constants.ConfigManagerNames.CONFIG_PARAM: {
+                    constants.ConfigManagerNames.CONFIG_VECTOR_STORE_METRIC: constants.ConfigManagerNames.CONFIG_METRIC_COSINE
                 }
             }
         elif vector_store == constants.VectorStore.PINE_CONE.value:
-            return {constants.CONFIG_TYPE_PARAM: constants.VectorStore.PINE_CONE.value}
+            return {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.VectorStore.PINE_CONE.value}
         elif vector_store == constants.VectorStore.CHROMA.value:
-            return {constants.CONFIG_TYPE_PARAM: constants.VectorStore.CHROMA.value}
+            return {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.VectorStore.CHROMA.value}
         else:
-            return {constants.CONFIG_TYPE_PARAM: constants.VectorStore.FAISS.value}
+            return {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: constants.VectorStore.FAISS.value}
 
     def get_embedder_config(self):
         """Configure embedder settings"""
         UIComponents.display_divider()
-        options, index = self.get_ui_options(option_type=constants.EmbedderType, config_name=constants.CONFIG_EMBEDDER)
+        options, index = self.get_ui_options(option_type=constants.EmbedderType, config_name=constants.ConfigManagerNames.CONFIG_EMBEDDER)
 
         embedder_type = UIComponents.selectbox(
-            constants.EMBEDDER_TYPE_DISPLAY_NAME,
+            constants.UIDisplayNameConstants.EMBEDDER_TYPE_DISPLAY_NAME,
             options=options,
             index=index
         )
@@ -474,14 +474,14 @@ class Sidebar:
         if embedder_type != EmbedderType.TFIDF.value:
             emb_options = self.get_embedder_options(embedder_type)
             emb_model = UIComponents.selectbox(
-                constants.EMBED_MODEL_DISPLAY_NAME,
+                constants.UIDisplayNameConstants.EMBED_MODEL_DISPLAY_NAME,
                 options=[e.value for e in emb_options]
             )
             return {
-                constants.CONFIG_TYPE_PARAM: embedder_type,
-                constants.CONFIG_PARAM: {constants.CONFIG_MODEL: emb_model}
+                constants.ConfigManagerNames.CONFIG_TYPE_PARAM: embedder_type,
+                constants.ConfigManagerNames.CONFIG_PARAM: {constants.ConfigManagerNames.CONFIG_MODEL: emb_model}
             }
-        return {constants.CONFIG_TYPE_PARAM: embedder_type}
+        return {constants.ConfigManagerNames.CONFIG_TYPE_PARAM: embedder_type}
 
     def get_embedder_options(self, embedder_type: str):
         """Get embedder model options based on embedder type"""
@@ -535,15 +535,15 @@ class Sidebar:
     
     def apply_text_processing_config(self, chunker_params, vector_store, embedder_params):
         """Apply text processing configuration to the pipeline"""
-        Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_CHUNKER, chunker_params)
-        Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_EMBEDDER, embedder_params)
-        Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_VECTOR_STORE, vector_store)
+        Utils.utils.get_pipeline().component_manager.update_component(constants.ConfigManagerNames.CONFIG_CHUNKER, chunker_params)
+        Utils.utils.get_pipeline().component_manager.update_component(constants.ConfigManagerNames.CONFIG_EMBEDDER, embedder_params)
+        Utils.utils.get_pipeline().component_manager.update_component(constants.ConfigManagerNames.CONFIG_VECTOR_STORE, vector_store)
         
         UIComponents.display_success("Text processing configuration updated.")
     
     def apply_Retrieval_and_Reranker_config(self, retriever_config, re_ranker_config):
         """Apply text processing configuration to the pipeline"""
-        Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_RETRIEVER, retriever_config)
-        Utils.utils.get_pipeline().component_manager.update_component(constants.CONFIG_RERANKER, re_ranker_config)
+        Utils.utils.get_pipeline().component_manager.update_component(constants.ConfigManagerNames.CONFIG_RETRIEVER, retriever_config)
+        Utils.utils.get_pipeline().component_manager.update_component(constants.ConfigManagerNames.CONFIG_RERANKER, re_ranker_config)
         
         UIComponents.display_success("Retrieval and Reranking configuration updated.")

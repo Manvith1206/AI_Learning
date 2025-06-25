@@ -18,11 +18,11 @@ class PineConeVectorStore(BaseVectorStore):
         self.cost = 0
 
     def update_index(self, index):
-        self.index = index
+        self.index = self.pc.Index(index)
 
     def get_index(self):
         if self.index:
-            return self.index
+            return self.index_name
         else:
             return None
         
@@ -47,9 +47,9 @@ class PineConeVectorStore(BaseVectorStore):
             # Extract documents
             for doc_id, doc_data in fetch_response['vectors'].items():
                 document = {
-                    constants.ID: doc_id,
-                    constants.METADATA: doc_data.get('metadata', {}),
-                    constants.PAGE_CONTENT: doc_data.get('values', [])
+                    constants.Constants.ID: doc_id,
+                    constants.Constants.METADATA: doc_data.get('metadata', {}),
+                    constants.Constants.PAGE_CONTENT: doc_data.get('values', [])
                 }
                 all_documents.append(document)
         
@@ -71,7 +71,7 @@ class PineConeVectorStore(BaseVectorStore):
             if self.index_name in [i.name for i in self.pc.list_indexes()]:
                 self.pc.delete_index(self.index_name)
 
-            self.pc.create_index(
+            self.pc.create_index(   
                 name=self.index_name,
                 dimension=self.dimension,  # We'll set dimension at runtime
                 metric="cosine",
@@ -148,9 +148,9 @@ class PineConeVectorStore(BaseVectorStore):
             score = match["score"]
             id = match["id"]
             results.append({
-                constants.Document: metadata,
-                constants.Score: score,
-                constants.ID: id
+                constants.Constants.Document: metadata,
+                constants.Constants.Score: score,
+                constants.Constants.ID: id
             })
 
         return results
