@@ -1,4 +1,4 @@
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 import Utils.exceptions as Exceptions
 from infrastructure.evaluators.base_evaluator import BaseEvaluator
 

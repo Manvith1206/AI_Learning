@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Callable
-from UI.ui_components import UIComponents
+from UI.UI_Components import UIComponents
 
 
 from infrastructure.common.rag_pipeline import RAGPipeline

@@ -1,6 +1,6 @@
 import uuid
 import traceback
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 import os
 from infrastructure.chunkers.base_chunker import BaseChunker
 from infrastructure.embedders.base_embedder import BaseEmbedder

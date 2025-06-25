@@ -3,7 +3,7 @@ import os
 import pickle
 from .base_vector_store import BaseVectorStore
 from langchain_core.documents import Document
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 import numpy as np
 import faiss
 import uuid

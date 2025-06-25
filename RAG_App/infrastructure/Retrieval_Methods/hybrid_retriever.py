@@ -1,5 +1,5 @@
 from .base_retriever import BaseRetriever
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 import time
 from rank_bm25 import BM25Okapi
 import re

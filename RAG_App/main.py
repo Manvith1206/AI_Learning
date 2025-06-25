@@ -3,8 +3,8 @@ from dotenv import load_dotenv
 from config import ConfigManager
 from UI.pages.main_page import MainPage
 from infrastructure.common.pipelines.rag_pipeline import RAGPipeline
-from UI.ui_components import UIComponents
-import infrastructure.common.rag_constants as constants
+from UI.UI_Components import UIComponents
+import infrastructure.common.RAG_Constants as constants
 from infrastructure.common.exceptions import ComponentBuildError, MissingConfigurationError
 
 def initialize_pipeline():

@@ -2,7 +2,7 @@ import os
 import logging
 from models import AppConfig
 from infrastructure.common.exceptions import ComponentBuildError, MissingConfigurationError
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 
 # Import all components to ensure they are registered
 import infrastructure.common.component_imports

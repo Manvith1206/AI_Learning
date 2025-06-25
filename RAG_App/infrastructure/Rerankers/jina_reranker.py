@@ -4,7 +4,7 @@ from typing import List, Dict, Union, Tuple
 from .base_reranker import BaseReranker
 import requests
 import time
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 from infrastructure.common.component_registry import register, RERANKERS_REGISTRY
 
 @register(RERANKERS_REGISTRY, name=constants.RerankerType.JINA.value)

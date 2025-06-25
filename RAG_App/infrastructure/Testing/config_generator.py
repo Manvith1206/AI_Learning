@@ -1,6 +1,6 @@
 import itertools
-import infrastructure.common.rag_constants as constants
-from infrastructure.common.rag_constants import (
+import infrastructure.common.RAG_Constants as constants
+from infrastructure.common.RAG_Constants import (
     ChunkerType, EmbedderType, RetrieverType, RerankerType, LLMServiceType, EvaluatorType
 )
 

@@ -1,7 +1,7 @@
 from .base_reranker import BaseReranker
 import cohere as co
 import time
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 from infrastructure.common.component_registry import register, RERANKERS_REGISTRY
 
 @register(RERANKERS_REGISTRY, name=constants.RerankerType.COHERE.value)

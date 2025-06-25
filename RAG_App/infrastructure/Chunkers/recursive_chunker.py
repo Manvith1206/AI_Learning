@@ -2,7 +2,7 @@ import time
 from typing import List, Tuple
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from .base_chunker import BaseChunker
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 from infrastructure.common.component_registry import CHUNKERS_REGISTRY
 
 @CHUNKERS_REGISTRY.register(constants.ChunkerType.RECURSIVE.value)

@@ -1,7 +1,7 @@
 from .base_reranker import BaseReranker
 import re
 import time
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 from infrastructure.llm_chat_services.base_llm_service import BaseLLMService
 from infrastructure.prompt_providers.llm_reranker_prompt_provider import LLM_Reranker_Prompt_Provider
 from infrastructure.common.component_registry import register, RERANKERS_REGISTRY

@@ -1,14 +1,14 @@
 from typing import Dict, List, Any, Optional
 
-from UI.ui_components import UIComponents
+from UI.UI_Components import UIComponents
 from UI.chat_interface import ChatInterface
 from UI.sidebar import Sidebar
 from UI.metrics_display import MetricsDisplay
 from UI.flashcard_display import FlashcardDisplay
 from models import Flashcard, AppConfig
 from infrastructure.common.rag_pipeline import RAGPipeline
-from infrastructure.common import rag_constants as constants
-from infrastructure.utils.exceptions import FlashcardGenerationError, PipelineError
+from infrastructure.common import RAG_Constants as constants
+from infrastructure.common.exceptions import FlashcardGenerationError, PipelineError
 import tempfile
 import os
 
@@ -88,9 +88,8 @@ class MainPage:
         
         with self.sidebar:
             self.render_upload_file_section()
-            self.sidebar.render()
+            self.sidebar.render_sidebar()
             
-        UIComponents.create_header_UI()
         
         chat_tab, flashcards_tab, metrics_tab, debug_tab = UIComponents.create_tabs(
             ["Chat", "FlashCards", "Metrics", "Debug"]
@@ -100,7 +99,7 @@ class MainPage:
             self.chat_interface.render()
         
         with flashcards_tab:
-            if UIComponents.button("Generate Flashcards"):
+            if UIComponents.create_button("Generate Flashcards"):
                 self.trigger_flashcard_generation()
             
             flashcards_to_display = UIComponents.get_session_state_variable("flashcards", [])
@@ -108,7 +107,6 @@ class MainPage:
                 UIComponents.display_info("No flashcards were generated. Try different content or check logs.")
             
             self.flashcard_display.flashcards = flashcards_to_display
-            self.flashcard_display.render()
 
         with metrics_tab:
             UIComponents.create_subheader_UI("Component Metrics")
@@ -124,7 +122,7 @@ class MainPage:
 
     def render_upload_file_section(self):
         """Render file upload section in sidebar with caching."""
-        uploaded_file = UIComponents.file_uploader(
+        uploaded_file = UIComponents.create_file_uploader(
             label="Upload your document",
             type=['pdf', 'txt', 'docx']
         )
@@ -195,13 +193,13 @@ class MainPage:
         
         metrics = {}
         component_map = {
-            constants.CONFIG_CHUNKER: constants.CONFIG_CHUNKER,
-            constants.CONFIG_EMBEDDER: constants.CONFIG_EMBEDDER,
-            constants.CONFIG_RETRIEVER: constants.CONFIG_RETRIEVER,
-            constants.CONFIG_RERANKER: constants.CONFIG_RERANKER,
-            constants.CONFIG_EVALUATOR: constants.CONFIG_EVALUATOR,
-            constants.CONFIG_VECTOR_STORE: constants.CONFIG_VECTOR_STORE,
-            constants.CONFIG_LLM: constants.CONFIG_LLM,
+            constants.ConfigManagerNames.CONFIG_CHUNKER: constants.ConfigManagerNames.CONFIG_CHUNKER,
+            constants.ConfigManagerNames.CONFIG_EMBEDDER: constants.ConfigManagerNames.CONFIG_EMBEDDER,
+            constants.ConfigManagerNames.CONFIG_RETRIEVER: constants.ConfigManagerNames.CONFIG_RETRIEVER,
+            constants.ConfigManagerNames.CONFIG_RERANKER: constants.ConfigManagerNames.CONFIG_RERANKER,
+            constants.ConfigManagerNames.CONFIG_EVALUATOR: constants.ConfigManagerNames.CONFIG_EVALUATOR,
+            constants.ConfigManagerNames.CONFIG_VECTOR_STORE: constants.ConfigManagerNames.CONFIG_VECTOR_STORE,
+            constants.ConfigManagerNames.CONFIG_LLM: constants.ConfigManagerNames.CONFIG_LLM,
         }
 
         for metric_name, component_key in component_map.items():

@@ -1,10 +1,10 @@
 import os
-from infrastructure.common.rag_constants import (
+from infrastructure.common.RAG_Constants import (
     ChunkerType, EmbedderType,
     RetrieverType, RerankerType,
     EvaluatorType, LLMServiceType, GeminiLLMModel
 )
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 
 class ConfigManager:
     """Manages configuration for RAG components"""

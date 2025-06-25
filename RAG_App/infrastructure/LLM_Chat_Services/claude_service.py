@@ -2,7 +2,7 @@ import json
 import time
 from .base_llm_service import BaseLLMService
 import anthropic
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 from infrastructure.common.component_registry import register, LLM_SERVICES_REGISTRY
 
 @register(LLM_SERVICES_REGISTRY, name=constants.LLMServiceType.CLAUDE.value)

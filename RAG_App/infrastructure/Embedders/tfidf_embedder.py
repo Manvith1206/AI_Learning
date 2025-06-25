@@ -5,7 +5,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.exceptions import NotFittedError
 from .base_embedder import BaseEmbedder
 from ..common.component_registry import EMBEDDERS_REGISTRY
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 
 logger = logging.getLogger(__name__)
 

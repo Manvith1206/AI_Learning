@@ -1,7 +1,7 @@
 import time
 from langchain_experimental.text_splitter import SemanticChunker
 from infrastructure.chunkers.base_chunker import BaseChunker
-from infrastructure.common.rag_constants import ThresholdTypeForSemanticChunkinLangChain
+from infrastructure.common.RAG_Constants import ThresholdTypeForSemanticChunkinLangChain
 
 class SemanticChunkerWithLangChain(BaseChunker):
     def __init__(self, embed_model):

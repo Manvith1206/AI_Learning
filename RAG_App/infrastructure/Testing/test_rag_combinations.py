@@ -10,8 +10,8 @@ sys.path.insert(0, ROOT)
 
 from infrastructure.common.rag_pipeline import RAGPipeline
 from config import ConfigManager
-import infrastructure.common.rag_constants as constants
-from infrastructure.common.rag_constants import (
+import infrastructure.common.RAG_Constants as constants
+from infrastructure.common.RAG_Constants import (
     ChunkerType, EmbedderType, RetrieverType,
     RerankerType, VectorStore, GeminiLLMModel,
     CohereRerankingModels, JINA_RERANKER_MODELS

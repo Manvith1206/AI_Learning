@@ -1,7 +1,7 @@
 import streamlit as st
 from typing import List, Tuple, Dict, Any, Callable
 import pandas as pd
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 class UIComponents:

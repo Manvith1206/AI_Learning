@@ -1,4 +1,4 @@
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 import traceback
 from infrastructure.prompt_providers.llm_chat_prompt_provider import LLM_Chat_Prompt_Provider
 from infrastructure.common.query_classifier_llm import QueryClassifier

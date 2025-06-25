@@ -3,7 +3,7 @@ import time
 from typing import List, Tuple
 from .base_chunker import BaseChunker
 from infrastructure.common.component_registry import CHUNKERS_REGISTRY
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 
 @CHUNKERS_REGISTRY.register(constants.ChunkerType.PAGE.value)
 class PageChunker(BaseChunker):

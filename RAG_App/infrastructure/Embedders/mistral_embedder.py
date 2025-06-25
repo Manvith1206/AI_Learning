@@ -5,7 +5,7 @@ from mistralai.client import MistralClient
 from mistralai.models.embeddings import EmbeddingResponse
 from .base_embedder import BaseEmbedder
 from ..common.component_registry import EMBEDDERS_REGISTRY
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 
 logger = logging.getLogger(__name__)
 

@@ -5,7 +5,7 @@ import json
 from typing import List, Dict, Any, Optional, Literal
 from infrastructure.prompt_providers.query_classifier_prompt_provider import Query_Classifier_Prompt_Provider
 from infrastructure.llm_chat_services.base_llm_service import BaseLLMService
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 
 class QueryClassifier:
     """

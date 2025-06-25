@@ -10,7 +10,7 @@ from infrastructure.common.pipelines.flash_cards_generation import FlashCardGene
 from infrastructure.common.pipelines.query_evaluation import QueryEvaluation
 from infrastructure.common.pipelines.query_processing import QueryProcessing
 from infrastructure.vector_stores.base_vector_store import BaseVectorStore
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 
 # Setup logger
 logging.basicConfig(level=logging.INFO)

@@ -10,7 +10,7 @@ from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.core.postprocessor import MetadataReplacementPostProcessor
 from llama_index.core.indices.postprocessor import SentenceTransformerRerank
 from .base_retriever import BaseRetriever
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 import Utils.utils as Utils
 import time
 from infrastructure.common.component_registry import register, RETRIEVERS_REGISTRY

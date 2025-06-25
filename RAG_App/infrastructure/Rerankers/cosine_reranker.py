@@ -1,7 +1,7 @@
 from .base_reranker import BaseReranker
 from sklearn.metrics.pairwise import cosine_similarity
 import time
-from infrastructure.common.rag_constants import UIDisplayNameConstants, RerankerType
+from infrastructure.common.RAG_Constants import UIDisplayNameConstants, RerankerType
 from infrastructure.common.component_registry import register, RERANKERS_REGISTRY
 
 @register(RERANKERS_REGISTRY, name=RerankerType.COSINE.value)

@@ -1,8 +1,8 @@
 from typing import Dict, List, Any, Callable, Tuple
-from UI.ui_components import UIComponents
+from UI.UI_Components import UIComponents
 from Utils import exceptions
 from infrastructure.common.rag_pipeline import RAGPipeline
-from infrastructure.common.rag_constants import ChunkerType, EmbedderType, RetrieverType, RerankerType
+from infrastructure.common.RAG_Constants import ChunkerType, EmbedderType, RetrieverType, RerankerType
 from infrastructure.common import rag_constants as constants
 import pandas as pd
 

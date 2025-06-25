@@ -3,7 +3,7 @@ from typing import List, Dict
 import traceback
 from infrastructure.llm_chat_services.base_llm_service import BaseLLMService
 from infrastructure.prompt_providers.flashcards_generation_prompt_provider import FlashCardsGeneration_Prompt_Provider
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 
 class FlashCardGeneration:
     def __init__(self, warning_callback, error_callback, llm_service: BaseLLMService):

@@ -1,7 +1,7 @@
 from .base_vector_store import BaseVectorStore
 import chromadb
 import numpy as np
-import infrastructure.common.rag_constants as constants
+import infrastructure.common.RAG_Constants as constants
 import time
 from infrastructure.common.component_registry import register, VECTOR_STORES_REGISTRY
 

@@ -1,5 +1,5 @@
 from typing import List
-from UI.ui_components import UIComponents
+from UI.UI_Components import UIComponents
 
 class FlashcardDisplay:
     def __init__(self, flashcards: List[dict]):
