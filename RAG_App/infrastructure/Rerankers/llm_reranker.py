@@ -4,20 +4,22 @@ import time
 import infrastructure.common.rag_constants as constants
 from infrastructure.llm_chat_services.base_llm_service import BaseLLMService
 from infrastructure.prompt_providers.llm_reranker_prompt_provider import LLM_Reranker_Prompt_Provider
+from infrastructure.common.component_registry import register, RERANKERS_REGISTRY
+
+@register(RERANKERS_REGISTRY, name=constants.RerankerType.LLM.value)
 class LLMReranker(BaseReranker):
-    def __init__(self, llm_client: BaseLLMService, model="gemini-2.0-flash", top_k_for_reranking: int = 5):
-        self.llm_client = llm_client
-        self.model_name = model
+    def __init__(self, top_k_for_reranking: int = 5):
         self.time_taken = 0
         self.cost = 0
         self.top_k_for_reranking = top_k_for_reranking
-    def rerank(self, query, documents, **kwargs):
+        
+    def rerank(self, query, documents, llm_client: BaseLLMService, **kwargs):
         llm_reranker_prompt_provider = LLM_Reranker_Prompt_Provider()
         chunk_list = "\n".join([f"{i+1}. {doc}" for i, doc in enumerate(documents)])
         rerank_prompt = llm_reranker_prompt_provider.get_final_prompt(query=query, chunk_list=chunk_list)
         start_time = time.time()
         full_response = ""
-        for delta in self.llm_client.generate_response(rerank_prompt):
+        for delta in llm_client.generate_response(rerank_prompt):
             full_response += delta
 
         best_chunks_match = re.search(r"Reranked Chunk\(s\):\s*\[([^\]]+)\]", full_response)

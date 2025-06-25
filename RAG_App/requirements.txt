@@ -1,0 +1,15 @@
+streamlit
+pydantic
+PyYAML
+python-dotenv
+cohere
+openai
+gemini-generativeai
+pinecone-client
+fastapi
+rerankers
+ragas
+deep-eval
+langchain
+lmdb
+faiss-cpu

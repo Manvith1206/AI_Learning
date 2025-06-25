@@ -1,300 +1,163 @@
-from infrastructure.common.query_classifier_llm import QueryClassifier
+import os
+import logging
+from models import AppConfig
+from infrastructure.common.exceptions import ComponentBuildError, MissingConfigurationError
 import infrastructure.common.rag_constants as constants
-from infrastructure.common.rag_constants import (ChunkerType, EmbedderType,RetrieverType, LLMServiceType, RerankerType, EvaluatorType,
-                                                 )
-from infrastructure.evaluators.custom_evaluator import (
-    CustomEvaluator,
-    FaithfulnessMetric,
-    ContextPrecisionMetric,
-    ContextRecallMetric,
-    AnswerRelevancyMetric
+
+# Import all components to ensure they are registered
+import infrastructure.common.component_imports
+
+from infrastructure.common.component_registry import (
+    CHUNKERS_REGISTRY,
+    EMBEDDERS_REGISTRY,
+    VECTOR_STORES_REGISTRY,
+    RETRIEVERS_REGISTRY,
+    LLM_SERVICES_REGISTRY,
+    RERANKERS_REGISTRY,
+    EVALUATORS_REGISTRY
 )
 
-from infrastructure.evaluators.simple_evaluator  import SimpleEvaluator
-from infrastructure.evaluators.ragas_evaluator import RagasEvaluator
-from infrastructure.evaluators.deep_eval_evaluator import DeepEval
-from config import ConfigManager
-from typing import Any
-from models import ComponentConfigDetails
+# Setup logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class ComponentManager:
-    def __init__(self, 
-                config_manager: ConfigManager, 
-                geminiApiKey,
-                cohereApiKey, 
-                voyageApiKey, 
-                mistralApiKey, 
-                pineconeApiKey, 
-                jinaApiKey, 
-                claudeApiKey,
-                error_callback,
-                warning_callback,
-                vector_store):
+    """A stateless factory for creating pipeline components based on configuration."""
+
+    def __init__(self, config: AppConfig):
+        self.config = config
+        self.components = {}
+
+    def build_all_components(self):
+        """Builds and returns a dictionary of all pipeline components."""
+        logger.info("Building all pipeline components...")
+        # Build components in order of dependency
+        self.components[constants.CONFIG_EMBEDDER] = self._build_embedder()
+        self.components[constants.CONFIG_CHUNKER] = self._build_chunker()
+        self.components[constants.CONFIG_VECTOR_STORE] = self._build_vector_store()
+        self.components[constants.CONFIG_RETRIEVER] = self._build_retriever()
+        self.components[constants.CONFIG_LLM] = self._build_llm_service()
+        self.components[constants.CONFIG_RERANKER] = self._build_reranker()
+        self.components[constants.CONFIG_EVALUATOR] = self._build_evaluator()
+        logger.info("All components built successfully.")
+        return self.components
+
+    def _get_api_key(self, key_name: str) -> str:
+        """Retrieves an API key from environment variables."""
+        api_key = os.getenv(key_name)
+        if not api_key:
+            raise MissingConfigurationError(f"API key '{key_name}' not found in environment variables.")
+        return api_key
+
+    def _build_component(self, registry, config, component_type_name, **kwargs):
+        component_type = config.type
+        logger.info(f"Building {component_type_name} of type: {component_type}")
         
-        self.warning_callback = warning_callback
-        self.error_callback = error_callback
-        self.config_manager = config_manager
+        component_class = registry.get(component_type)
+        if not component_class:
+            raise ComponentBuildError(f"Unknown {component_type_name} type: {component_type}")
 
-        # API Keys assignment (if needed for further use within the pipeline)
-        self.geminiApiKey = geminiApiKey
-        self.cohereApiKey = cohereApiKey
-        self.voyageApiKey = voyageApiKey
-        self.mistralApiKey = mistralApiKey
-        self.pineconeApiKey = pineconeApiKey
-        self.jinaApiKey = jinaApiKey
-        self.claudeApiKey = claudeApiKey
-        self.vector_store = vector_store
-        
-    # setup components
-    def setup_components(self):
-        # Build all core components via factory methods
-        self.embedder = self._build_embedder()
-        self.chunker = self._build_chunker()
-        if self.vector_store is None:
-            self.vector_store = self._build_vector_store()
-        self.retriever = self._build_retriever()
-        self.llm_service = self._build_llm_service()
-        self.reranker = self._build_reranker()
-        self.evaluator = self._build_evaluator()
-        self.query_classifier = QueryClassifier(self.llm_service)
+        try:
+            params = {**config.params, **kwargs}
+            return component_class(**params)
+        except Exception as e:
+            raise ComponentBuildError(f"Failed to build {component_type_name}: {e}")
 
-        component_config_details = {}
-        
-        component_config_details[constants.ConfigManagerNames.CONFIG_CHUNKER] = self.chunker
-        component_config_details[constants.ConfigManagerNames.CONFIG_EMBEDDER] = self.embedder
-        component_config_details[constants.ConfigManagerNames.CONFIG_VECTOR_STORE] = self.vector_store
-        component_config_details[constants.ConfigManagerNames.CONFIG_RETRIEVER] = self.retriever
-        component_config_details[constants.ConfigManagerNames.CONFIG_RERANKER] = self.reranker
-        component_config_details[constants.ConfigManagerNames.CONFIG_EVALUATOR] = self.evaluator
-        component_config_details[constants.ConfigManagerNames.CONFIG_LLM] = self.llm_service 
-
-        component_config_details = ComponentConfigDetails(component_config_details)
-        print("Setup Components")
-        return component_config_details
-
-    def get_chunker_cost_and_time(self):
-        return self.chunker.get_cost_and_time_taken()
-    def get_embedder_cost_and_time(self):
-        return self.embedder.get_cost_and_time_taken()
-    def get_vector_store_cost_and_time(self):
-        return self.vector_store.get_cost_and_time_taken()
-    def get_retriever_cost_and_time(self):
-        return self.retriever.get_cost_and_time_taken()
-    def get_llm_service_cost_and_time(self):
-        return self.llm_service.get_cost_and_time_taken()
-    def get_reranker_cost_and_time(self):
-        return self.reranker.get_cost_and_time_taken()
-    def get_evaluator_cost_and_time(self):
-        return self.evaluator.get_cost_and_time_taken()
-    
-    def get_config_from_config_manager_based_on_config(self, config_name: str):
-        config = self.config_manager.get_config(config_name)
-        return config
-    
-    def get_config_param_from_config(self, config: dict[str, Any], config_param: str, defaultValue: list):
-        config_param = config.get(config_param, defaultValue)
-        return config_param
-    
-    # build invidual components
     def _build_chunker(self):
-        from infrastructure.chunkers.recursive_chunker import RecursiveChunker
-        from infrastructure.chunkers.sentence_chunker import SentenceChunker
-        from infrastructure.chunkers.semantic_chunker import SemanticChunker
-        from infrastructure.chunkers.page_chunker import PageChunker
-        from infrastructure.chunkers.semantic_chunker_with_langchain import SemanticChunkerWithLangChain
-
-        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_CHUNKER)
-        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
-
-        if config_type == ChunkerType.RECURSIVE.value:
-            return RecursiveChunker(**params)
-        elif config_type == ChunkerType.SENTENCE.value:
-            return SentenceChunker(**params)
-        elif config_type == ChunkerType.SEMANTIC.value:
-            return SemanticChunker(**params)
-        elif config_type == ChunkerType.PAGE.value:
-            return PageChunker()
-        elif config_type == ChunkerType.SEMANTIC_WITH_LANGCHAIN.value:
-            return SemanticChunkerWithLangChain(self.embedder)
-        else:
-            return RecursiveChunker()
+        kwargs = {}
+        if self.config.chunker.type == constants.ChunkerType.SEMANTIC.value:
+            kwargs['embedder'] = self.components[constants.CONFIG_EMBEDDER]
+        return self._build_component(CHUNKERS_REGISTRY, self.config.chunker, "chunker", **kwargs)
 
     def _build_embedder(self):
-        from infrastructure.embedders.tfidf_embedder import TFIDFEmbedder
-        from infrastructure.embedders.gemini_embedder import GeminiEmbedder
-        from infrastructure.embedders.mistral_embedder import MistralEmbedder
-
-        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_EMBEDDER)
-        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
-        model_name =  self.get_config_param_from_config(params, constants.ConfigManagerNames.CONFIG_MODEL, {})
-
-        if config_type == EmbedderType.TFIDF.value:
-            return TFIDFEmbedder()
-        elif config_type == EmbedderType.GEMINI.value:
-            return GeminiEmbedder(api_key=self.geminiApiKey, model_name=model_name)
-        elif config_type == EmbedderType.COHERE.value:
-            from infrastructure.embedders.cohere_embedder import CohereEmbedder
-            return CohereEmbedder(api_key=self.cohereApiKey,
-                                  model=model_name)
-        elif config_type == EmbedderType.VOYAGE.value:
-            from infrastructure.embedders.voyage_embedder import VoyageEmbedder
-            return VoyageEmbedder(api_key=self.voyageApiKey,
-                                  model=model_name)
-        elif config_type == EmbedderType.MISTRAL.value:
-            return MistralEmbedder(api_key=self.mistralApiKey,
-                                  **params
-                                  )
-        else:
-            return TFIDFEmbedder()
+        kwargs = {}
+        embedder_type = self.config.embedder.type
+        if embedder_type == constants.EmbedderType.OPENAI.value:
+            kwargs['api_key'] = self._get_api_key(constants.OPENAI_API_KEY)
+        elif embedder_type == constants.EmbedderType.COHERE.value:
+            kwargs['api_key'] = self._get_api_key(constants.COHERE_API_KEY)
+        elif embedder_type == constants.EmbedderType.GEMINI.value:
+            kwargs['api_key'] = self._get_api_key(constants.GEMINI_API_KEY)
+        elif embedder_type == constants.EmbedderType.MISTRAL.value:
+            kwargs['api_key'] = self._get_api_key(constants.MISTRAL_API_KEY)
+        elif embedder_type == constants.EmbedderType.VOYAGE.value:
+            kwargs['api_key'] = self._get_api_key(constants.VOYAGE_API_KEY)
+        return self._build_component(EMBEDDERS_REGISTRY, self.config.embedder, "embedder", **kwargs)
 
     def _build_vector_store(self):
-        from infrastructure.vector_stores.pinecone_vector_store import PineConeVectorStore
-        from infrastructure.vector_stores.FAISS_Vector_Store import FAISS_Vector_Store
-        from infrastructure.vector_stores.sklearn_vector_store import SklearnVectorStore
-
-        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_VECTOR_STORE)
-        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
-        
-        if config_type == constants.VectorStore.SCIKIT_LEARN.value:
-            return SklearnVectorStore(**params)
-        elif config_type == constants.VectorStore.PINE_CONE.value:
-            return PineConeVectorStore(api_key=self.pineconeApiKey, index_name=constants.PineConeStorageConstants.PINE_CONE_INDEX_NAME)
-        elif config_type == constants.VectorStore.CHROMA.value:
-            from infrastructure.vector_stores.chroma_vector_store import ChromaVectorStore
-            return ChromaVectorStore(**params, collectionName=constants.ChromaStorageConstants.CHROMA_COLLECTION_NAME)
-        elif config_type == constants.VectorStore.FAISS.value:
-            return FAISS_Vector_Store()
-        else:
-            return SklearnVectorStore(metric=constants.ConfigManagerNames.CONFIG_METRIC_COSINE)
+        kwargs = {}
+        if self.config.vector_store.type == constants.VectorStore.PINE_CONE.value:
+            kwargs['api_key'] = self._get_api_key(constants.PINECONE_API_KEY)
+        return self._build_component(VECTOR_STORES_REGISTRY, self.config.vector_store, "vector store", **kwargs)
 
     def _build_retriever(self):
-        from infrastructure.retrieval_methods.similarity_retriever import SimilarityRetriever
-        from infrastructure.retrieval_methods.sentence_window_retreiver import SentenceWindowRetriever
-        from infrastructure.retrieval_methods.similarity_retriever import SimilarityRetriever
-
-        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_RETRIEVER)
-        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
-
-        self.top_k = self.get_config_param_from_config(params, constants.ConfigManagerNames.CONFIG_TOP_K_PARAM, 0)
-        if config_type == RetrieverType.SIMILARITY.value:
-            return SimilarityRetriever(**params)
-        elif config_type == RetrieverType.HYBRID.value:
-            from infrastructure.retrieval_methods.hybrid_retriever import HybridRetriever
-            return HybridRetriever(**params)
-        elif config_type == RetrieverType.SENTENCE_WINDOW.value:
-            return SentenceWindowRetriever(**params)
-        else:
-            return SimilarityRetriever()
+        # The vector_store is passed to the retrieve method at runtime, not during initialization.
+        kwargs = {}
+        return self._build_component(RETRIEVERS_REGISTRY, self.config.retriever, "retriever", **kwargs)
 
     def _build_llm_service(self):
-        
-        from infrastructure.llm_chat_services.gemini_service import GeminiService
-        from google import genai
-
-        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_LLM)
-        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
-
-        model_name = self.get_config_param_from_config(params, constants.ConfigManagerNames.CONFIG_MODEL, "")
-
-        if config_type == LLMServiceType.GEMINI.value:
-            client = genai.Client(api_key=self.geminiApiKey)
-            return GeminiService(client, model_name=model_name)
-        elif config_type == LLMServiceType.CLAUDE.value:
-            from infrastructure.llm_chat_services.claude_service import ClaudeService
-            import anthropic
-            client = anthropic.Anthropic(api_key=self.claudeApiKey)
-            return ClaudeService(client, model_name=model_name)
-        else:
-            return GeminiService(client, model_name=model_name)
+        kwargs = {}
+        llm_type = self.config.llm.type
+        if llm_type == constants.LLMServiceType.GEMINI.value:
+            kwargs['api_key'] = self._get_api_key(constants.GEMINI_API_KEY)
+        elif llm_type == constants.LLMServiceType.OPENAI.value:
+            kwargs['api_key'] = self._get_api_key(constants.OPENAI_API_KEY)
+        elif llm_type == constants.LLMServiceType.CLAUDE.value:
+            kwargs['api_key'] = self._get_api_key(constants.CLAUDE_API_KEY)
+        elif llm_type == constants.LLMServiceType.COHERE.value:
+            kwargs['api_key'] = self._get_api_key(constants.COHERE_API_KEY)
+        return self._build_component(LLM_SERVICES_REGISTRY, self.config.llm, "LLM service", **kwargs)
 
     def _build_reranker(self):
-        
-        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_RERANKER)
-        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
-
-        top_k = self.get_config_param_from_config(params, constants.ConfigManagerNames.CONFIG_TOP_K_FOR_RERANKING_PARAM, 0)
-        if config_type == RerankerType.LLM.value:
-            from infrastructure.rerankers.llm_reranker import LLMReranker
-
-            return LLMReranker(self.llm_service,**params)
-        elif config_type == RerankerType.COHERE.value:
-            from infrastructure.rerankers.cohere_re_ranker import CohereReranker
-
-            return CohereReranker(self.cohereApiKey, **params)
-        elif config_type == RerankerType.JINA.value:
-            from infrastructure.rerankers.jina_reranker import JinaReranker
-
-            return JinaReranker(**params, api_key=self.jinaApiKey)
-        elif config_type == RerankerType.COSINE.value:
-            from infrastructure.rerankers.cosine_reranker import CosineReranker
-
-            return CosineReranker(self.embedder, top_k)
-        else:
-            from infrastructure.rerankers.cosine_reranker import CosineReranker
-
-            return CosineReranker(self.embedder, top_k_for_reranking=top_k)
+        kwargs = {}
+        reranker_type = self.config.reranker.type
+        if reranker_type == constants.RerankerType.LLM.value:
+            kwargs['llm_service'] = self.components[constants.CONFIG_LLM]
+        elif reranker_type == constants.RerankerType.COHERE.value:
+            kwargs['api_key'] = self._get_api_key(constants.COHERE_API_KEY)
+        elif reranker_type == constants.RerankerType.JINA.value:
+            kwargs['api_key'] = self._get_api_key(constants.JINA_RERANKER_API_KEY)
+        return self._build_component(RERANKERS_REGISTRY, self.config.reranker, "reranker", **kwargs)
 
     def _build_evaluator(self):
-        from infrastructure.evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
-        config = self.get_config_from_config_manager_based_on_config(constants.ConfigManagerNames.CONFIG_EVALUATOR)
-        config_type = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_TYPE_PARAM, "")
-        params = self.get_config_param_from_config(config, constants.ConfigManagerNames.CONFIG_PARAM, {})
+        kwargs = {}
+        evaluator_type = self.config.evaluator.type
+        logger.info(f"Attempting to build evaluator of type: {evaluator_type}")
 
+        evaluator_class = EVALUATORS_REGISTRY.get(evaluator_type)
 
-        if config_type == EvaluatorType.RAGAS.value:
-            return RagasEvaluator(**params)
-        elif config_type == EvaluatorType.CUSTOM.value:
-            try:
-                gemini_api_key = self.geminiApiKey
-                if not gemini_api_key:
-                    self.error_callback(f"Gemini API key ({constants.APIKeys.GEMINI_API_KEY}) not found in st.secrets for Custom Evaluator.")
-                    self.warning_callback("Falling back to SimpleEvaluator.")
-                    return SimpleEvaluator()
+        if not evaluator_class:
+            logger.warning(f"Unknown or unsupported evaluator type '{evaluator_type}'. Defaulting to SimpleEvaluator.")
+            evaluator_type = constants.EvaluatorType.SIMPLE.value
+            evaluator_class = EVALUATORS_REGISTRY.get(evaluator_type)
+
+        try:
+            if evaluator_type == constants.EvaluatorType.CUSTOM.value:
+                kwargs['gemini_api_key'] = self._get_api_key(constants.GEMINI_API_KEY)
+            elif evaluator_type == constants.EvaluatorType.DEEP_EVAL.value:
+                kwargs['gemini_api_key'] = self._get_api_key(constants.GEMINI_API_KEY)
+            elif evaluator_type == constants.EvaluatorType.RAGAS.value:
+                try:
+                    kwargs['openai_api_key'] = self._get_api_key(constants.OPENAI_API_KEY)
+                except MissingConfigurationError:
+                    kwargs['openai_api_key'] = None
+                try:
+                    kwargs['gemini_api_key'] = self._get_api_key(constants.GEMINI_API_KEY)
+                except MissingConfigurationError:
+                    kwargs['gemini_api_key'] = None
                 
-                llm_service_for_custom_eval = LLM_Evaluation_Service(client=self.llm_service, 
-                                                                     model_name=self.llm_service.model_name,
-                                                                     embedder=self.embedder)
-                
-                metrics_for_custom_eval = [
-                    FaithfulnessMetric(llm_service=llm_service_for_custom_eval),
-                    ContextPrecisionMetric(llm_service=llm_service_for_custom_eval),
-                    ContextRecallMetric(llm_service=llm_service_for_custom_eval),
-                    AnswerRelevancyMetric(llm_service=llm_service_for_custom_eval)
-                ]
-                return CustomEvaluator(metrics=metrics_for_custom_eval)
-            except Exception as e:
-                self.error_callback(f"Failed to initialize Custom Evaluator: {e}")
-                self.error_callback("Falling back to SimpleEvaluator due to an error in Custom Evaluator setup.")
-                return SimpleEvaluator()
-        elif config_type == EvaluatorType.SIMPLE.value:
-            return SimpleEvaluator()
-        elif config_type == EvaluatorType.DEEP_EVAL.value:
-            return DeepEval(**params, api_key=self.geminiApiKey)
-        else:
-            return SimpleEvaluator()
+                if not kwargs.get('openai_api_key') and not kwargs.get('gemini_api_key'):
+                    raise MissingConfigurationError("RagasEvaluator requires either an OpenAI or Gemini API key.")
 
-    # update components
-    def update_component(self, component_name, config):
-        self.config_manager.update_config(component_name, config)
-        if component_name in [
-            constants.ConfigManagerNames.CONFIG_CHUNKER,
-            constants.ConfigManagerNames.CONFIG_EMBEDDER,
-            constants.ConfigManagerNames.CONFIG_VECTOR_STORE,
-            constants.ConfigManagerNames.CONFIG_LLM,
-            constants.ConfigManagerNames.CONFIG_RERANKER
-        ]:
-            # heavy components: rebuild whole pipeline
-            self.setup_components()
-        elif component_name == constants.ConfigManagerNames.CONFIG_RETRIEVER:
-            # hot-swap retriever only
-            self.retriever = self._build_retriever()
-        elif component_name == constants.ConfigManagerNames.CONFIG_EVALUATOR:
-            # hot-swap evaluator only
-            self.evaluator = self._build_evaluator()
-        # else: unknown component, ignore
+            params = {**self.config.evaluator.params, **kwargs}
+            logger.info(f"Building evaluator '{evaluator_type}' with params: {list(params.keys())}")
+            return evaluator_class(**params)
+            
+        except MissingConfigurationError as e:
+            logger.warning(f"API key missing for '{evaluator_type}' evaluator: {e}. Falling back to SimpleEvaluator.")
+            evaluator_class = EVALUATORS_REGISTRY.get(constants.EvaluatorType.SIMPLE.value)
+            return evaluator_class()
+        except Exception as e:
+            logger.error(f"Failed to build evaluator '{evaluator_type}': {e}. Falling back to SimpleEvaluator.")
+            evaluator_class = EVALUATORS_REGISTRY.get(constants.EvaluatorType.SIMPLE.value)
+            return evaluator_class()

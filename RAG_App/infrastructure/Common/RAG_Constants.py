@@ -235,7 +235,7 @@ class GeminiLLMModel(Enum):
     
 # vector stores
 class VectorStore(Enum):
-    SCIKIT_LEARN = "sckit_learn"
+    SCIKIT_LEARN = "scikit_learn"
     FAISS = "faiss"
     PINE_CONE = "pine-cone"
     CHROMA = "chroma"

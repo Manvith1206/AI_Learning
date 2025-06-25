@@ -3,13 +3,16 @@ import time
 from .base_llm_service import BaseLLMService
 import anthropic
 import infrastructure.common.rag_constants as constants
+from infrastructure.common.component_registry import register, LLM_SERVICES_REGISTRY
 
+@register(LLM_SERVICES_REGISTRY, name=constants.LLMServiceType.CLAUDE.value)
 class ClaudeService(BaseLLMService):
-    def __init__(self, client: anthropic.Client, model_name="claude-2"):
-        self.client = client
+    def __init__(self, api_key: str, model_name="claude-2"):
+        self.client = anthropic.Anthropic(api_key=api_key)
         self.model_name = model_name
         self.time_taken = 0
         self.cost = 0
+
     def generate_response(self, prompt, **kwargs):
         start_time = time.time()
         total_tokens = 0

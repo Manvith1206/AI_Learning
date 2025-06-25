@@ -2,11 +2,13 @@ from mistralai import Mistral
 from .base_embedder import BaseEmbedder
 import infrastructure.common.rag_constants as constants
 import random, time, logging
+from infrastructure.common.component_registry import register, EMBEDDERS_REGISTRY
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
 
+@register(EMBEDDERS_REGISTRY, constants.EmbedderType.MISTRAL.value)
 class MistralEmbedder(BaseEmbedder):
     """Mistral embedding model implementation with batching and rate limiting"""
     def __init__(self, api_key, model="mistral-embed", batch_size=20):

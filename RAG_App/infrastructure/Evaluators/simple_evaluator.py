@@ -1,6 +1,9 @@
 from .base_evaluator import BaseEvaluator
 import re
+import infrastructure.common.rag_constants as constants
+from infrastructure.common.component_registry import register, EVALUATORS_REGISTRY
 
+@register(EVALUATORS_REGISTRY, name=constants.EvaluatorType.SIMPLE.value)
 class SimpleEvaluator(BaseEvaluator):
     """Simple evaluator that checks basic metrics without external dependencies"""
     

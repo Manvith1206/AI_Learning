@@ -13,7 +13,9 @@ from .base_retriever import BaseRetriever
 import infrastructure.common.rag_constants as constants
 import Utils.utils as Utils
 import time
+from infrastructure.common.component_registry import register, RETRIEVERS_REGISTRY
 
+@register(RETRIEVERS_REGISTRY, name=constants.RetrieverType.SENTENCE_WINDOW.value)
 class SentenceWindowRetriever(BaseRetriever):
 
     def __init__(self, window_size: int, top_k: int):

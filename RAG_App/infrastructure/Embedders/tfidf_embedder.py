@@ -2,7 +2,10 @@ import time
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.exceptions import NotFittedError
 from .base_embedder import BaseEmbedder
+from infrastructure.common.component_registry import register, EMBEDDERS_REGISTRY
+import infrastructure.common.rag_constants as constants
 
+@register(EMBEDDERS_REGISTRY, constants.EmbedderType.TFIDF.value)
 class TFIDFEmbedder(BaseEmbedder):
     def __init__(self):
         self.vectorizer = TfidfVectorizer()

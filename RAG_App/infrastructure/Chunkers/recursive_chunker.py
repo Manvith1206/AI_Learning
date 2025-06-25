@@ -1,8 +1,10 @@
 from langchain.text_splitter import TokenTextSplitter
 from .base_chunker import BaseChunker
 from infrastructure.common.rag_constants import Constants
+from infrastructure.common.component_registry import register, CHUNKERS_REGISTRY
 import time
 
+@register(CHUNKERS_REGISTRY, Constants.ChunkerType.RECURSIVE.value)
 class RecursiveChunker(BaseChunker):
     def __init__(self, chunk_size=600, chunk_overlap=200):
         self.chunk_size = chunk_size

@@ -2,7 +2,9 @@ import numpy as np
 from .base_retriever import BaseRetriever
 import infrastructure.common.rag_constants as constants
 import time
+from infrastructure.common.component_registry import register, RETRIEVERS_REGISTRY
 
+@register(RETRIEVERS_REGISTRY, name=constants.RetrieverType.SIMILARITY.value)
 class SimilarityRetriever(BaseRetriever):
     """Retriever that uses cosine similarity to find relevant documents"""
     

@@ -1,0 +1,21 @@
+# Allow requirements.txt, overriding the parent gitignore
+!requirements.txt
+
+# General Python ignores
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment
+.env
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Test results
+.pytest_cache/
+.coverage
+htmlcov/

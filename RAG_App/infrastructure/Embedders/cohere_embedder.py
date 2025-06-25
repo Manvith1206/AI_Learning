@@ -4,7 +4,9 @@ from infrastructure.embedders.base_embedder import BaseEmbedder
 import cohere
 import os
 import infrastructure.common.rag_constants as constants
+from infrastructure.common.component_registry import register, EMBEDDERS_REGISTRY
 
+@register(EMBEDDERS_REGISTRY, constants.EmbedderType.COHERE.value)
 class CohereEmbedder(BaseEmbedder):
     def __init__(self, api_key: str = None, model: str = constants.CohereEmbedModels.COHERE_EMBED_MODEL_ENG):
         """

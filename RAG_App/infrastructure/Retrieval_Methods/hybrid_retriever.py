@@ -4,7 +4,9 @@ import time
 from rank_bm25 import BM25Okapi
 import re
 from typing import List, Dict, Any
+from infrastructure.common.component_registry import register, RETRIEVERS_REGISTRY
 
+@register(RETRIEVERS_REGISTRY, name=constants.RetrieverType.HYBRID.value)
 class HybridRetriever(BaseRetriever):
     """
     Retriever that combines BM25 keyword scoring with semantic search

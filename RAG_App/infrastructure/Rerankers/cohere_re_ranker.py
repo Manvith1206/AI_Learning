@@ -2,7 +2,9 @@ from .base_reranker import BaseReranker
 import cohere as co
 import time
 import infrastructure.common.rag_constants as constants
+from infrastructure.common.component_registry import register, RERANKERS_REGISTRY
 
+@register(RERANKERS_REGISTRY, name=constants.RerankerType.COHERE.value)
 class CohereReranker(BaseReranker):
     def __init__(self, api_key: str = None, model: str = constants.CohereEmbedModels.COHERE_EMBED_MODEL_ENG, top_k_for_reranking: int = 3):
         """

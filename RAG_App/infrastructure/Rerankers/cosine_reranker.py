@@ -1,24 +1,25 @@
 from .base_reranker import BaseReranker
 from sklearn.metrics.pairwise import cosine_similarity
 import time
-from infrastructure.common.rag_constants import UIDisplayNameConstants  
+from infrastructure.common.rag_constants import UIDisplayNameConstants, RerankerType
+from infrastructure.common.component_registry import register, RERANKERS_REGISTRY
 
+@register(RERANKERS_REGISTRY, name=RerankerType.COSINE.value)
 class CosineReranker(BaseReranker):
     """
     Reranker that orders document chunks by cosine similarity with the query embedding.
     """
-    def __init__(self, embedder, top_k_for_reranking: int = 5):
-        self.embedder = embedder
+    def __init__(self, top_k_for_reranking: int = 5):
         self.time_taken = 0
         self.cost = 0
         self.top_k_for_reranking = top_k_for_reranking
 
-    def rerank(self, query, documents, **kwargs):
+    def rerank(self, query, documents, embedder, **kwargs):
         start_time = time.time()
         # Compute embeddings
         
-        query_vec = self.embedder.transform([query])  # shape (1, dim)
-        doc_vecs = self.embedder.embed_documents(documents)  # shape (n, dim)
+        query_vec = embedder.transform([query])  # shape (1, dim)
+        doc_vecs = embedder.embed_documents(documents)  # shape (n, dim)
         
         # Compute cosine similarities
         sims = cosine_similarity(doc_vecs, query_vec).flatten()

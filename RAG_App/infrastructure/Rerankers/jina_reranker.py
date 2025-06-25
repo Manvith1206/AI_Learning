@@ -5,6 +5,9 @@ from .base_reranker import BaseReranker
 import requests
 import time
 import infrastructure.common.rag_constants as constants
+from infrastructure.common.component_registry import register, RERANKERS_REGISTRY
+
+@register(RERANKERS_REGISTRY, name=constants.RerankerType.JINA.value)
 class JinaReranker(BaseReranker):
     """
     A reranker using JINA AI's reranker models from Hugging Face.

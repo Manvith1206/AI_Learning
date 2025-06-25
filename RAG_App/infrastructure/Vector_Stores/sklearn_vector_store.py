@@ -4,7 +4,9 @@ from .base_vector_store import BaseVectorStore
 import infrastructure.common.rag_constants as constants
 import uuid
 import time
+from infrastructure.common.component_registry import register, VECTOR_STORES_REGISTRY
 
+@register(VECTOR_STORES_REGISTRY, name=constants.VectorStore.SCIKIT_LEARN.value)
 class SklearnVectorStore(BaseVectorStore):
     def __init__(self, metric='cosine'):
         self.metric = metric

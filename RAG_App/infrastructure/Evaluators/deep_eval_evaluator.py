@@ -5,10 +5,14 @@ from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 import infrastructure.common.rag_constants as constants
 from deepeval.models.llms import gemini_model
+from infrastructure.common.component_registry import register, EVALUATORS_REGISTRY
 
-class DeepEval(BaseEvaluator):
-    def __init__(self, api_key, metrics=None):
-        model = gemini_model.GeminiModel(model_name=constants.GeminiLLMModel.GEMINI_FLASH.value, api_key=api_key)
+@register(EVALUATORS_REGISTRY, name=constants.EvaluatorType.DEEP_EVAL.value)
+class DeepEvalEvaluator(BaseEvaluator):
+    def __init__(self, gemini_api_key: str, metrics=None):
+        if not gemini_api_key:
+            raise ValueError("Gemini API key is required for DeepEvalEvaluator.")
+        model = gemini_model.GeminiModel(model_name=constants.GeminiLLMModel.GEMINI_FLASH.value, api_key=gemini_api_key)
         self.metrics = metrics or [
             FaithfulnessMetric(threshold=0.7, model=model, include_reason=True),
             AnswerRelevancyMetric(threshold=0.7, model=model, include_reason=True),

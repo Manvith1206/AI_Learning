@@ -1,82 +1,89 @@
 import time
 from .base_evaluator import BaseEvaluator
-from ragas.metrics import answer_relevancy, faithfulness, answer_correctness, context_precision, context_recall
+from ragas.metrics import (
+    answer_relevancy,
+    faithfulness,
+    answer_correctness,
+    context_precision,
+    context_recall,
+)
 from ragas import evaluate
 from datasets import Dataset
-import os
-import openai
 import infrastructure.common.rag_constants as constants
-from ragas.dataset_schema import MultiTurnSample
-from ragas.llms import LangchainLLMWrapper
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
+from infrastructure.common.component_registry import register, EVALUATORS_REGISTRY
 
-from ragas.llms import LangchainLLMWrapper
 
+@register(EVALUATORS_REGISTRY, name=constants.EvaluatorType.RAGAS.value)
 class RagasEvaluator(BaseEvaluator):
     """Evaluator that uses RAGAS metrics for RAG evaluation"""
-    
-    def __init__(self, metrics=None):
-        """
-        Initialize with specific metrics or use default
-        
-        Args:
-            metrics: List of RAGAS metrics to use (default: faithfulness)
-        """
-        self.metrics = metrics or [faithfulness, context_precision, answer_correctness, context_recall, answer_relevancy]
+
+    def __init__(self, openai_api_key: str = None, gemini_api_key: str = None, metrics=None):
+        self.metrics = metrics or [
+            faithfulness,
+            context_precision,
+            answer_correctness,
+            context_recall,
+            answer_relevancy,
+        ]
+
+        if openai_api_key:
+            self.llm = ChatOpenAI(
+                model=constants.OPEN_AI_MODELS.GPT_FOUR_1.value,
+                temperature=0.0,
+                api_key=openai_api_key,
+            )
+        elif gemini_api_key:
+            self.llm = ChatGoogleGenerativeAI(
+                model=constants.GeminiLLMModel.GEMINI_PRO.value,
+                temperature=0.0,
+                google_api_key=gemini_api_key,
+            )
+        else:
+            raise ValueError("Either OpenAI or Gemini API key is required for RagasEvaluator.")
+
         self.time_taken = 0
         self.cost = 0
 
     def evaluate(self, question, answer, contexts, ground_truths=None):
-        """
-        Evaluate using RAGAS metrics
-        
-        Args:
-            question: The query/question asked
-            answer: The generated answer
-            contexts: The contexts used to generate the answer
-            ground_truths: Optional ground truth answers (list)
-            
-        Returns:
-            Dictionary of evaluation metrics
-        """
-        start_time = time.time()  
-        questions = [question]
-        answers = [answer]
-        contexts_list = [contexts]
-        ground_truths_list = [ground_truths]
-        
+        start_time = time.time()
 
-        data = Dataset.from_dict({
-            constants.Constants.QUESTION: questions,
-            constants.Constants.ANSWER: answers,
-            constants.Constants.CONTEXTS: contexts_list,
-            "ground_truth": ground_truths_list
-        })
+        metrics_to_run = self.metrics
+        dataset_dict = {
+            "question": [question],
+            "answer": [answer],
+            "contexts": [contexts],
+        }
 
-        chatLLM = ChatOpenAI(
-            model=constants.OPEN_AI_MODELS.GPT_FOUR_1.value,
-            temperature=0.0,
-        )
-        
-        result = evaluate(
-            data,
-            metrics=self.metrics,
-            raise_exceptions=True,
-            llm = chatLLM
-        )
+        if ground_truths:
+            dataset_dict["ground_truth"] = [ground_truths]
+        else:
+            # Filter out metrics that require ground_truth
+            metrics_that_need_ground_truth = [
+                constants.RagasMetricsConstants.ANSWER_CORRECTNESS,
+                constants.RagasMetricsConstants.CONTEXT_RECALL,
+            ]
+            metrics_to_run = [
+                m for m in self.metrics if m.name not in metrics_that_need_ground_truth
+            ]
+
+        if not metrics_to_run:
+            return {}
+
+        data = Dataset.from_dict(dataset_dict)
+
+        result = evaluate(data, metrics=metrics_to_run, llm=self.llm, raise_exceptions=False)
 
         metrics_dict = {}
-        metrics_dict[constants.RagasMetricsConstants.FAITHFULNESS] = round((result[constants.RagasMetricsConstants.FAITHFULNESS][0]), 2)
-        metrics_dict[constants.RagasMetricsConstants.CONTEXT_PRECISION] = round((result[constants.RagasMetricsConstants.CONTEXT_PRECISION][0]), 2)
-        metrics_dict[constants.RagasMetricsConstants.CONTEXT_RECALL] = round((result[constants.RagasMetricsConstants.CONTEXT_RECALL][0]), 2)
-        metrics_dict[constants.RagasMetricsConstants.ANSWER_RELEVANCY] = round((result[constants.RagasMetricsConstants.ANSWER_RELEVANCY][0]), 2)
+        if result:
+            for metric_name, score in result.items():
+                if isinstance(score, list) and score:
+                    metrics_dict[metric_name] = round(score[0], 2)
+
         end_time = time.time()
         self.time_taken = end_time - start_time
         return metrics_dict
-    
+
     def get_cost_and_time_taken(self):
-        """
-        Get the cost and time taken for the evaluation
-        """
         return self.cost, self.time_taken

@@ -3,7 +3,9 @@ import chromadb
 import numpy as np
 import infrastructure.common.rag_constants as constants
 import time
+from infrastructure.common.component_registry import register, VECTOR_STORES_REGISTRY
 
+@register(VECTOR_STORES_REGISTRY, name=constants.VectorStore.CHROMA.value)
 class ChromaVectorStore(BaseVectorStore):
     def __init__(self, collectionName):
         self.client = chromadb.PersistentClient()

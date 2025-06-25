@@ -2,7 +2,9 @@ import time
 import voyageai
 from .base_embedder import BaseEmbedder
 import infrastructure.common.rag_constants as constants
+from infrastructure.common.component_registry import register, EMBEDDERS_REGISTRY
 
+@register(EMBEDDERS_REGISTRY, constants.EmbedderType.VOYAGE.value)
 class VoyageEmbedder(BaseEmbedder):
     def __init__(self, api_key, model):
         """

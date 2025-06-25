@@ -1,59 +1,65 @@
 import time
 from .base_llm_service import BaseLLMService
-from infrastructure.common.rag_constants import GeminiLLMModel
-from google.genai import types
+from infrastructure.common.rag_constants import GeminiLLMModel, LLMServiceType
+from google.generativeai import types
 from google import genai
+from infrastructure.common.component_registry import register, LLM_SERVICES_REGISTRY
 
+@register(LLM_SERVICES_REGISTRY, name=LLMServiceType.GEMINI.value)
 class GeminiService(BaseLLMService):
-    def __init__(self, client: genai.Client, model_name=GeminiLLMModel.GEMINI_FLASH.value):
-        self.client = client
+    def __init__(self, api_key: str, model_name=GeminiLLMModel.GEMINI_FLASH.value):
+        genai.configure(api_key=api_key)
+        self.model = genai.GenerativeModel(model_name)
         self.model_name = model_name
         self.cost = 0
         self.time_taken = 0
         
     def generate_response(self, prompt, **kwargs):
         start_time = time.time()
-        total_tokens = 0
-        for chunk in self.client.models.generate_content_stream(
-            model=self.model_name,
+        generation_config = types.GenerationConfig(
+            temperature=kwargs.get("temperature", 0.1)
+        )
+        stream = self.model.generate_content(
             contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.1
-            )
-        ):
+            generation_config=generation_config,
+            stream=True
+        )
+        last_chunk = None
+        for chunk in stream:
             if hasattr(chunk, 'text'):
-                total_tokens += chunk.usage_metadata.total_token_count
                 yield chunk.text
+            last_chunk = chunk
 
-        self.cost = self.get_cost_based_on_model(total_tokens)
-    
+        if last_chunk and hasattr(last_chunk, 'usage_metadata'):
+            total_tokens = last_chunk.usage_metadata.total_token_count
+            self.cost = self.get_cost_based_on_model(total_tokens)
+
         end_time = time.time()
         self.time_taken = end_time - start_time
         
     def get_cost_based_on_model(self, tokens):
-        if self.model_name == GeminiLLMModel.GEMINI_FLASH:
+        if self.model_name == GeminiLLMModel.GEMINI_FLASH.value:
             return (tokens / 1000000) * 0.80
-        elif self.model_name == GeminiLLMModel.GEMINI_PRO:
+        elif self.model_name == GeminiLLMModel.GEMINI_PRO.value:
             if tokens <= 200000:
-                  return (tokens / 1000000) * 10
+                return (tokens / 1000000) * 10
             else:
-                  return (tokens / 1000000) * 15
-        elif self.model_name == GeminiLLMModel.GEMINI_TWO_5_FLASH:
+                return (tokens / 1000000) * 15
+        elif self.model_name == GeminiLLMModel.GEMINI_TWO_5_FLASH.value:
             return 0
+        return 0
         
     def function_call(self, functions, prompt, **kwargs):
-        tools = [types.Tool(function_declarations=[func]) for func in functions]
-
-        config = types.GenerateContentConfig(
-            tools=tools,
+        tools = [types.Tool(function_declarations=[func for func in functions])]
+        generation_config = types.GenerationConfig(
             temperature=kwargs.get("temperature", 0.7)
         )
 
-        response = self.client.models.generate_content(
-        model=self.model_name,
-        contents=prompt,
-        config=config
-    )
+        response = self.model.generate_content(
+            contents=prompt,
+            tools=tools,
+            generation_config=generation_config
+        )
         return response
     
     def get_function_args(self, response):

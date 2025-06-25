@@ -1,60 +1,43 @@
-from infrastructure.common.rag_constants import (
-    ChunkerType, EmbedderType,
-    RetrieverType, RerankerType,
-    EvaluatorType, LLMServiceType, GeminiLLMModel
-)
-
-import infrastructure.common.rag_constants as constants
+import yaml
+from pydantic import ValidationError
+from models import AppConfig
+import streamlit as st
 
 class ConfigManager:
-    """Manages configuration for RAG components"""
-    def __init__(self, config=None):
-        self.config = config or   {
-    "chunker": {
-      "type": "recursive",
-      "params": {
-        "chunk_size": 150,
-        "chunk_overlap": 70
-      }
-    },
-    "embedder": {
-      "type": "Voyage",
-      "params": {
-        "model": "voyage-3-lite"
-      }
-    },
-    "vector_store": {
-      "type": "faiss",
-      "params": {}
-    },
-    "retriever": {
-      "type": "similarity",
-      "params": {
-        "similarity_threshold": 0.0,
-        "top_k": 20
-      }
-    },
-    "reranker": {
-      "type": "Jina",
-      "params": {
-        "top_k_for_reranking": 5,
-        "model": "jina-reranker-v1-turbo-en"
-      }
-    },
-    "llm": {
-      "type": "Gemini",
-      "params": {
-        "model": "gemini-2.5-pro-preview-05-06"
-      }
-    },
-    "evaluator": {
-      "type": "Ragas"
-    }
-  }
+    """Manages RAG component configurations by loading from a YAML file."""
+    _config: AppConfig = None
+    _config_path: str = "config.yml"
 
-    def get_config(self, component=None):
-        if component:
-            return self.config.get(component, {})
-        return self.config
-    def update_config(self, component, config):
-        self.config[component] = config
+    @classmethod
+    def load_config(cls) -> AppConfig:
+        """Loads, validates, and returns the application configuration.
+        Caches the configuration after the first load.
+        """
+        if cls._config is None:
+            try:
+                with open(cls._config_path, 'r') as f:
+                    config_data = yaml.safe_load(f)
+                cls._config = AppConfig(**config_data)
+            except FileNotFoundError:
+                st.error(f"Configuration file not found at: {cls._config_path}")
+                raise
+            except ValidationError as e:
+                st.error(f"Configuration validation error in '{cls._config_path}':\n{e}")
+                raise
+            except Exception as e:
+                st.error(f"An unexpected error occurred while loading the configuration: {e}")
+                raise
+        return cls._config
+
+    @classmethod
+    def get_config(cls) -> AppConfig:
+        """Returns the loaded application configuration."""
+        return cls.load_config()
+
+    @classmethod
+    def get_component_config(cls, component_name: str):
+        """Gets the configuration for a specific component by its name."""
+        config = cls.get_config()
+        if hasattr(config, component_name):
+            return getattr(config, component_name)
+        raise AttributeError(f"Component '{component_name}' not found in configuration.")

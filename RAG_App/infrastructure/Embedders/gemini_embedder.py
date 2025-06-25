@@ -2,7 +2,9 @@ import time
 from .base_embedder import BaseEmbedder
 from google import genai
 import infrastructure.common.rag_constants as constants
+from infrastructure.common.component_registry import register, EMBEDDERS_REGISTRY
 
+@register(EMBEDDERS_REGISTRY, constants.EmbedderType.GEMINI.value)
 class GeminiEmbedder(BaseEmbedder):
     def __init__(self, api_key=None, model_name = constants.GeminiEmbedModels.GEMINI_EMBED_001_MODEL.value):
         api_key = api_key

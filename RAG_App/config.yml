@@ -1,0 +1,34 @@
+chunker:
+  type: "recursive"
+  params:
+    chunk_size: 150
+    chunk_overlap: 70
+
+embedder:
+  type: "cohere"
+  params:
+    model: "embed-v4.0"
+
+vector_store:
+  type: "pine-cone"
+  params: {}
+
+retriever:
+  type: "hybrid"
+  params:
+    keyword_weight: 0.5
+    top_k: 20
+
+reranker:
+  type: "Jina"
+  params:
+    top_k_for_reranking: 5
+    model: "jina-reranker-v1-turbo-en"
+
+llm:
+  type: "Gemini"
+  params:
+    model: "gemini-1.5-pro-preview-0514"
+
+evaluator:
+  type: "Ragas"

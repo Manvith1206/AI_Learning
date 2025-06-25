@@ -8,7 +8,9 @@ import numpy as np
 import faiss
 import uuid
 import time
+from infrastructure.common.component_registry import register, VECTOR_STORES_REGISTRY
 
+@register(VECTOR_STORES_REGISTRY, name=constants.VectorStore.FAISS.value)
 class FAISS_Vector_Store(BaseVectorStore):
     def __init__(self):
         self.documents = []

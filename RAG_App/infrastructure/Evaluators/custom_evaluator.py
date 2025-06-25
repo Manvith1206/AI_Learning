@@ -9,6 +9,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import infrastructure.common.rag_constants as constants
 from infrastructure.evaluators.LLM_Evaluation_Service import LLM_Evaluation_Service
+from infrastructure.common.component_registry import register, EVALUATORS_REGISTRY
 
 # --- Evaluation Metric Base Class ---
 class EvaluationMetric(ABC):
@@ -95,11 +96,8 @@ class ContextPrecisionMetric(EvaluationMetric):
             # else: Precision@k * 0 (weight for irrelevant), so no need to add to precision_sum
             
         if relevant_chunks_count_for_weight == 0:
-             return 0.0 # Avoid division by zero if no chunks are deemed relevant
-
-        # Weighted average: Sum(Precision@k * rel_k) / Sum(rel_k)
-        # rel_k is 1 if chunk at k is relevant, 0 otherwise.
-        # Sum(rel_k) is effectively relevant_chunks_count_for_weight
+            return 0.0
+        
         return precision_sum / relevant_chunks_count_for_weight
 
 class ContextRecallMetric(EvaluationMetric):
@@ -108,22 +106,21 @@ class ContextRecallMetric(EvaluationMetric):
         "Given the following context, can the statement from the ground truth answer be inferred from this context? "
         "Respond with only 'yes' or 'no'.\n\n"
         "Context:\n{context}\n\n"
-        "Ground Truth Statement:\n{statement}"
+        "Statement:\n{statement}"
     )
 
     def __init__(self, llm_service: LLM_Evaluation_Service, prompt_template: str = None):
         super().__init__(llm_service)
         self.prompt_template = prompt_template or self.default_prompt_template
 
-    def _extract_statements(self, text: str):
+    def _extract_statements(self, text: str) -> List[str]:
         sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|!)\s', text)
         return [s.strip() for s in sentences if s.strip()]
 
     def calculate(self, question: str, answer: str, contexts: List[str], ground_truth: str = None):
         if not ground_truth or not contexts:
-            # This metric requires ground truth
-            return 0.0 # Or raise an error, or return None/NaN
-        
+            return 0.0
+
         gt_statements = self._extract_statements(ground_truth)
         if not gt_statements:
             return 0.0
@@ -182,37 +179,38 @@ class AnswerRelevancyMetric(EvaluationMetric):
         
         return total_similarity / len(generated_questions)
 
+# --- Metric Registry ---
+METRIC_REGISTRY = {
+    constants.EvaluationMetrics.FAITHFULNESS.value: FaithfulnessMetric,
+    constants.EvaluationMetrics.CONTEXT_PRECISION.value: ContextPrecisionMetric,
+    constants.EvaluationMetrics.CONTEXT_RECALL.value: ContextRecallMetric,
+    constants.EvaluationMetrics.ANSWER_RELEVANCY.value: AnswerRelevancyMetric,
+}
+
 # --- Custom Evaluator ---
+@register(EVALUATORS_REGISTRY, name=constants.EvaluatorType.CUSTOM.value)
 class CustomEvaluator(BaseEvaluator):
     """Evaluator that uses custom metrics and LLM services."""
 
-    def __init__(self, metrics: List[EvaluationMetric], llm_service: LLM_Evaluation_Service = None):
-        """
-        Initialize with a list of evaluation metrics and an LLM service.
-        If llm_service is None, it implies metrics are pre-configured with their own LLM services.
-        If llm_service is provided, it can be used as a default for metrics if they don't have one.
-        However, current metric design requires LLMService at metric initialization.
-        """
-        self.metrics = metrics
+    def __init__(self, gemini_api_key: str, metrics: List[str] = None):
+        if not gemini_api_key:
+            raise ValueError("Gemini API key is required for CustomEvaluator.")
+        
+        llm_service = LLM_Evaluation_Service(api_key=gemini_api_key)
+        
+        self.metrics = []
+        if metrics:
+            for metric_name in metrics:
+                metric_class = METRIC_REGISTRY.get(metric_name)
+                if metric_class:
+                    self.metrics.append(metric_class(llm_service=llm_service))
+                else:
+                    print(f"Warning: Unknown metric '{metric_name}' specified for CustomEvaluator.")
+
         self.cost = 0
         self.time_taken = 0
-        # Each metric should be initialized with an LLM service already.
-        # self.llm_service = llm_service 
 
     def evaluate(self, question: str, answer: str, contexts: List[str], ground_truths: str = None):
-        """
-        Evaluate using the configured custom metrics.
-        
-        Args:
-            question: The query/question asked
-            answer: The generated answer
-            contexts: The contexts used to generate the answer (list of strings)
-            ground_truths: Optional ground truth answer (single string)
-            
-        Returns:
-            Dictionary of evaluation scores, with metric names as keys.
-        """
-        
         results = {}
         start_time = time.time()
         
@@ -222,11 +220,11 @@ class CustomEvaluator(BaseEvaluator):
                 results[metric.metric_name] = score
             except Exception as e:
                 print(f"Error calculating metric {metric.metric_name}: {e}")
-                results[metric.metric_name] = None # Or 0.0, or handle as per requirement
+                results[metric.metric_name] = None
 
         end_time = time.time()
         self.time_taken = end_time - start_time
         return results
     
     def get_cost_and_time_taken(self):
-        return 0,self.time_taken
+        return 0, self.time_taken

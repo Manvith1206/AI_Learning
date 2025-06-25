@@ -6,7 +6,9 @@ import uuid
 import numpy as np
 from scipy.sparse import csr_matrix
 import time
+from infrastructure.common.component_registry import register, VECTOR_STORES_REGISTRY
 
+@register(VECTOR_STORES_REGISTRY, name=constants.VectorStore.PINE_CONE.value)
 class PineConeVectorStore(BaseVectorStore):
     def __init__(self, api_key: str, index_name: str):
         self.documents = None
