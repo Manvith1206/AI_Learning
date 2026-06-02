@@ -1,5 +1,4 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.exceptions import NotFittedError
 from .base_embedder import BaseEmbedder
 
 class TFIDFEmbedder(BaseEmbedder):

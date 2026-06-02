@@ -1,8 +1,5 @@
-from langchain.vectorstores import FAISS, faiss
-import os
 from .base_vector_store import BaseVectorStore
-from langchain_core.documents import Document
-import RAG_Constants as constants
+import rag_modular.RAG_Constants as constants
 import numpy as np
 import faiss
 import uuid

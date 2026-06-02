@@ -1,9 +1,9 @@
 from .base_reranker import BaseReranker
 import cohere as co
-import RAG_Constants as constants
+import rag_modular.RAG_Constants as constants
 
 class CohereReranker(BaseReranker):
-    def __init__(self, api_key: str = None, model_name: str = constants.CohereEmbedModels.COHERE_EMBED_MODEL_ENG):
+    def __init__(self, api_key: str = None, model_name: str = constants.CohereLLMModel.RERANK_DEFAULT_MODEL.value):
         """
         api_key: your COHERE_API_KEY (or set via env var COHERE_API_KEY)
         model:   the Cohere embed model to use

@@ -155,7 +155,7 @@ class LLMServiceType(Enum):
 # Common LLM model names
 class GeminiLLMModel(Enum):
     GEMINI_FLASH = "gemini-2.0-flash"
-    GEMINI_PRO = "gemini-2.5-pro"
+    GEMINI_PRO = "gemini-3-flash-preview"
     
     @property
     def display_name(self):
@@ -163,7 +163,7 @@ class GeminiLLMModel(Enum):
         return self.name.replace("_", " ").title()
 # vector stores
 class VectorStore(Enum):
-    SCIKIT_LEARN = "sckit_learn"
+    SCIKIT_LEARN = "sklearn"
     FAISS = "faiss"
     PINE_CONE = "pine-cone"
 
@@ -189,6 +189,7 @@ class GeminiEmbedModels(Enum):
     GEMINI_EMBED_001_MODEL = "models/embedding-001"
 
 class JINA_RERANKER_MODELS(Enum):
+    JINA_RERANKER_DEFAULT_MODEL = "jina-reranker-v1-turbo-en"
     JINA_RERANKER_V1_TURBO = "jina-reranker-v1-turbo-en"
     JINA_RERANKER_TINY = "jina-reranker-v1-tiny-en"
     JINA_RERANKER_M0 = "jina-reranker-m0"

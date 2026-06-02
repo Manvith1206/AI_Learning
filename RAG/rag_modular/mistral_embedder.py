@@ -1,7 +1,6 @@
 from mistralai import Mistral
 from .base_embedder import BaseEmbedder
-import streamlit as st
-import RAG_Constants as constants
+import rag_modular.RAG_Constants as constants
 import tiktoken
 import random, time, logging
 

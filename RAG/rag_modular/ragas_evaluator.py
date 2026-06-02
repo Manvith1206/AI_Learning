@@ -4,11 +4,7 @@ from ragas import evaluate
 from datasets import Dataset
 import os
 import streamlit as st
-import openai
 import rag_modular.RAG_Constants as constants
-from ragas.dataset_schema import MultiTurnSample
-
-os.environ["OPENAI_API_KEY"] = st.secrets[constants.OPENAI_API_KEY]
 
 class RagasEvaluator(BaseEvaluator):
     """Evaluator that uses RAGAS metrics for RAG evaluation"""
@@ -20,6 +16,10 @@ class RagasEvaluator(BaseEvaluator):
         Args:
             metrics: List of RAGAS metrics to use (default: faithfulness)
         """
+        openai_api_key = st.secrets.get(constants.OPENAI_API_KEY) or os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            raise ValueError("RAGAS evaluation requires OPENAI_API_KEY in Streamlit secrets or environment.")
+        os.environ["OPENAI_API_KEY"] = openai_api_key
         self.metrics = metrics or [faithfulness, context_precision, answer_correctness, context_recall, answer_relevancy]
 
     def evaluate(self, question, answer, contexts, ground_truths=None):

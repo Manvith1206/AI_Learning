@@ -24,7 +24,8 @@ class LLMReranker(BaseReranker):
             Explanation: [your reasoning]
             """
         response = self.llm_client.generate_response(
-            prompt=rerank_prompt
+            prompt=rerank_prompt,
+            model_name=self.model_name
         )
         response_text = response.strip()
         best_chunks_match = re.search(r"Best Chunk\(s\):\s*\[([^\]]+)\]", response_text)

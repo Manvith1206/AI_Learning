@@ -10,7 +10,9 @@ def main():
         layout="wide"
     )
 
-main()
+if __name__ == '__main__':
+    main()
+
 # Create a loading indicator for initial setup
 with st.spinner("Loading application..."):
     # Lazy import dependencies only when needed
@@ -29,20 +31,15 @@ with st.spinner("Loading application..."):
     def load_pipeline_dependencies():
         from rag_modular.rag_pipeline import RAGPipeline
         from rag_modular.config_manager import ConfigManager
-        import rag_modular.recursive_chunker
-        import rag_modular.test_rag_pipeline
-        import test_rag_combinations
         return {
             "RAGPipeline": RAGPipeline,
-            "ConfigManager": ConfigManager,
-            "test_rag_combinations": test_rag_combinations
+            "ConfigManager": ConfigManager
         }
     
     # Load dependencies with caching
     deps = load_pipeline_dependencies()
     RAGPipeline = deps["RAGPipeline"]
     ConfigManager = deps["ConfigManager"]
-    test_rag_combinations = deps["test_rag_combinations"]
 
 TEMP_DIR = "temp_docs"
 
@@ -113,11 +110,14 @@ with st.sidebar:
             index=0            
         )
         if vector_store == constants.VectorStore.SCIKIT_LEARN.value:
-            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_SKLEARN, constants.CONFIG_VECTOR_STORE_METRIC: {constants.CONFIG_METRIC_COSINE}}
+            vector_store_params = {
+                constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_SKLEARN,
+                constants.CONFIG_PARAM: {constants.CONFIG_VECTOR_STORE_METRIC: constants.CONFIG_METRIC_COSINE}
+            }
         elif vector_store == constants.VectorStore.PINE_CONE.value:
-            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_PINCONE}
+            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_PINCONE, constants.CONFIG_PARAM: {}}
         else:
-            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_FAISS}
+            vector_store_params = {constants.CONFIG_TYPE_PARAM: constants.CONFIG_VECTOR_STORE_FAISS, constants.CONFIG_PARAM: {}}
         st.divider()
         # Embedder selection
         embedder_type = st.selectbox(
@@ -201,7 +201,6 @@ with st.sidebar:
             if st.button("Apply Retrieval Params", key="apply_retrieval"):
                 retriever_config = {constants.CONFIG_TYPE_PARAM: retriever_type, constants.CONFIG_PARAM: retriever_params, constants.CONFIG_TOP_K_PARAM: top_k}
                 if re_ranker_type == RerankerType.LLM.value:
-                    service = st.selectbox("LLM Service", options=[e.value for e in constants.LLMServiceType])
                     reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: model}
                 elif re_ranker_type == RerankerType.COHERE.value or re_ranker_type == RerankerType.JINA.value:
                     reranker_config = {constants.CONFIG_TYPE_PARAM: re_ranker_type, constants.CONFIG_PARAM: model}
@@ -290,7 +289,7 @@ with st.sidebar:
                 for score in list(metrics.values()):
                     overallScore += score
                 
-                overallScore = overallScore / metrics_df.count()
+                overallScore = overallScore / len(metrics_df)
                 st.write("Overall Score: " + str(overallScore))
                 # Show a bar chart of metrics
                 st.bar_chart(metrics_df.set_index("Metric"))
@@ -320,6 +319,7 @@ with st.sidebar:
 
     if st.button("Test All Configurations", key="test_all_combinations"):
         # Only import and run when button is clicked
+        import test_rag_combinations
         test_rag_combinations.run_tests()
 
 # Main chat interface
@@ -339,11 +339,12 @@ if prompt := st.chat_input("Ask a question about your documents"):
                 # Initialize pipeline when needed
                 pipeline = get_pipeline()
                 response = pipeline.query(prompt)
-                st.markdown(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
-                st.markdown(response["answer"])
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": response["answer"]
-                })
+                if response:
+                    st.markdown(f"**Re-ranking Explanation:**\n{response['rerank_explanation']}")
+                    st.markdown(response["answer"])
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": response["answer"]
+                    })
         else:
             st.error("Please upload and process documents first.")

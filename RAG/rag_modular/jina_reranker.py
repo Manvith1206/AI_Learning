@@ -1,10 +1,7 @@
-import torch
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-from typing import List, Dict, Union, Tuple
 from .base_reranker import BaseReranker
 import requests
 import streamlit as st
-import RAG_Constants as constants
+import rag_modular.RAG_Constants as constants
 
 class JinaReranker(BaseReranker):
     """
@@ -19,19 +16,15 @@ class JinaReranker(BaseReranker):
             device: Device to run the model on ('cpu', 'cuda', etc.). If None, uses CUDA if available.
         """
         self.model = model_name
-        if device is None:
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        else:
-            self.device = device
+        self.device = device
 
     
     def rerank(self, query, documents, **kwargs):
-        import requests
         top_k = kwargs.get('top_k', 5)
         url = 'https://api.jina.ai/v1/rerank'
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': st.secrets[constants.JINA_RERANKER_API_KEY]
+            'Authorization': f"Bearer {st.secrets[constants.JINA_RERANKER_API_KEY]}"
         }
         data = {
             "model": self.model,

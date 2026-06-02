@@ -2,8 +2,6 @@ import os
 import uuid
 
 
-from .simple_evaluator import SimpleEvaluator
-from .ragas_evaluator import RagasEvaluator
 from .config_manager import ConfigManager
 import streamlit as st
 
@@ -52,16 +50,16 @@ class RAGPipeline:
             return RecursiveChunker()
 
     def _build_embedder(self):
-        from .tfidf_embedder import TFIDFEmbedder
-        from .gemini_embedder import GeminiEmbedder
-        from .mistral_embedder import MistralEmbedder
-
         cfg = self.config_manager.get_config(constants.CONFIG_EMBEDDER)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         model_name = cfg.get(constants.CONFIG_MODEL)
         if t == EmbedderType.TFIDF.value:
+            from .tfidf_embedder import TFIDFEmbedder
+
             return TFIDFEmbedder()
         elif t == EmbedderType.GEMINI.value:
+            from .gemini_embedder import GeminiEmbedder
+
             return GeminiEmbedder(api_key=st.secrets[constants.GEMINI_API_KEY], model_name=model_name)
         elif t == EmbedderType.COHERE.value:
             from .cohere_embedder import CohereEmbedder
@@ -72,27 +70,33 @@ class RAGPipeline:
             return VoyageEmbedder(api_key=st.secrets[constants.VOYAGE_API_KEY],
                                   model=cfg.get(constants.CONFIG_MODEL))
         elif t == EmbedderType.MISTRAL.value:
+            from .mistral_embedder import MistralEmbedder
+
             return MistralEmbedder(api_key=st.secrets[constants.MISTRAL_API_KEY],
                                   model=cfg.get(constants.CONFIG_MODEL),
                                   )
         else:
+            from .tfidf_embedder import TFIDFEmbedder
+
             return TFIDFEmbedder()
 
     def _build_vector_store(self):
-        from .pinecone_vector_store import PineConeVectorStore
-        from .FAISS_Vector_Store import FAISS_Vector_Store
-        from .sklearn_vector_store import SklearnVectorStore
-
         cfg = self.config_manager.get_config(constants.CONFIG_VECTOR_STORE)
         params = cfg.get(constants.CONFIG_PARAM, {})
-        type = cfg.get(constants.CONFIG_TYPE_PARAM)
-        api_key = st.secrets[constants.PINECONE_API_KEY]
+        vector_store_type = cfg.get(constants.CONFIG_TYPE_PARAM)
 
-        if type == constants.CONFIG_VECTOR_STORE_SKLEARN:
+        if vector_store_type == constants.CONFIG_VECTOR_STORE_SKLEARN:
+            from .sklearn_vector_store import SklearnVectorStore
+
             return SklearnVectorStore(**params)
-        elif type == constants.CONFIG_VECTOR_STORE_PINCONE:
+        elif vector_store_type == constants.CONFIG_VECTOR_STORE_PINCONE:
+            from .pinecone_vector_store import PineConeVectorStore
+
+            api_key = st.secrets[constants.PINECONE_API_KEY]
             return PineConeVectorStore(api_key=api_key, index_name=constants.PINE_CONE_INDEX_NAME)
         else:
+            from .FAISS_Vector_Store import FAISS_Vector_Store
+
             return FAISS_Vector_Store()
 
     def _build_retriever(self):
@@ -165,8 +169,12 @@ class RAGPipeline:
         cfg = self.config_manager.get_config(constants.CONFIG_EVALUATOR)
         t = cfg.get(constants.CONFIG_TYPE_PARAM)
         if t == EvaluatorType.RAGAS.value:
+            from .ragas_evaluator import RagasEvaluator
+
             return RagasEvaluator(**cfg.get(constants.CONFIG_PARAM, {}))
         else:
+            from .simple_evaluator import SimpleEvaluator
+
             return SimpleEvaluator()
 
     # update components
@@ -289,8 +297,7 @@ class RAGPipeline:
             else:
                 context_docs = "\n\n".join(retrieved_docs)
 
-            # Join contexts
-            context = "\n\n".join(context_docs)
+            context = context_docs
             
             # Generate answer
             answer_prompt = f"""

@@ -2,7 +2,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import re
 from typing import List, Dict, Any
-from base_chunker import BaseChunker
+from .base_chunker import BaseChunker
 import rag_modular.RAG_Constants as constants
 max_sentences = 300
 

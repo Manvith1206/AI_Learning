@@ -1,4 +1,3 @@
-import PyPDF2
 from .base_loader import BaseDocumentLoader
 
 class PDFLoader(BaseDocumentLoader):

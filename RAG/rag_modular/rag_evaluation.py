@@ -75,7 +75,7 @@ EMBEDDER_PARAM_GRID = [
     }),
     (constants.EmbedderType.GEMINI.value, {
         constants.CONFIG_TYPE_PARAM: constants.EmbedderType.GEMINI.value, 
-        constants.CONFIG_MODEL: constants.GeminiEmbedModels.GEMINI_EMBED_DEFAULT_MODEL.value,
+        constants.CONFIG_MODEL: constants.GeminiEmbedModels.GEMINI_TEXT_EMBED_MODEL.value,
         constants.CONFIG_BATCH_SIZE: 0
     }),
     (constants.EmbedderType.COHERE.value, {

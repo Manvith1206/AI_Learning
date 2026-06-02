@@ -1,7 +1,6 @@
 from pinecone import Pinecone, ServerlessSpec
-import os
 from .base_vector_store import BaseVectorStore
-import RAG_Constants as constants
+import rag_modular.RAG_Constants as constants
 import uuid
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -26,8 +25,13 @@ class PineConeVectorStore(BaseVectorStore):
         if isinstance(embeddings, list):
             self.dimension = len(embeddings[0])
 
-        if self.index_name not in [i.name for i in self.pc.list_indexes()] or self.dimension != [i.index['dimension'] for i in self.pc.list_indexes()]:
-            if self.index_name in [i.name for i in self.pc.list_indexes()]:
+        existing_indexes = list(self.pc.list_indexes())
+        existing_names = [index.name for index in existing_indexes]
+        existing_index = next((index for index in existing_indexes if index.name == self.index_name), None)
+        existing_dimension = existing_index.dimension if existing_index else None
+
+        if self.index_name not in existing_names or self.dimension != existing_dimension:
+            if self.index_name in existing_names:
                 self.pc.delete_index(self.index_name)
 
             self.pc.create_index(
@@ -36,12 +40,7 @@ class PineConeVectorStore(BaseVectorStore):
                 metric="cosine",
                 spec=ServerlessSpec(cloud="aws", region="us-east-1")
             )
-        else:
-            for i in self.pc.list_indexes():
-                if i.index['dimension'] == self.dimension:
-                    self.index_name = i.name
-            
-        
+
         self.index = self.pc.Index(self.index_name)
 
         # Handle sparse to dense if needed
